@@ -73,8 +73,8 @@ function(cp_script script_name)
 		${CMAKE_CURRENT_BINARY_DIR}/${script_name} COPYONLY)
 endfunction()
 
-include_directories("${CMAKE_CURRENT_BINARY_DIR}src/") # for config.h
-#include_directories("${res_dir}")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/src/") # for config.h
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
 
 #
 # special headers
@@ -165,7 +165,7 @@ endif()
 # FLAGS
 # the order of -Wall -Wno-unknown-pragmas is important
 # TODO: -Werror
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -Werror ${WARN_EXC} -std=c++11 -pipe")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -Werror ${WARN_EXC} -std=c++11 -pipe -ldl")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
 
