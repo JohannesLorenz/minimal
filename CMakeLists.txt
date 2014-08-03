@@ -4,6 +4,27 @@
 
 #Specify the version being used aswell as the language
 cmake_minimum_required(VERSION 2.8)
+
+#Compiler
+set(WARN_EXC "")
+
+if(COMPILER STREQUAL "gcc")
+	# enable these flags if you get tons of errors from boost...
+	#set(WARN_EXC "-Wno-unused-local-typedefs -Wno-maybe-uninitialized")
+	set(CMAKE_CXX_FLAGS_RELEASE "-flto")
+	set(FLTO_FLAGS "-flto")
+
+	SET( CMAKE_CXX_COMPILER "g++" )
+	SET( CMAKE_CC_COMPILER "gcc" )
+elseif(COMPILER STREQUAL "clang")
+	set(FLTO_FLAGS "") # not supported by clang on most platforms
+
+	SET( CMAKE_CXX_COMPILER "clang++" )
+	SET( CMAKE_CC_COMPILER "clang" )
+else()
+	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang]")
+endif()
+
 #Name your project here
 project(mmms)
 
@@ -107,12 +128,26 @@ add_custom_target (
 
 MESSAGE("CHECKING FOR LIBRARIES...")
 
+#TODO!!!
+find_package(PkgConfig REQUIRED)
+
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED OFF)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.49.0
 	REQUIRED
 	COMPONENTS graph)
+
+#todo: -> rtosc?
+pkg_search_module(LIBLO liblo>=0.25 REQUIRED)
+mark_as_advanced(LIBLO_LIBRARIES)
+include_directories(${LIBLO_INCLUDE_DIRS})
+
+list(APPEND AUDIO_LIBRARIES ${LIBLO_LIBRARIES})
+list(APPEND AUDIO_LIBRARY_DIRS ${LIBLO_LIBRARY_DIRS})
+
+link_directories(${AUDIO_LIBRARY_DIRS})
+#target_link_libraries(mmms ${AUDIO_LIBRARIES})
 
 #find_package(Qt4)
 #if(QT4_FOUND)
@@ -137,25 +172,6 @@ find_package(Boost 1.49.0
 # Compile
 #
 
-set(WARN_EXC "")
-
-if(COMPILER STREQUAL "gcc")
-	# enable these flags if you get tons of errors from boost...
-	#set(WARN_EXC "-Wno-unused-local-typedefs -Wno-maybe-uninitialized")
-	set(CMAKE_CXX_FLAGS_RELEASE "-flto")
-	set(FLTO_FLAGS "-flto")
-
-	SET( CMAKE_CXX_COMPILER "g++" )
-	SET( CMAKE_CC_COMPILER "gcc" )
-elseif(COMPILER STREQUAL "clang")
-	set(FLTO_FLAGS "") # not supported by clang on most platforms
-
-	SET( CMAKE_CXX_COMPILER "clang++" )
-	SET( CMAKE_CC_COMPILER "clang" )
-else()
-	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang]")
-endif()
-
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 	message(FATAL_ERROR "Please set -DCMAKE_BUILD_TYPE=[Debug|Release]")
@@ -165,11 +181,12 @@ endif()
 # FLAGS
 # the order of -Wall -Wno-unknown-pragmas is important
 # TODO: -Werror
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -Werror ${WARN_EXC} -std=c++11 -pipe -ldl")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall ${WARN_EXC} -std=c++11 -pipe -ldl")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
 
 MESSAGE("READING SUB-DIRECTORIES...")
+add_subdirectory(rtosc)
 add_subdirectory(src)
 add_subdirectory(doc)
 

@@ -6,6 +6,6 @@ file(GLOB main_hdr ${src_dir}/*.h)
 
 add_definitions("-ldl")
 add_executable(mmms ${main_src} ${main_hdr})
-target_link_libraries(mmms lib.so)
+target_link_libraries(mmms lib.so ${AUDIO_LIBRARIES})
 
 

@@ -22,17 +22,39 @@
 #include <iostream>
 #include "project.h"
 #include "plugin.h"
+#include "ports.h"
+
+using namespace mmms;
+
+void main_init()
+{
+	// TODO: needed?
+	//For misc utf8 chars
+	setlocale(LC_ALL, "");
+}
+
+project_t main_load_project(const char* lib_name)
+{
+	plugin_t plugin(lib_name);
+
+	project_t pro;
+
+	std::cout << "Attempting to load project: " << lib_name << std::endl;
+	plugin.load_project(pro);
+
+	std::cout << "Loaded project: " << pro.title() << std::endl;
+	return pro;
+}
 
 int main(int argc, char** argv)
 {
+	main_init();
+
 	assert(argc == 2);
-	plugin_t plugin(argv[1]);
 
-	project pro;
-	if(!plugin.load_project(pro))
-	 return EXIT_FAILURE;
+	project_t pro = main_load_project(argv[1]);
 
-	std::cout << pro.title() << std::endl;
+//	usleep(100);
 
 	return EXIT_SUCCESS;
 }

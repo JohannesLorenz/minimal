@@ -20,7 +20,10 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-class project;
+namespace mmms
+{
+
+class project_t;
 
 class plugin_t
 {
@@ -29,7 +32,9 @@ public:
 	plugin_t(const char* path);
 	~plugin_t();
 
-	bool load_project(project& pro);
+	bool load_project(project_t& pro);
 };
+
+}
 
 #endif // PLUGIN_H

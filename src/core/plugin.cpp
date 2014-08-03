@@ -23,6 +23,8 @@
 
 #include "plugin.h"
 
+namespace mmms {
+
 plugin_t::plugin_t(const char *path)
 {
 	handle = dlopen(path, RTLD_LAZY);
@@ -36,9 +38,9 @@ plugin_t::plugin_t(const char *path)
 
 plugin_t::~plugin_t() { dlclose(handle); }
 
-bool plugin_t::load_project(project &pro)
+bool plugin_t::load_project(project_t &pro)
 {
-	void (*init_project)(project&); // TODO: prefer "using"
+	void (*init_project)(project_t&); // TODO: prefer "using"
 	char *error;
 
 	// for the cast syntax, consult man dlopen (3)
@@ -47,6 +49,7 @@ bool plugin_t::load_project(project &pro)
 	if ((error = dlerror()))  {
 		std::cerr << "Error calling init() from plugin: "
 			  << error << std::endl;
+		pro.invalidate();
 		return false;
 	}
 
@@ -54,3 +57,4 @@ bool plugin_t::load_project(project &pro)
 	return true;
 }
 
+}

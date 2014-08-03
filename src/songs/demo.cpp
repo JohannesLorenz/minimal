@@ -19,12 +19,19 @@
 
 #include "project.h"
 
+using namespace mmms;
+
 extern "C"
 {
-void init(project& p)
+
+void init(project_t& p)
 {
 	p.set_tempo(140);
 	p.set_title("demo-song");
+	track_t t;
+	//t.add_timeline(~~)
+	t.add_line(1,1, line_t(1,2,3));
 }
+
 }
 

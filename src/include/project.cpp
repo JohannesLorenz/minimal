@@ -19,6 +19,11 @@
 
 #include "project.h"
 
-project::project()
+namespace mmms {
+
+project_t::project_t()
 {
 }
+
+}
+
