@@ -17,45 +17,15 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <dlfcn.h>
-#include <iostream>
-
-#include "project.h"
-
-#include "plugin.h"
+#include "ports.h"
+#include "instrument.h"
 
 namespace mmms {
 
-plugin_t::plugin_t(const char *path)
+void instrument_t::set_param_fixed(const char *param, ...)
 {
-	handle = dlopen(path, RTLD_LAZY); //< ok, but valgrind memory leak
-	if(!handle)
-	{
-		std::cerr << "Error loading library " << path << ": "
-			  << dlerror() << std::endl;
-		/*return false;*/ // TODO: throw
-	}
-}
 
-plugin_t::~plugin_t() { dlclose(handle); }
-
-bool plugin_t::load_project(project_t &pro)
-{
-	void (*init_project)(project_t&); // TODO: prefer "using"
-	char *error;
-
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
-
-	if ((error = dlerror()))  {
-		std::cerr << "Error calling init() from plugin: "
-			  << error << std::endl;
-		pro.invalidate();
-		return false;
-	}
-
-	init_project(pro);
-	return true;
 }
 
 }
+

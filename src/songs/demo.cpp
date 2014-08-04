@@ -28,9 +28,10 @@ void init(project_t& p)
 {
 	p.set_tempo(140);
 	p.set_title("demo-song");
-	track_t t;
+	track_t t(instrument_t::type::zyn);
 	//t.add_timeline(~~)
 	t.add_line(1,1, line_t(1,2,3));
+//	t.set_param_fixed("", 3); // TODO: instrument
 }
 
 }

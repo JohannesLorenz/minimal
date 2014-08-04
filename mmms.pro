@@ -6,14 +6,22 @@ TEMPLATE = subdirs
 
 # Directories
 
+INCLUDEPATH += src/include/ \
+	rtosc/include
+
 # Input
 
 HEADERS += src/core/plugin.h \
-	src/include/project.h
+	src/include/project.h \
+	src/include/instrument.h \
+	src/include/ports.h
+
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
 	src/include/project.cpp \
-	src/songs/demo.cpp
+	src/songs/demo.cpp \
+	src/include/instrument.cpp \
+	src/include/ports.cpp
 
 OTHER_FILES += CMakeLists.txt \
 	src/CMakeLists.txt \

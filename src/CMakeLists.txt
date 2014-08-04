@@ -1,6 +1,13 @@
+# todo: own variable
+list(APPEND AUDIO_LIBRARIES rtosc)
+list(APPEND AUDIO_LIBRARY_DIRS "${CMAKE_CURRENT_BINARY_DIR}/rtosc")
+
+include_directories(../rtosc/include)
+
 add_subdirectory(include)
 add_subdirectory(core)
 add_subdirectory(songs)
+
 
 #add_subdirectory(ca)
 #add_subdirectory(io)
