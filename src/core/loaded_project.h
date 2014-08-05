@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* demo.cpp - a small demo song for mmms                                 */
+/* mmms - minimal multimedia studio                                      */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -17,22 +17,25 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#ifndef LOADED_PROJECT_H
+#define LOADED_PROJECT_H
+
 #include "project.h"
 
-using namespace mmms;
+namespace mmms {
 
-extern "C"
-{
 
-void init(project_t& p)
+
+//! this class takes a project and then does some things to handle it
+class loaded_project
 {
-	p.set_tempo(140);
-	p.set_title("demo-song");
-	track_t t(instrument_t::type::zyn);
-	//t.add_timeline(~~)
-	t.add_line(1,1, line_t(1,2,3));
-//	t.set_param_fixed("", 3); // TODO: instrument
+	project_t project;
+
+public:
+	loaded_project(project_t&& project) : project(project) {}
+
+};
+
 }
 
-}
-
+#endif // LOADED_PROJECT_H

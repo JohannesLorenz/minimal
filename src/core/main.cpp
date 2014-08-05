@@ -49,6 +49,7 @@ project_t main_load_project(const char* lib_name)
 int main(int argc, char** argv)
 {
 	main_init();
+	ports::init();
 
 	assert(argc == 2);
 

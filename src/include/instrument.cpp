@@ -24,7 +24,7 @@ namespace mmms {
 
 void instrument_t::set_param_fixed(const char *param, ...)
 {
-
+	ports::send_rtosc_msg(param, "?", "...");
 }
 
 }

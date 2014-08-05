@@ -14,14 +14,16 @@ INCLUDEPATH += src/include/ \
 HEADERS += src/core/plugin.h \
 	src/include/project.h \
 	src/include/instrument.h \
-	src/include/ports.h
+	src/include/ports.h \
+	src/core/loaded_project.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
 	src/include/project.cpp \
 	src/songs/demo.cpp \
 	src/include/instrument.cpp \
-	src/include/ports.cpp
+	src/include/ports.cpp \
+	src/core/loaded_project.cpp
 
 OTHER_FILES += CMakeLists.txt \
 	src/CMakeLists.txt \

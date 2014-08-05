@@ -83,7 +83,7 @@ public:
 	{
 		lines[key] = line;
 	}
-	track_t(instrument_t::type tp);
+	track_t(instrument_t::type);
 
 };
 

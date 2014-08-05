@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* demo.cpp - a small demo song for mmms                                 */
+/* mmms - minimal multimedia studio                                      */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -17,22 +17,46 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "project.h"
+#include <iostream>
+#include <cstdlib>
+#include <fcntl.h>
+#include <unistd.h>
 
-using namespace mmms;
+#include "loaded_project.h"
 
-extern "C"
+// TODO: move this out?
+bool get_input(const char* shell_command)
 {
+	int pipefd[2];
+	pid_t childs_pid;
 
-void init(project_t& p)
-{
-	p.set_tempo(140);
-	p.set_title("demo-song");
-	track_t t(instrument_t::type::zyn);
-	//t.add_timeline(~~)
-	t.add_line(1,1, line_t(1,2,3));
-//	t.set_param_fixed("", 3); // TODO: instrument
-}
+	if (pipe(pipefd) == -1) {
+		std::cerr << "pipe() failed -> no zyn" << std::endl;
+		return false;
+	}
 
+//	fcntl(pipefd[0], F_SETFL, O_NONBLOCK); // ?????
+
+	// fork sh
+	childs_pid=fork();
+	if(childs_pid < 0) {
+		std::cerr << "fork() failed -> no zyn" << std::endl;
+		return false;
+	}
+	else if(childs_pid == 0) {
+
+		close(pipefd[0]); /* Close unused read end */
+
+		dup2(pipefd[1], STDOUT_FILENO);
+
+		execlp("/bin/sh", "sh"	, "-c", shell_command, NULL);
+
+		close(pipefd[1]); /* Reader will see EOF */
+		exit(0);
+	}
+
+	close(pipefd[1]); /* Close unused write end */
+	dup2(pipefd[0], STDIN_FILENO);
+	return true;
 }
 

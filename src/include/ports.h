@@ -23,7 +23,7 @@
 namespace mmms {
 namespace ports {
 
-void init_ports();
+void init();
 void handle_events();
 bool send_rtosc_msg(const char *path, const char *msg_args, ...);
 

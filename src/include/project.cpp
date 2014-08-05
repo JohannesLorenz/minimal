@@ -25,7 +25,7 @@ project_t::project_t()
 {
 }
 
-track_t::track_t(instrument_t::type tp)
+track_t::track_t(instrument_t::type )
 {
 
 }
