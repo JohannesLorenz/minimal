@@ -20,12 +20,14 @@
 #ifndef PORTS_H
 #define PORTS_H
 
+#include <lo/lo_types.h>
+
 namespace mmms {
 namespace ports {
 
 void init();
 void handle_events();
-bool send_rtosc_msg(const char *path, const char *msg_args, ...);
+bool send_rtosc_msg(lo_address dest, const char *path, const char *msg_args, ...);
 
 }
 }

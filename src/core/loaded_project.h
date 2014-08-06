@@ -20,11 +20,26 @@
 #ifndef LOADED_PROJECT_H
 #define LOADED_PROJECT_H
 
+#include <unistd.h>
+#include <lo/lo_types.h>
+
+#include "instrument.h"
 #include "project.h"
 
 namespace mmms {
 
+class rtosc_con
+{
+	pid_t pid;
+	lo_address port;
+	int fd;
+};
 
+class loaded_instrument
+{
+	instrument_t* instrument;
+	rtosc_con con;
+};
 
 //! this class takes a project and then does some things to handle it
 class loaded_project

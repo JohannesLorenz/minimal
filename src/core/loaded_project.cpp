@@ -25,7 +25,7 @@
 #include "loaded_project.h"
 
 // TODO: move this out?
-bool get_input(const char* shell_command)
+bool get_input(const char* shell_command, pid_t* _childs_pid)
 {
 	int pipefd[2];
 	pid_t childs_pid;
@@ -57,6 +57,9 @@ bool get_input(const char* shell_command)
 
 	close(pipefd[1]); /* Close unused write end */
 	dup2(pipefd[0], STDIN_FILENO);
+
+	if(_childs_pid)
+	 *_childs_pid = childs_pid;
 	return true;
 }
 

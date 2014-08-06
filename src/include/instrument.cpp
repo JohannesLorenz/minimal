@@ -22,9 +22,21 @@
 
 namespace mmms {
 
+std::size_t instrument_t::next_id;
+
 void instrument_t::set_param_fixed(const char *param, ...)
 {
 	ports::send_rtosc_msg(param, "?", "...");
+}
+
+std::string zynaddsubfx_t::make_start_command(const char* port) const
+{
+	std::string cmd = binary;
+	cmd += " ";
+	cmd += default_args;
+	cmd += " -p ";
+	cmd += port;
+	return cmd;
 }
 
 }

@@ -72,7 +72,7 @@ public:
 
 class track_t
 {
-
+	const instrument_t& instrument;
 	std::map<key_t, line_t> lines;
 public:
 	void add_line(octave_t octave, key_note_t key, line_t&& line)
@@ -83,7 +83,7 @@ public:
 	{
 		lines[key] = line;
 	}
-	track_t(instrument_t::type);
+	track_t(const instrument_t& instrument);
 
 };
 

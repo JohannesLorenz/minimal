@@ -20,18 +20,38 @@
 #ifndef INSTRUMENT_H
 #define INSTRUMENT_H
 
+#include <string>
+
 namespace mmms
 {
 
 class instrument_t
 {
+	static std::size_t next_id;
+	std::size_t id;
 public:
+	instrument_t() : id(next_id++) {}
 	enum class type
 	{
 		zyn
 	};
 	void set_param_fixed(const char* param, ...);
+	virtual std::string make_start_command(const char* port) const = 0;
 };
+
+class zynaddsubfx_t : public instrument_t
+{
+	// TODO: read from options file
+	const char* binary
+		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
+	const char* default_args = "--no-gui -O alsa";
+public:
+	std::string make_start_command(const char* port) const;
+
+};
+
+
+
 
 }
 
