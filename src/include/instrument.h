@@ -29,6 +29,7 @@ class instrument_t
 {
 	static std::size_t next_id;
 	std::size_t id;
+	std::vector<std::string> todo;
 public:
 	instrument_t() : id(next_id++) {}
 	enum class type
