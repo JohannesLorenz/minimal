@@ -23,20 +23,24 @@
 #include <lo/lo_types.h>
 
 namespace mmms {
-namespace ports {
 
-class lo_port
+class lo_port_t
 {
 	lo_address dest;
 public:
-	lo_port(const char* udp_port);
+	lo_port_t(const char* udp_port);
 	bool send_rtosc_msg(const char *path, const char *msg_args, ...);
 };
 
-void init();
-void handle_events();
+class lo_server_t
+{
+	lo_server srv;
+	void handle_events();
+public:
+	lo_server_t();
+	~lo_server_t();
+};
 
-}
 }
 
 #endif // PORTS_H

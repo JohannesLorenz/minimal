@@ -24,9 +24,6 @@
 #include "ports.h"
 
 namespace mmms {
-namespace ports {
-
-lo_server server;
 
 int on_receive(const char *path, const char *, lo_arg **, int, lo_message msg, void *)
 {
@@ -65,26 +62,17 @@ void error_cb(int i, const char *m, const char *loc)
 #endif
 }
 
-void init()
+void lo_server_t::handle_events()
 {
-	//setup liblo - it can choose its own port
-	server = lo_server_new_with_proto(NULL, LO_UDP, error_cb);
-	lo_server_add_method(server, NULL, NULL, on_receive, NULL);
-	//lo_addr = lo_address_new_with_proto(LO_UDP, NULL, "8080");
-//	wprintw(log, "lo server running on %d\n", lo_server_get_port(server));
+	lo_server_recv_noblock(srv, 0);
 }
 
-void handle_events()
-{
-	lo_server_recv_noblock(server, 0);
-}
-
-lo_port::lo_port(const char *udp_port) :
+lo_port_t::lo_port_t(const char *udp_port) :
 	dest(lo_address_new(nullptr, udp_port))
 {
 }
 
-bool lo_port::send_rtosc_msg(const char *path, const char *msg_args, ...)
+bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...)
 {
 	va_list va;
 	va_start(va, msg_args);
@@ -98,5 +86,16 @@ bool lo_port::send_rtosc_msg(const char *path, const char *msg_args, ...)
 	return true; // TODO
 }
 
-}}
+lo_server_t::lo_server_t()
+	: srv(lo_server_new_with_proto(NULL, LO_UDP, error_cb))
+{
+	lo_server_add_method(srv, NULL, NULL, on_receive, NULL);
+}
+
+lo_server_t::~lo_server_t()
+{
+	lo_server_free(srv);
+}
+
+}
 

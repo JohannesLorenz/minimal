@@ -31,32 +31,38 @@ namespace mmms
 
 class command_base
 {
-public:
+protected:
 	const char* path;
+public:
+	command_base(const char* path) : path(path) {}
 };
 
 template<class ...Args>
 class command : public command_base
 {
-public:
 	std::tuple<Args...> args;
+public:
+	command(const char* path, Args... args) :
+		command_base(path),
+		args(args...) {}
 };
 
 class instrument_t
 {
 	static std::size_t next_id;
 	std::size_t id;
-	std::vector<std::string> todo;
+	std::vector<command_base*> commands;
 public:
 	using port_t = int;
 	instrument_t() : id(next_id++) {}
+	~instrument_t();
 	enum class type
 	{
 		zyn
 	};
 	template<class ...Args>
-	void add_param_fixed(const char* param, ...) {
-
+	void add_param_fixed(const char* param, Args ...args) {
+		commands.push_back(new command<Args...>(param, args...));
 	}
 
 	void set_param_fixed(const char* param, ...);

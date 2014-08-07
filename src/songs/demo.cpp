@@ -29,6 +29,7 @@ void init(project_t& p)
 	p.set_tempo(140);
 	p.set_title("demo-song");
 	zynaddsubfx_t sine_bass;
+	sine_bass.add_param_fixed("/bla", 1, "zwei");
 	track_t track1(sine_bass);
 	//t.add_timeline(~~)
 	track1.add_line(1,1, line_t(1,2,3));

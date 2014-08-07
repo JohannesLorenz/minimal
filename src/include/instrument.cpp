@@ -51,5 +51,11 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 	return port;
 }
 
+instrument_t::~instrument_t()
+{
+	for(const command_base* cb : commands)
+	 delete cb;
+}
+
 }
 
