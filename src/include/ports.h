@@ -25,9 +25,16 @@
 namespace mmms {
 namespace ports {
 
+class lo_port
+{
+	lo_address dest;
+public:
+	lo_port(const char* udp_port);
+	bool send_rtosc_msg(const char *path, const char *msg_args, ...);
+};
+
 void init();
 void handle_events();
-bool send_rtosc_msg(lo_address dest, const char *path, const char *msg_args, ...);
 
 }
 }

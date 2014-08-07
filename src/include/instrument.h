@@ -20,10 +20,27 @@
 #ifndef INSTRUMENT_H
 #define INSTRUMENT_H
 
+#include <tuple>
 #include <string>
+#include <vector>
 
 namespace mmms
 {
+
+//! note: if binary gets too large, we might need to not use templates...
+
+class command_base
+{
+public:
+	const char* path;
+};
+
+template<class ...Args>
+class command : public command_base
+{
+public:
+	std::tuple<Args...> args;
+};
 
 class instrument_t
 {
@@ -31,13 +48,21 @@ class instrument_t
 	std::size_t id;
 	std::vector<std::string> todo;
 public:
+	using port_t = int;
 	instrument_t() : id(next_id++) {}
 	enum class type
 	{
 		zyn
 	};
+	template<class ...Args>
+	void add_param_fixed(const char* param, ...) {
+
+	}
+
 	void set_param_fixed(const char* param, ...);
-	virtual std::string make_start_command(const char* port) const = 0;
+	virtual std::string make_start_command() const = 0;
+	//! shall return the lo port (UDP) after the program was started
+	virtual port_t get_port(pid_t pid, int fd) const = 0;
 };
 
 class zynaddsubfx_t : public instrument_t
@@ -47,7 +72,8 @@ class zynaddsubfx_t : public instrument_t
 		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
 	const char* default_args = "--no-gui -O alsa";
 public:
-	std::string make_start_command(const char* port) const;
+	std::string make_start_command() const;
+	port_t get_port(pid_t pid, int ) const;
 
 };
 

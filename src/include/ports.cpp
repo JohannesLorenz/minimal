@@ -79,7 +79,12 @@ void handle_events()
 	lo_server_recv_noblock(server, 0);
 }
 
-bool send_rtosc_msg(lo_address dest, const char *path, const char *msg_args, ...)
+lo_port::lo_port(const char *udp_port) :
+	dest(lo_address_new(nullptr, udp_port))
+{
+}
+
+bool lo_port::send_rtosc_msg(const char *path, const char *msg_args, ...)
 {
 	va_list va;
 	va_start(va, msg_args);

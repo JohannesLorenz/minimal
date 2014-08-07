@@ -63,3 +63,13 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 	return true;
 }
 
+
+
+mmms::rtosc_con mmms::loaded_instrument::make_rtosc_con() const
+{
+	rtosc_con con;
+	get_input(instrument.make_start_command().c_str(), &con.pid);
+	con.fd = 0; // TODO
+	con.port = instrument.get_port(con.pid, con.fd);
+	return con;
+}

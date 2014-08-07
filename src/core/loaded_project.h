@@ -21,7 +21,7 @@
 #define LOADED_PROJECT_H
 
 #include <unistd.h>
-#include <lo/lo_types.h>
+//#include <lo/lo_types.h>
 
 #include "instrument.h"
 #include "project.h"
@@ -30,15 +30,23 @@ namespace mmms {
 
 class rtosc_con
 {
+public:
 	pid_t pid;
-	lo_address port;
+	int port; // TODO: port_t
 	int fd;
 };
 
 class loaded_instrument
 {
-	instrument_t* instrument;
+	rtosc_con make_rtosc_con() const;
+public:
+	const instrument_t& instrument;
 	rtosc_con con;
+	loaded_instrument(const instrument_t& instrument) :
+		instrument(instrument),
+		con(make_rtosc_con())
+	{
+	}
 };
 
 //! this class takes a project and then does some things to handle it
