@@ -36,7 +36,7 @@ public:
 	int fd;
 };
 
-class loaded_instrument
+/*class loaded_instrument
 {
 	rtosc_con make_rtosc_con() const;
 public:
@@ -47,16 +47,17 @@ public:
 		con(make_rtosc_con())
 	{
 	}
-};
+};*/
 
 //! this class takes a project and then does some things to handle it
 class loaded_project
 {
 	project_t project;
-
+	const std::vector<rtosc_con> cons;
+	std::vector<rtosc_con> make_cons() const;
+	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
 public:
-	loaded_project(project_t&& project) : project(project) {}
-
+	loaded_project(project_t&& project);
 };
 
 }

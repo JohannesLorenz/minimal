@@ -72,7 +72,7 @@ public:
 
 class track_t
 {
-	const instrument_t& instrument;
+	const instrument_t::id_t& instr_id;
 	std::map<key_t, line_t> lines;
 public:
 	void add_line(octave_t octave, key_note_t key, line_t&& line)
@@ -92,16 +92,23 @@ class project_t
 	bool valid = true;
 	float _tempo = 140.0;
 	const char* _title;
-	std::vector<track_t> tracks;
+	std::vector<instrument_t*> _instruments;
+	std::vector<track_t> _tracks;
 public:
 	project_t();
+	const std::vector<instrument_t*>& instruments() const {
+		return _instruments; }
+	const std::vector<track_t>& tracks() const { return _tracks; }
+
 	void set_tempo(float tempo) { _tempo = tempo; }
 	float tempo() const { return _tempo; }
 	//void set_tempo(unsigned short tempo) { _tempo = tempo; }
 	void set_title(const char* title) { _title = title; }
 	const char* title() const { return _title; }
 
-	void add_track(track_t&& track) { tracks.emplace_back(track); }
+	void add_track(track_t&& track) { _tracks.push_back(track); }
+	// todo: can we avoid add instrument, by using add track?
+	void add_instrument(instrument_t* ins) { _instruments.push_back(ins); }
 	void invalidate() { valid = false; }
 };
 

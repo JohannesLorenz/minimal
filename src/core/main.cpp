@@ -20,7 +20,8 @@
 #include <cstdlib>
 #include <cassert>
 #include <iostream>
-#include "project.h"
+#include <unistd.h>
+#include "loaded_project.h"
 #include "plugin.h"
 #include "ports.h"
 
@@ -53,9 +54,9 @@ int main(int argc, char** argv)
 
 	assert(argc == 2);
 
-	project_t pro = main_load_project(argv[1]);
+	loaded_project lo_pro(main_load_project(argv[1]));
 
 //	usleep(100);
-
+	sleep(5);
 	return EXIT_SUCCESS;
 }

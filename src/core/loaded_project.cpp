@@ -65,7 +65,8 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 
 
 
-mmms::rtosc_con mmms::loaded_instrument::make_rtosc_con() const
+mmms::rtosc_con mmms::loaded_project::make_rtosc_con(
+	const instrument_t& instrument)
 {
 	rtosc_con con;
 	get_input(instrument.make_start_command().c_str(), &con.pid);
@@ -73,3 +74,19 @@ mmms::rtosc_con mmms::loaded_instrument::make_rtosc_con() const
 	con.port = instrument.get_port(con.pid, con.fd);
 	return con;
 }
+
+
+std::vector<mmms::rtosc_con> mmms::loaded_project::make_cons() const
+{
+	std::vector<mmms::rtosc_con> result;
+	for(const instrument_t* ins : project.instruments())
+	{
+		result.push_back(make_rtosc_con(*ins));
+	}
+	return result;
+}
+
+mmms::loaded_project::loaded_project(mmms::project_t&& project) :
+	project(project),
+	cons(make_cons())
+{}

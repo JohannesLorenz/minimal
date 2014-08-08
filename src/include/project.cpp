@@ -26,7 +26,7 @@ project_t::project_t()
 }
 
 track_t::track_t(const instrument_t &instrument)
-	: instrument(instrument)
+	: instr_id(instrument.id())
 {
 
 }

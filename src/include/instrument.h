@@ -49,13 +49,17 @@ public:
 
 class instrument_t
 {
+public:
+	using id_t = std::size_t;
+private:
 	static std::size_t next_id;
-	std::size_t id;
+	const std::size_t _id;
 	std::vector<command_base*> commands;
 public:
 	using port_t = int;
-	instrument_t() : id(next_id++) {}
+	instrument_t() : _id(next_id++) {}
 	~instrument_t();
+	const id_t& id() const { return _id; }
 	enum class type
 	{
 		zyn
