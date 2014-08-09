@@ -56,11 +56,12 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 
 instrument_t::~instrument_t()
 {
-	std::cout << "instrument: destroyed" << std::endl;
-/*	for(const command_base* cb : commands)
+	std::cout << "destroying instrument: " << name() << std::endl;
+	for(command_base*& cb : commands)
 	{
+		std::cout << name() << ": deleting " << cb->path() << std::endl;
 		delete cb;
-	}*/
+	}
 }
 
 /*instrument_t *instrument_t::clone() const

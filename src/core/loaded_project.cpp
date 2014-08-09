@@ -104,6 +104,7 @@ pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
 
 mmms::rtosc_con::~rtosc_con()
 {
+	sleep(2); // TODO
 	kill(pid, SIGTERM);
 /*	int status;
 	while (-1 == waitpid(pid, &status, 0));

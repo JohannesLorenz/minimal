@@ -36,7 +36,7 @@ void main_init()
 
 project_t main_load_project(const char* lib_name)
 {
-	plugin_t plugin(lib_name);
+	plugin_t plugin = plugin_t(lib_name);
 
 	project_t pro;
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 		loaded_project lo_pro(main_load_project(argv[1]));
 #endif
 	//	usleep(100);
-		sleep(5);
+	//	sleep(5);
 	} catch(const char* msg) {
 		std::cout << "Aborting on error thrown: " << std::endl
 			<< msg << std::endl;

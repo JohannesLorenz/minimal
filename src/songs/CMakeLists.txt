@@ -3,5 +3,5 @@ set(incl_dir "${src_dir}/../include")
 
 # TODO: comfortable function for that
 add_library(demo MODULE demo.cpp)
-target_link_libraries(demo lib.so)
+target_link_libraries(demo lib)
 
