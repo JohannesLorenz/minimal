@@ -17,60 +17,23 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
-#include <unistd.h> // TODO
-#include <fstream>
-#include "ports.h"
-#include "instrument.h"
+#ifndef UTILS_H
+#define UTILS_H
 
-namespace mmms {
-
-std::size_t instrument_t::next_id;
-
-/*void instrument_t::set_param_fixed(const char *param, ...)
+//! This class is in no way copyable, but movable
+class non_copyable_t
 {
-	ports::send_rtosc_msg(param, "?", "...");
-}*/
+public:
+	non_copyable_t() = default;
 
-std::string zynaddsubfx_t::make_start_command() const
-{
-	const std::string cmd = "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx "
-		"--no-gui -O alsa"; // TODO: read from options file
-	return cmd;
-}
+	non_copyable_t(const non_copyable_t&) = delete;
+	non_copyable_t & operator=(const non_copyable_t&) = delete;
 
-instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
-{
-	port_t port;
-	std::string tmp_filename = "/tmp/zynaddsubfx_"
-		+ std::to_string(pid);
-	std::cout << "Reading " << tmp_filename << std::endl;
-	sleep(1); // wait for zyn to be started... (TODO)
-	std::ifstream stream(tmp_filename);
-	if(!stream.good()) {
-		throw "Error: Communication to zynaddsubfx failed.";
+	non_copyable_t(const non_copyable_t&&) noexcept {}
+	const non_copyable_t & operator=(const non_copyable_t&&)
+		const noexcept {
+		return *this;
 	}
-	stream >> port;
-	return port;
-}
+};
 
-instrument_t::~instrument_t()
-{
-	std::cout << "instrument: destroyed" << std::endl;
-/*	for(const command_base* cb : commands)
-	{
-		delete cb;
-	}*/
-}
-
-/*instrument_t *instrument_t::clone() const
-{
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
-
-}
-
+#endif // UTILS_H

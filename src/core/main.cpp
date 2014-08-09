@@ -41,22 +41,36 @@ project_t main_load_project(const char* lib_name)
 	project_t pro;
 
 	std::cout << "Attempting to load project: " << lib_name << std::endl;
-	plugin.load_project(pro);
+	plugin.load_project(pro); // TODO: return pro?
 
 	std::cout << "Loaded project: " << pro.title() << std::endl;
+
+//	loaded_project lo_pro(project_t(pro));
+
 	return pro;
 }
 
 int main(int argc, char** argv)
 {
-	main_init();
-	lo_server_t server;
+	try {
+		main_init();
+		lo_server_t server;
 
-	assert(argc == 2);
+		assert(argc == 2);
 
-	loaded_project lo_pro(main_load_project(argv[1]));
+		//std::cout << "main:" << main_load_project(argv[1]).title() << std::endl;
 
-//	usleep(100);
-	sleep(5);
+#if 0
+		main_load_project(argv[1]);
+#else
+		loaded_project lo_pro(main_load_project(argv[1]));
+#endif
+	//	usleep(100);
+		sleep(5);
+	} catch(const char* msg) {
+		std::cout << "Aborting on error thrown: " << std::endl
+			<< msg << std::endl;
+	}
+
 	return EXIT_SUCCESS;
 }

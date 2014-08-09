@@ -23,6 +23,8 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <memory>
+#include <iostream> // TODO
 
 namespace mmms
 {
@@ -32,9 +34,12 @@ namespace mmms
 class command_base
 {
 protected:
-	const char* path;
+	std::string _path; // TODO: std string everywhere
 public:
-	command_base(const char* path) : path(path) {}
+	const std::string& path() const { return _path; }
+	command_base(const char* _path) : _path(_path) {}
+//	virtual command_base* clone() const = 0; // TODO: generic clone class?
+	virtual ~command_base() {}
 };
 
 template<class ...Args>
@@ -45,7 +50,11 @@ public:
 	command(const char* path, Args... args) :
 		command_base(path),
 		args(args...) {}
+//	virtual command* clone() const { return new command(*this); }
+	virtual ~command() {}
 };
+
+#include "utils.h" // TODO
 
 class instrument_t
 {
@@ -54,11 +63,16 @@ public:
 private:
 	static std::size_t next_id;
 	const std::size_t _id;
-	std::vector<command_base*> commands;
+	std::vector<std::shared_ptr<command_base>> commands;
 public:
 	using port_t = int;
-	instrument_t() : _id(next_id++) {}
-	~instrument_t();
+	instrument_t() : _id(next_id++) { std::cout << "instrument: constructed" << std::endl; }
+	virtual ~instrument_t();
+//	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
+
+	//instrument_t(const instrument_t& other);
+
+
 	const id_t& id() const { return _id; }
 	enum class type
 	{
@@ -66,25 +80,27 @@ public:
 	};
 	template<class ...Args>
 	void add_param_fixed(const char* param, Args ...args) {
-		commands.push_back(new command<Args...>(param, args...));
+		using command_t = command<Args...>;
+		commands.push_back(std::shared_ptr<command_t>(new command_t(param, args...)));
 	}
 
 	void set_param_fixed(const char* param, ...);
 	virtual std::string make_start_command() const = 0;
 	//! shall return the lo port (UDP) after the program was started
 	virtual port_t get_port(pid_t pid, int fd) const = 0;
+	//instrument_t(instrument_t&& other) = default;
 };
 
 class zynaddsubfx_t : public instrument_t
 {
 	// TODO: read from options file
-	const char* binary
+/*	const char* binary
 		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
-	const char* default_args = "--no-gui -O alsa";
+	const char* default_args = "--no-gui -O alsa";*/
 public:
 	std::string make_start_command() const;
 	port_t get_port(pid_t pid, int ) const;
-
+	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 };
 
 

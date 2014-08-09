@@ -28,12 +28,18 @@
 
 namespace mmms {
 
-class rtosc_con
+class rtosc_con : non_copyable_t
 {
+private:
+	static pid_t make_fork(const char *start_cmd);
+	rtosc_con(const rtosc_con& other) = delete;
 public:
-	pid_t pid;
-	int port; // TODO: port_t
-	int fd;
+	const pid_t pid;
+	const int fd;
+	const int port; // TODO: port_t
+	~rtosc_con();
+	rtosc_con(const instrument_t& ins);
+	rtosc_con(rtosc_con&&) = default;
 };
 
 /*class loaded_instrument
@@ -50,12 +56,12 @@ public:
 };*/
 
 //! this class takes a project and then does some things to handle it
-class loaded_project
+class loaded_project : non_copyable_t
 {
 	project_t project;
 	const std::vector<rtosc_con> cons;
 	std::vector<rtosc_con> make_cons() const;
-	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
+//	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
 public:
 	loaded_project(project_t&& project);
 };

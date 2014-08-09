@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "loaded_project.h"
 
@@ -65,28 +66,56 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 
 
 
-mmms::rtosc_con mmms::loaded_project::make_rtosc_con(
+/*mmms::rtosc_con mmms::loaded_project::make_rtosc_con(
 	const instrument_t& instrument)
 {
+// TODO: move to rtosc_con ctor?
 	rtosc_con con;
 	get_input(instrument.make_start_command().c_str(), &con.pid);
 	con.fd = 0; // TODO
 	con.port = instrument.get_port(con.pid, con.fd);
 	return con;
-}
+}*/
 
 
 std::vector<mmms::rtosc_con> mmms::loaded_project::make_cons() const
 {
 	std::vector<mmms::rtosc_con> result;
-	for(const instrument_t* ins : project.instruments())
+	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
 	{
-		result.push_back(make_rtosc_con(*ins));
+		result.push_back(*ins);
 	}
 	return result;
 }
 
 mmms::loaded_project::loaded_project(mmms::project_t&& project) :
-	project(project),
-	cons(make_cons())
-{}
+	project(std::move(project)),
+	cons(std::move(make_cons()))
+{
+}
+
+
+pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
+{
+	pid_t pid; // TODO: use return value, make pid class with operator bool
+	get_input(start_cmd, &pid);
+	return pid;
+}
+
+mmms::rtosc_con::~rtosc_con()
+{
+	kill(pid, SIGTERM);
+/*	int status;
+	while (-1 == waitpid(pid, &status, 0));
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
+		exit(1);
+	}*/
+}
+
+mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
+	pid(make_fork(ins.make_start_command().c_str())),
+	fd(0), // TODO
+	port(ins.get_port(pid, fd))
+{
+}

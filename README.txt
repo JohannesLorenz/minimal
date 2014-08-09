@@ -42,6 +42,9 @@ some of those:
  * LMMS does not have macros for its UI. With mmms, you can write a script
    or a C++ program that does what you like.
  * LMMS is not generally RTOSC compatible. mmms lets you simply write plugins.
+ * The LMMS developpers care about compatibility with old compilers. This
+   restricts the code to old versions of C++. In mmms, coders can use new
+   versions of C++.
 
 3 License
 :::::::::

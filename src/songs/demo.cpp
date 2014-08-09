@@ -31,15 +31,17 @@ void init(project_t& p)
 	p.set_title("demo-song");
 
 	// instruments
-	zynaddsubfx_t sine_bass;
-	sine_bass.add_param_fixed("/bla", 1, "zwei");
-	p.add_instrument(&sine_bass);
+	// TODO: disallow "zynaddsubfx sine_base ...."
+	zynaddsubfx_t& sine_bass = p.emplace<zynaddsubfx_t>();
+//	sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
 
 	// tracks
-	track_t track1(sine_bass);
+	track_t& track1 = p.add_track(sine_bass);
+	(void)track1;
 	//t.add_timeline(~~)
-	track1.add_line(1,1, line_t(1,2,3));
-//	t.set_param_fixed("", 3); // TODO: instrument
+//	track1.add_line(1,1, line_t(1,2,3));
+//	p.add_track(track1);
+	//t.set_param_fixed("", 3); // TODO: instrument
 }
 
 }

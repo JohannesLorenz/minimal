@@ -25,8 +25,19 @@ project_t::project_t()
 {
 }
 
-track_t::track_t(const instrument_t &instrument)
-	: instr_id(instrument.id())
+project_t::~project_t()
+{
+//	for(const instrument_t* ins : _instruments)
+//	 delete ins;
+}
+
+track_t& project_t::add_track(const instrument_t &ins) {
+	_tracks.push_back(track_t(ins.id()));
+	return _tracks.back();
+}
+
+track_t::track_t(const instrument_t::id_t& instr_id)
+	: instr_id(instr_id)
 {
 
 }

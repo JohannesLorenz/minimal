@@ -24,6 +24,7 @@
 #include <map>
 
 #include "instrument.h"
+#include "utils.h"
 
 namespace mmms
 {
@@ -72,7 +73,7 @@ public:
 
 class track_t
 {
-	const instrument_t::id_t& instr_id;
+	const instrument_t::id_t instr_id;
 	std::map<key_t, line_t> lines;
 public:
 	void add_line(octave_t octave, key_note_t key, line_t&& line)
@@ -83,20 +84,29 @@ public:
 	{
 		lines[key] = line;
 	}
-	track_t(const instrument_t& instrument);
-
+	// TODO: disallow ctor for user
+	track_t(const instrument_t::id_t& instr_id);
 };
 
-class project_t
+//! Consists of all data which is needed to serialize a project.
+//! This class will never be instantiated in an so file
+class project_t : non_copyable_t
 {
 	bool valid = true;
 	float _tempo = 140.0;
-	const char* _title;
-	std::vector<instrument_t*> _instruments;
+	std::string _title;
+	std::vector<std::unique_ptr<instrument_t>> _instruments;
 	std::vector<track_t> _tracks;
 public:
 	project_t();
-	const std::vector<instrument_t*>& instruments() const {
+	~project_t();
+	project_t(project_t&& other):
+		_instruments(std::move(other._instruments)),
+		_tracks(std::move(other._tracks))
+	{
+	}
+
+	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 		return _instruments; }
 	const std::vector<track_t>& tracks() const { return _tracks; }
 
@@ -104,11 +114,22 @@ public:
 	float tempo() const { return _tempo; }
 	//void set_tempo(unsigned short tempo) { _tempo = tempo; }
 	void set_title(const char* title) { _title = title; }
-	const char* title() const { return _title; }
+	void set_title(const std::string& title) { _title = title; }
+	const std::string& title() const { return _title; }
 
-	void add_track(track_t&& track) { _tracks.push_back(track); }
+	void add_track(const track_t& track) { _tracks.push_back(track); }
 	// todo: can we avoid add instrument, by using add track?
-	void add_instrument(instrument_t* ins) { _instruments.push_back(ins); }
+/*	template<class T>
+	void add_instrument(const T&& ins) {
+		_instruments.push_back(std::unique_ptr<T>(std::move(ins)));
+	}*/
+	template<class T, class ...Args>
+	T& emplace(Args ...args) {
+		_instruments.emplace_back(new T(args...));
+		return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
+	}
+	track_t& add_track(const instrument_t& ins);
+
 	void invalidate() { valid = false; }
 };
 
