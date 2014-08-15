@@ -94,11 +94,12 @@ namespace daw
 	};
 
 	template<class ...Children>
-	class seg_base
+	class seg_base : non_copyable_t
 	{
 	public:
 		// TODO: private and protected accessors?
 		geom_t geom;
+		seg_base(geom_t geom) : geom(geom) {}
 	protected:
 		std::tuple<std::vector<Children>...> children;
 		template<class T, class ...Args>
@@ -152,13 +153,16 @@ namespace daw
 	class chunk_list_t : seg_base<chunk_list_t, inst_list_t>, note_event_propagator<inst_list_t>
 	{
 		using child_type = inst_list_t;
+		using seg_base::seg_base;
 
 	};
 
-	class global_t : seg_base<global_t, chunk_list_t>, note_event_propagator<chunk_list_t>
+	class global_t : seg_base<chunk_list_t>, note_event_propagator<chunk_list_t>
 	{
 		using child_type = chunk_list_t;
-		chunk_list_t& make_chunk_list(geom_t ) { return make<chunk_list_t>(/*geom*/); }
+	public:
+		chunk_list_t& make_chunk_list(geom_t geom) { return make<chunk_list_t>(geom); }
+		global_t() : seg_base(geom_t{0}) {}
 	};
 
 

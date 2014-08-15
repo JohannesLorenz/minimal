@@ -44,11 +44,10 @@ void init(project_t& p)
 //	p.add_track(track1);
 	//t.set_param_fixed("", 3); // TODO: instrument
 
-#if 0
 	using namespace daw;
 	global_t global;
-	global.cseg();
-#endif
+	chunk_list_t& c1 = global.make_chunk_list(geom_t());
+	(void)c1;
 }
 
 }
