@@ -43,6 +43,12 @@ void init(project_t& p)
 	track1.add_line(1,1, line_t(1,2,3));
 //	p.add_track(track1);
 	//t.set_param_fixed("", 3); // TODO: instrument
+
+#if 0
+	using namespace daw;
+	global_t global;
+	global.cseg();
+#endif
 }
 
 }

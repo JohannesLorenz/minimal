@@ -78,7 +78,7 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 }*/
 
 
-std::vector<mmms::rtosc_con> mmms::loaded_project::make_cons() const
+std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
 {
 	std::vector<mmms::rtosc_con> result;
 	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
@@ -88,7 +88,7 @@ std::vector<mmms::rtosc_con> mmms::loaded_project::make_cons() const
 	return result;
 }
 
-mmms::loaded_project::loaded_project(mmms::project_t&& project) :
+mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 	project(std::move(project)),
 	cons(std::move(make_cons()))
 {
@@ -105,18 +105,34 @@ pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
 mmms::rtosc_con::~rtosc_con()
 {
 	sleep(2); // TODO
-	kill(pid, SIGTERM);
-/*	int status;
-	while (-1 == waitpid(pid, &status, 0));
+//	kill(pid, SIGTERM);
+	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 42, 10);
+	sleep(2);
+	lo_port.send_rtosc_msg("/close-ui", "");
+	// TODO: kill() if this did not work
+
+	int status;
+	while (-1 == waitpid(pid, &status, 0)) {
+		puts("...");
+		usleep(10000); // TODO: what is a good value here?
+	}
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
 		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
-	}*/
+	}
+	sleep(10);
 }
 
 mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
 	pid(make_fork(ins.make_start_command().c_str())),
 	fd(0), // TODO
-	port(ins.get_port(pid, fd))
+	port(ins.get_port(pid, fd)),
+	lo_port(port_as_str().c_str())
 {
+}
+
+
+void mmms::player::play_until(float dest) {
+	(void)dest;
+	usleep(100);
 }

@@ -16,7 +16,8 @@ HEADERS += src/core/plugin.h \
 	src/include/instrument.h \
 	src/include/ports.h \
 	src/core/loaded_project.h \
-	src/include/utils.h
+	src/include/utils.h \
+	src/include/tuple_helpers.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \

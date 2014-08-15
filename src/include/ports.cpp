@@ -70,9 +70,11 @@ void lo_server_t::handle_events()
 lo_port_t::lo_port_t(const char *udp_port) :
 	dest(lo_address_new(nullptr, udp_port))
 {
+	if(!dest)
+	 throw "Could not connect to lo dest port.";
 }
 
-bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...)
+bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const
 {
 	va_list va;
 	va_start(va, msg_args);

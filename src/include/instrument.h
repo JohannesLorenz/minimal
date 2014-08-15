@@ -39,7 +39,7 @@ public:
 	const std::string& path() const { return _path; }
 	command_base(const char* _path) : _path(_path) {}
 //	virtual command_base* clone() const = 0; // TODO: generic clone class?
-	virtual ~command_base() { std::cout << "destroying command_base" << std::endl; }
+//	virtual ~command_base() = 0;
 };
 
 template<class Path, class ...Args>
@@ -51,8 +51,9 @@ public:
 		command_base("???"),
 		args(args...) {}
 //	virtual command* clone() const { return new command(*this); }
-	virtual ~command() {}
+//	virtual ~command() = 0;
 };
+
 
 #include "utils.h" // TODO
 

@@ -22,9 +22,11 @@
 
 #include <unistd.h>
 //#include <lo/lo_types.h>
+#include <boost/heap/fibonacci_heap.hpp>
 
 #include "instrument.h"
 #include "project.h"
+#include "ports.h"
 
 namespace mmms {
 
@@ -37,6 +39,9 @@ public:
 	const pid_t pid;
 	const int fd;
 	const int port; // TODO: port_t
+	const lo_port_t lo_port;
+
+	std::string port_as_str() { return std::to_string(port); }
 	~rtosc_con();
 	rtosc_con(const instrument_t& ins);
 	rtosc_con(rtosc_con&&) = default;
@@ -56,14 +61,45 @@ public:
 };*/
 
 //! this class takes a project and then does some things to handle it
-class loaded_project : non_copyable_t
+class loaded_project_t : non_copyable_t
 {
 	project_t project;
 	const std::vector<rtosc_con> cons;
 	std::vector<rtosc_con> make_cons() const;
 //	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
 public:
-	loaded_project(project_t&& project);
+	loaded_project_t(project_t&& project);
+};
+
+class player // TODO: own header
+{
+	//!< maximum seconds to sleep until wakeup forced
+	static constexpr const float max_sleep_time = 0.1;
+	float pos = 0.0f;
+	const loaded_project_t& project;
+
+	/*struct pq_entry
+	{
+
+	};
+
+	struct cmp_func
+	{
+		bool operator() (const pq_entry* lhs, const pq_entry* rhs) const
+		{
+			return lhs->area < rhs->area;
+		}
+	};
+
+	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;*/
+
+public:
+	player(const loaded_project_t& project) : project(project)
+	{
+
+	}
+
+	void play_until(float dest);
 };
 
 }

@@ -29,7 +29,8 @@ class lo_port_t
 	lo_address dest;
 public:
 	lo_port_t(const char* udp_port);
-	bool send_rtosc_msg(const char *path, const char *msg_args, ...);
+	// TODO: does const make sense
+	bool send_rtosc_msg(const char *path, const char *msg_args, ...) const;
 };
 
 class lo_server_t

@@ -25,6 +25,7 @@
 
 #include "instrument.h"
 #include "utils.h"
+#include "tuple_helpers.h"
 
 namespace mmms
 {
@@ -70,6 +71,106 @@ public:
 	{
 	}
 };
+
+// concept
+template<class ScaleType>
+class segment_t
+{
+	using scale_t = ScaleType;
+	scale_t _begin, _end;
+	//segment_t parent;
+	std::vector<segment_t> lines;
+	bool constonly = false;
+public:
+
+};
+
+
+namespace daw
+{
+	class geom_t {
+	public:
+		float start;
+	};
+
+	template<class ...Children>
+	class seg_base
+	{
+	public:
+		// TODO: private and protected accessors?
+		geom_t geom;
+	protected:
+		std::tuple<std::vector<Children>...> children;
+		template<class T, class ...Args>
+		T& make(Args ...args) {
+			auto& v = tuple_helpers::get<std::vector<T>>(children);
+			v.emplace_back(args...);
+			return v.back();
+		}
+	};
+
+
+	/*template<class Self, class ...Children>
+	class daw_base
+	{
+	};*/
+
+	struct note_event {
+		int inst_id; float pos;
+		note_event(int inst_id, float pos) : inst_id(inst_id), pos(pos) {}
+	};
+
+	class note_t : seg_base<note_t> {
+		float propagate() const { return geom.start; } // TODO: also propagate end?
+	};
+
+	class note_line_t : seg_base<note_line_t, note_t>
+	{
+		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
+	};
+
+	template<class Child>
+	class note_event_propagator
+	{
+	protected:
+		note_event propagate(note_event ne, Child c) {
+			return note_event(ne.inst_id, ne.pos + c.geom.start);
+		}
+	};
+
+	class inst_t : public seg_base<inst_t, note_line_t>, note_event_propagator<inst_t>
+	{
+		using child_type = note_t;
+	};
+
+	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
+	{
+		using child_type = inst_t;
+		note_event propagate(note_event ne, inst_t i) { return note_event(ne.inst_id, ne.pos + i.geom.start); }
+	};
+
+	class chunk_list_t : seg_base<chunk_list_t, inst_list_t>, note_event_propagator<inst_list_t>
+	{
+		using child_type = inst_list_t;
+
+	};
+
+	class global_t : seg_base<global_t, chunk_list_t>, note_event_propagator<chunk_list_t>
+	{
+		using child_type = chunk_list_t;
+		chunk_list_t& make_chunk_list(geom_t ) { return make<chunk_list_t>(/*geom*/); }
+	};
+
+
+}
+
+//template<class Self, class Child>
+//Child cseg(Self& );
+
+
+
+
+
 
 class track_t
 {

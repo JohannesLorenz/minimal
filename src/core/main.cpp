@@ -63,9 +63,8 @@ int main(int argc, char** argv)
 #if 0
 		main_load_project(argv[1]);
 #else
-		loaded_project lo_pro(main_load_project(argv[1]));
+		loaded_project_t lo_pro(main_load_project(argv[1]));
 #endif
-	//	usleep(100);
 	//	sleep(5);
 	} catch(const char* msg) {
 		std::cout << "Aborting on error thrown: " << std::endl
