@@ -93,6 +93,7 @@ namespace daw
 	public:
 		float start;
 		geom_t(float start) : start(start) {}
+		static geom_t zero() { return geom_t(0.0f); }
 	};
 
 	class note_geom_t
@@ -117,6 +118,11 @@ namespace daw
 			auto& v = tuple_helpers::get<std::vector<T>>(children);
 			v.emplace_back(args...);
 			return v.back();
+		}
+		template<class T>
+		void add(const T& t) {
+			auto& v = tuple_helpers::get<std::vector<T>>(children);
+			v.push_back(t); // TODO: push back pointer, id, ... ?
 		}
 	};
 
@@ -166,6 +172,7 @@ namespace daw
 		using seg_base::seg_base;
 		instrument_t::id_t id;
 	public:
+		void add_notes(const notes& n, geom_t geom) { add<notes_t>(geom); } // TODO: add with geom (maybe default arg?)
 		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 		//track_t(instrument_t::id_t id) : id(id) {}
 	};
@@ -194,6 +201,7 @@ namespace daw
 	{
 		using child_type = track_t; // TODO: unused?
 	public:
+		void add_track(const track& t) { add<track_t>(geom); }
 		track_t& track(geom_t geom) { return make<track_t>(geom); }
 		global_t& global(geom_t geom) { return make<global_t>(geom); }
 		global_t(geom_t g = geom_t{0}) : seg_base(g) {}
