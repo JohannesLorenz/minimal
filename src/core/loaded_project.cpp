@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cstdarg>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -83,7 +84,7 @@ std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
 	std::vector<mmms::rtosc_con> result;
 	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
 	{
-		result.push_back(*ins);
+		result.emplace_back(*ins);
 	}
 	return result;
 }
@@ -95,9 +96,30 @@ mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 }
 
 
+
+
+mmms::loaded_project_t::~loaded_project_t()
+{
+	for(std::size_t i = 0; i < cons.size(); ++i)
+	{
+		const auto& quit_commands = project.instruments()[i]->quit_commands();
+		for(std::size_t j = 0; j < quit_commands.size(); ++j)
+		{
+			std::cout << "???" << std::endl;
+		//	dump d;
+		//	quit_commands[j]->execute(d);
+
+
+		//	std::cout << quit_commands[j]->casted().arg(0) << std::endl;
+		//	quit_commands[j]->call(cons[i].send_rtosc_msg); // TODO: without c_str()?
+		}
+	}
+}
+
+
 pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
 {
-	pid_t pid; // TODO: use return value, make pid class with operator bool
+	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
 	get_input(start_cmd, &pid);
 	return pid;
 }
@@ -106,7 +128,7 @@ mmms::rtosc_con::~rtosc_con()
 {
 	sleep(2); // TODO
 //	kill(pid, SIGTERM);
-	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 42, 10);
+	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
 	sleep(2);
 	lo_port.send_rtosc_msg("/close-ui", "");
 	// TODO: kill() if this did not work
@@ -120,7 +142,7 @@ mmms::rtosc_con::~rtosc_con()
 		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
 	}
-	sleep(10);
+	sleep(3);
 }
 
 mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
@@ -129,6 +151,16 @@ mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
 	port(ins.get_port(pid, fd)),
 	lo_port(port_as_str().c_str())
 {
+}
+
+void mmms::rtosc_con::send_rtosc_msg(const char *path, const char *msg_args, ...)
+const {
+	va_list argptr;
+	va_start(argptr, msg_args);
+	bool ret = lo_port.send_rtosc_msg(path, msg_args, argptr);
+	va_end(argptr);
+	//return ret;
+	(void)ret; // :-(
 }
 
 

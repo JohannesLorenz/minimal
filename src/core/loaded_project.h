@@ -44,7 +44,10 @@ public:
 	std::string port_as_str() { return std::to_string(port); }
 	~rtosc_con();
 	rtosc_con(const instrument_t& ins);
+	rtosc_con(rtosc_con&) = delete;
 	rtosc_con(rtosc_con&&) = default;
+	void send_rtosc_msg(const char *path, const char *msg_args, ...)
+		const;
 };
 
 /*class loaded_instrument
@@ -69,14 +72,17 @@ class loaded_project_t : non_copyable_t
 //	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
 public:
 	loaded_project_t(project_t&& project);
+	~loaded_project_t();
 };
 
 class player // TODO: own header
 {
 	//!< maximum seconds to sleep until wakeup forced
 	static constexpr const float max_sleep_time = 0.1;
-	float pos = 0.0f;
-	const loaded_project_t& project;
+
+//	float pos = 0.0f;
+//	const loaded_project_t& project;
+
 
 	/*struct pq_entry
 	{
@@ -94,7 +100,8 @@ class player // TODO: own header
 	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;*/
 
 public:
-	player(const loaded_project_t& project) : project(project)
+	//player(const loaded_project_t& project)  : project(project)
+	player()
 	{
 
 	}

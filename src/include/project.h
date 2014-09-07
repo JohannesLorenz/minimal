@@ -88,18 +88,28 @@ public:
 
 namespace daw
 {
-	class geom_t {
+	class geom_t
+	{
 	public:
 		float start;
+		geom_t(float start) : start(start) {}
 	};
 
-	template<class ...Children>
-	class seg_base : non_copyable_t
+	class note_geom_t
+	{
+	public:
+		float start;
+		int offs;
+		note_geom_t(float start, int offs) : start(start), offs(offs) {}
+	};
+
+	template<class Geom, class ...Children>
+	class seg_base // : non_copyable_t
 	{
 	public:
 		// TODO: private and protected accessors?
-		geom_t geom;
-		seg_base(geom_t geom) : geom(geom) {}
+		Geom geom;
+		seg_base(Geom geom) : geom(geom) {}
 	protected:
 		std::tuple<std::vector<Children>...> children;
 		template<class T, class ...Args>
@@ -116,53 +126,70 @@ namespace daw
 	{
 	};*/
 
-	struct note_event {
+	struct note_event_t {
 		int inst_id; float pos;
-		note_event(int inst_id, float pos) : inst_id(inst_id), pos(pos) {}
+	public:
+		note_event_t(int inst_id, float pos) : inst_id(inst_id), pos(pos) {}
 	};
 
-	class note_t : seg_base<note_t> {
+	class note_t : seg_base<note_geom_t> {
 		float propagate() const { return geom.start; } // TODO: also propagate end?
+		using seg_base::seg_base;
+	public:
 	};
 
-	class note_line_t : seg_base<note_line_t, note_t>
+	class notes_t : seg_base<note_geom_t, notes_t, note_t>
 	{
 		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
+		using seg_base::seg_base;
+	public:
+		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
+		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 	};
 
 	template<class Child>
 	class note_event_propagator
 	{
 	protected:
-		note_event propagate(note_event ne, Child c) {
+		note_event_t propagate(note_event_t ne, Child c) {
 			return note_event(ne.inst_id, ne.pos + c.geom.start);
 		}
 	};
 
-	class inst_t : public seg_base<inst_t, note_line_t>, note_event_propagator<inst_t>
+	class track_t : public seg_base<geom_t, track_t, notes_t>, note_event_propagator<track_t>
 	{
 		using child_type = note_t;
+		using seg_base::seg_base;
+	public:
+		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 	};
 
-	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
+/*	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
 	{
 		using child_type = inst_t;
-		note_event propagate(note_event ne, inst_t i) { return note_event(ne.inst_id, ne.pos + i.geom.start); }
+		note_event_t propagate(note_event_t ne, inst_t i) {
+			return note_event_t(ne.inst_id, ne.pos + i.geom.start);
+		}
+		using seg_base::seg_base;
+	public:
+		inst_t& make_inst(geom_t geom) { return make<inst_t>(geom); }
 	};
 
 	class chunk_list_t : seg_base<chunk_list_t, inst_list_t>, note_event_propagator<inst_list_t>
 	{
 		using child_type = inst_list_t;
 		using seg_base::seg_base;
-
-	};
-
-	class global_t : seg_base<chunk_list_t>, note_event_propagator<chunk_list_t>
-	{
-		using child_type = chunk_list_t;
 	public:
-		chunk_list_t& make_chunk_list(geom_t geom) { return make<chunk_list_t>(geom); }
-		global_t() : seg_base(geom_t{0}) {}
+		inst_list_t& make_inst_list(geom_t geom) { return make<inst_list_t>(geom); }
+	};*/
+
+	class global_t : seg_base<geom_t, global_t, track_t>, note_event_propagator<track_t>
+	{
+		using child_type = track_t; // TODO: unused?
+	public:
+		track_t& track(geom_t geom) { return make<track_t>(geom); }
+		global_t& global(geom_t geom) { return make<global_t>(geom); }
+		global_t(geom_t g = geom_t{0}) : seg_base(g) {}
 	};
 
 
@@ -174,7 +201,7 @@ namespace daw
 
 
 
-
+/*
 
 class track_t
 {
@@ -191,7 +218,7 @@ public:
 	}
 	// TODO: disallow ctor for user
 	track_t(const instrument_t::id_t& instr_id);
-};
+};*/
 
 //! Consists of all data which is needed to serialize a project.
 //! This class will never be instantiated in an so file
@@ -201,19 +228,19 @@ class project_t : non_copyable_t
 	float _tempo = 140.0;
 	std::string _title;
 	std::vector<std::unique_ptr<instrument_t>> _instruments;
-	std::vector<track_t> _tracks;
+//	std::vector<track_t> _tracks;
 public:
 	project_t();
 	~project_t();
 	project_t(project_t&& other):
-		_instruments(std::move(other._instruments)),
-		_tracks(std::move(other._tracks))
+		_instruments(std::move(other._instruments))/*,
+		_tracks(std::move(other._tracks))*/
 	{
 	}
 
 	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 		return _instruments; }
-	const std::vector<track_t>& tracks() const { return _tracks; }
+//	const std::vector<track_t>& tracks() const { return _tracks; }
 
 	void set_tempo(float tempo) { _tempo = tempo; }
 	float tempo() const { return _tempo; }
@@ -222,7 +249,7 @@ public:
 	void set_title(const std::string& title) { _title = title; }
 	const std::string& title() const { return _title; }
 
-	void add_track(const track_t& track) { _tracks.push_back(track); }
+//	void add_track(const track_t& track) { _tracks.push_back(track); }
 	// todo: can we avoid add instrument, by using add track?
 /*	template<class T>
 	void add_instrument(const T&& ins) {
@@ -233,7 +260,7 @@ public:
 		_instruments.emplace_back(new T(args...));
 		return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
 	}
-	track_t& add_track(const instrument_t& ins);
+//	track_t& add_track(const instrument_t& ins);
 
 	void invalidate() { valid = false; }
 };

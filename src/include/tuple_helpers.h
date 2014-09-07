@@ -71,7 +71,7 @@ constexpr bool is_in() {
 };
 
 template<class T, class... Types>
-inline constexpr bool contains(std::tuple<Types...>& tuple)
+inline constexpr bool contains(std::tuple<Types...>& )
 {
 	return is_in<T, Types...>();
 }

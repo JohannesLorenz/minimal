@@ -31,7 +31,7 @@ project_t::~project_t()
 //	 delete ins;
 }
 
-track_t& project_t::add_track(const instrument_t &ins) {
+/*track_t& project_t::add_track(const instrument_t &ins) {
 	_tracks.push_back(track_t(ins.id()));
 	return _tracks.back();
 }
@@ -40,7 +40,7 @@ track_t::track_t(const instrument_t::id_t& instr_id)
 	: instr_id(instr_id)
 {
 
-}
+}*/
 
 }
 

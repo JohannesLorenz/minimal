@@ -71,7 +71,12 @@ lo_port_t::lo_port_t(const char *udp_port) :
 	dest(lo_address_new(nullptr, udp_port))
 {
 	if(!dest)
-	 throw "Could not connect to lo dest port.";
+		throw "Could not connect to lo dest port.";
+}
+
+lo_port_t::~lo_port_t()
+{
+	lo_address_free(dest);
 }
 
 bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const

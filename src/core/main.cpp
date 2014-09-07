@@ -34,7 +34,7 @@ void main_init()
 	setlocale(LC_ALL, "");
 }
 
-project_t main_load_project(const char* lib_name)
+/*project_t main_load_project(const char* lib_name)
 {
 	plugin_t plugin = plugin_t(lib_name);
 
@@ -48,23 +48,24 @@ project_t main_load_project(const char* lib_name)
 //	loaded_project lo_pro(project_t(pro));
 
 	return pro;
-}
+}*/
 
 int main(int argc, char** argv)
 {
 	try {
 		main_init();
-		lo_server_t server;
 
 		assert(argc == 2);
 
 		//std::cout << "main:" << main_load_project(argv[1]).title() << std::endl;
 
-#if 0
-		main_load_project(argv[1]);
-#else
-		loaded_project_t lo_pro(main_load_project(argv[1]));
-#endif
+		plugin_t plugin(argv[1]);
+		project_t pro;
+
+		plugin.load_project(pro);
+
+		loaded_project_t lpro(std::move(pro));
+
 	//	sleep(5);
 	} catch(const char* msg) {
 		std::cout << "Aborting on error thrown: " << std::endl

@@ -25,6 +25,8 @@
 
 namespace mmms {
 
+command_base::~command_base() {}
+
 std::size_t instrument_t::next_id;
 
 /*void instrument_t::set_param_fixed(const char *param, ...)
@@ -53,6 +55,10 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 	stream >> port;
 	return port;
 }
+
+zynaddsubfx_t::zynaddsubfx_t(const char *name) :
+	instrument_t(name, { new command<>("/quit") })
+	{}
 
 instrument_t::~instrument_t()
 {

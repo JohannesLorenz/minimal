@@ -31,29 +31,90 @@ namespace mmms
 
 //! note: if binary gets too large, we might need to not use templates...
 
+class p_arg
+{
+};
+
+class p_char : public p_arg
+{
+	const char c;
+public:
+	p_char(char c) : c(c) {}
+	static char sign() { return 'c'; }
+};
+
 class command_base
 {
 protected:
 	std::string _path; // TODO: std string everywhere
 public:
+
+	using call_functor = void (*)(const char*, const char*, ...);
+
 	const std::string& path() const { return _path; }
 	command_base(const char* _path) : _path(_path) {}
+	virtual std::string type_str() const = 0;
+
+//	virtual void execute(functor_base<>& ftor) const = 0;
+
 //	virtual command_base* clone() const = 0; // TODO: generic clone class?
-//	virtual ~command_base() = 0;
+	virtual ~command_base() = 0;
 };
 
-template<class Path, class ...Args>
+
+template<class ...Args>
 class command : public command_base
 {
+	using self = command<Args...>;
 	std::tuple<Args...> args;
+
+
+
 public:
-	command(Args... args) :
-		command_base("???"),
+	command(const char* _path, Args... args) :
+		command_base(_path),
 		args(args...) {}
+
+	std::string type_str() const {
+		std::string res { Args::sign()... };
+		return res; // TODO: in one line!
+	}
+
+
+
+	/*void execute(functor_base& ftor) const {
+		std::cout << "EXE..." << std::endl;
+
+	_execute(ftor, typename gens<sizeof...(Args)>::type()); }*/
+
+/*	self& casted() { return *this; }
+
+	template<std::size_t i>
+	auto arg() -> decltype(std::get<i>(args)) const // TODO: not use decltype
+	{ return std::get<i>(args); }*/
+
+
+
+
+	//std::string arg(std::size_t i)
+
+	/*std::string rtosc_msg() const
+	{
+		std::string res = path;
+		std::string type_str { Args::sign()... };
+		res += " " + type_str;
+		//for(std::size_t i = 0; i < sizeof...(Args); ++i)
+		// res += " " + std::get<i>().to_str();
+		// ^^ TODO!!!
+		return res;
+	}*/
 //	virtual command* clone() const { return new command(*this); }
-//	virtual ~command() = 0;
+	virtual ~command(); // TODO: = 0 ?
 };
 
+// TODO: cpp file?
+template<class ...Args>
+command<Args...>::~command() {}
 
 #include "utils.h" // TODO
 
@@ -73,11 +134,17 @@ private:
 	static std::size_t next_id;
 	const std::size_t _id;
 	std::vector<command_base*> commands; // TODO: unique?
+	const std::vector<command_base*> _quit_commands;
 public:
+	const std::vector<command_base*>& quit_commands() const {
+		return _quit_commands;
+	}
 	using port_t = int;
-	instrument_t(const char* name) :
+	instrument_t(const char* name,
+		const std::vector<command_base*>&& _quit_commands) :
 		named_t(name),
-		_id(next_id++)
+		_id(next_id++),
+		_quit_commands(_quit_commands)
 		{ std::cout << "instrument: constructed" << std::endl; }
 	virtual ~instrument_t();
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
@@ -109,11 +176,6 @@ public:
 	//instrument_t(instrument_t&& other) = default;
 };
 
-namespace paths
-{
-	static constexpr const char noteOn[] = "noteOn";
-}
-
 template <char ...Letters> class fixed_str {
 	static std::string make_str() { return std::string(Letters...); }
 };
@@ -127,15 +189,8 @@ class zynaddsubfx_t : public instrument_t
 public:
 	std::string make_start_command() const;
 	port_t get_port(pid_t pid, int ) const;
-	zynaddsubfx_t(const char* name) : instrument_t(name) {}
+	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
-
-	class p_char {
-		char c;
-	public:
-		p_char(char c) : c(c) {}
-		static char sign() { return 'c'; }
-	};
 
 	// TODO: string as template param?
 	/*class note_on : public command<p_char, p_char, p_char>
@@ -145,9 +200,14 @@ public:
 		note_on(const char* _path, Args ...args) : command(_path, ...args) {}
 	};
 	class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };*/
-	class note_on : public command<fixed_str<'n', 'o', 't', 'e', 'O', 'n'>, p_char, p_char, p_char> { using command::command;
+
+	class note_on : public command<p_char, p_char, p_char> { //using command::command;
+	public:
+
+		note_on(p_char x, p_char y, p_char z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
 	};
 };
+
 
 /*template<class Cmd, class ...Args>
 make_cmd()*/

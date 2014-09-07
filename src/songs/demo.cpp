@@ -37,17 +37,29 @@ void init(project_t& p)
 //	sine_bass.add_command_fixed<command>();
 	sine_bass.add_command_fixed<zynaddsubfx_t::note_on>(0, 42, 10);
 
-	// tracks
+/*	// tracks
 	track_t& track1 = p.add_track(sine_bass);
 	//t.add_timeline(~~)
 	track1.add_line(1,1, line_t(1,2,3));
 //	p.add_track(track1);
-	//t.set_param_fixed("", 3); // TODO: instrument
+	//t.set_param_fixed("", 3); // TODO: instrument*/
 
 	using namespace daw;
+
+	notes_t maj(note_geom_t(0, 0)); // TODO: no arg
+	maj.note(note_geom_t(0, 0));
+	maj.note(note_geom_t(4, 1));
+	maj.note(note_geom_t(7, 2));
+
 	global_t global;
-	chunk_list_t& c1 = global.make_chunk_list(geom_t());
-	(void)c1;
+	track_t& t1 = global.track(geom_t(0)); // TODO: tempo, channel, instr
+	notes_t& notes = t1.notes(note_geom_t(0, 42)); // start from note "42"
+
+	// 4 major chords
+	notes.notes(note_geom_t(0, 0)) = maj;
+	notes.notes(note_geom_t(2, 1)) = maj;
+	notes.notes(note_geom_t(4, 2)) = maj;
+	notes.notes(note_geom_t(5, 3)) = maj;
 }
 
 }

@@ -25,10 +25,19 @@ namespace mmms
 
 class project_t;
 
+/**
+ * @brief A class to keep dynamically loaded libraries.
+ *
+ * @note The plugin must be opened as long as the plugins stuff is needed.
+ */
 class plugin_t
 {
 	void* handle;
 public:
+	/**
+	 * @brief plugin_t
+	 * @param path full path to the .so file
+	 */
 	plugin_t(const char* path);
 	~plugin_t();
 
