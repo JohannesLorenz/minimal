@@ -164,7 +164,7 @@ const {
 }
 
 
-void mmms::player::play_until(float dest) {
+void mmms::player_t::play_until(float dest) {
 	(void)dest;
 	usleep(100);
 }

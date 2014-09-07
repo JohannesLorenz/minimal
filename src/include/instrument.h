@@ -40,22 +40,26 @@ class p_char : public p_arg
 {
 	const char c;
 public:
+	const char& value() const { return c; }
+	using base_type = char;
 	p_char(char c) : c(c) {}
 	static char sign() { return 'c'; }
 };
 
-template<class T>
+template<class Functor, class Tar, class ...Src>
 class func
 {
 	using id_t = std::size_t;
 	static id_t next_id;
+	Functor ftor;
 public:
 	id_t id;
-	func() : id(next_id++) {}
+	func(Functor& ftor) : ftor(ftor), id(next_id++) {}
+	Tar operator()(Src... input) { return ftor(input...); }
 };
 
-template<class T>
-typename func<T>::id_t func<T>::next_id;
+template<class F, class T, class ...S>
+typename func<F, T, S...>::id_t func<F, T, S...>::next_id;
 
 template<class T>
 class con
@@ -71,11 +75,26 @@ public:
 		value(fixed_value)
 	{
 	}
-	con(const func<T>& func) :
+	con(const typename T::base_type& fixed_value) :
+		id(no_id()),
+		value(fixed_value)
+	{
+	}
+
+	template<class F, class ...S>
+	con(const func<F, T, S...>& func) :
 		id(func.id),
 		value(0)
 	{
 	}
+
+
+/*	con(const con<T>& other) = default;
+	con(const con<typename T::base_type>& other) :
+		id(other.id),
+		value(other.value)
+	{
+	}*/
 };
 
 
@@ -241,8 +260,7 @@ public:
 
 	class note_on : public command<p_char, p_char, p_char> { //using command::command;
 	public:
-
-		note_on(p_char x, p_char y, p_char z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
+		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
 	};
 };
 

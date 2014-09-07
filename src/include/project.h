@@ -138,6 +138,7 @@ namespace daw
 	public:
 	};
 
+	//! just notes, not corresponding to any instrument
 	class notes_t : seg_base<note_geom_t, notes_t, note_t>
 	{
 		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
@@ -156,12 +157,17 @@ namespace daw
 		}
 	};
 
+	//! notes, corresponding to single instruments
+	//! if you want to use multiple tracks with the same instrument, make them and set them in the ctor
+	//! if you want multiple instruments to play the same, make multiple tracks and use the same notes object
 	class track_t : public seg_base<geom_t, track_t, notes_t>, note_event_propagator<track_t>
 	{
 		using child_type = note_t;
 		using seg_base::seg_base;
+		instrument_t::id_t id;
 	public:
 		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
+		//track_t(instrument_t::id_t id) : id(id) {}
 	};
 
 /*	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
@@ -183,6 +189,7 @@ namespace daw
 		inst_list_t& make_inst_list(geom_t geom) { return make<inst_list_t>(geom); }
 	};*/
 
+	//! a pattern of instruments. e.g., different drum patterns are different globals
 	class global_t : seg_base<geom_t, global_t, track_t>, note_event_propagator<track_t>
 	{
 		using child_type = track_t; // TODO: unused?
@@ -229,6 +236,7 @@ class project_t : non_copyable_t
 	std::string _title;
 	std::vector<std::unique_ptr<instrument_t>> _instruments;
 //	std::vector<track_t> _tracks;
+	daw::global_t _global;
 public:
 	project_t();
 	~project_t();
@@ -237,6 +245,8 @@ public:
 		_tracks(std::move(other._tracks))*/
 	{
 	}
+
+	daw::global_t& global() { return _global; }
 
 	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 		return _instruments; }

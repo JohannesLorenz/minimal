@@ -51,7 +51,7 @@ void init(project_t& p)
 	maj.note(note_geom_t(4, 1));
 	maj.note(note_geom_t(7, 2));
 
-	global_t global;
+	global_t& global = p.global();
 	track_t& t1 = global.track(geom_t(0)); // TODO: tempo, channel, instr
 	notes_t& notes = t1.notes(note_geom_t(0, 42)); // start from note "42"
 
@@ -61,7 +61,9 @@ void init(project_t& p)
 	notes.notes(note_geom_t(4, 2)) = maj;
 	notes.notes(note_geom_t(5, 3)) = maj;
 
-	zynaddsubfx_t::note_on cmd();
+	const auto ftor = [](int c) { return c % 100 + 50; };
+	func<decltype(ftor), p_char, int> f(ftor);
+	zynaddsubfx_t::note_on cmd(f, 2, 3);
 }
 
 }

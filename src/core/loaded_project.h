@@ -63,19 +63,7 @@ public:
 	}
 };*/
 
-//! this class takes a project and then does some things to handle it
-class loaded_project_t : non_copyable_t
-{
-	project_t project;
-	const std::vector<rtosc_con> cons;
-	std::vector<rtosc_con> make_cons() const;
-//	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
-public:
-	loaded_project_t(project_t&& project);
-	~loaded_project_t();
-};
-
-class player // TODO: own header
+class player_t // TODO: own header
 {
 	//!< maximum seconds to sleep until wakeup forced
 	static constexpr const float max_sleep_time = 0.1;
@@ -101,12 +89,39 @@ class player // TODO: own header
 
 public:
 	//player(const loaded_project_t& project)  : project(project)
-	player()
+	player_t()
 	{
 
 	}
 
 	void play_until(float dest);
+};
+
+class command_table
+{
+
+
+};
+
+//! this class takes a project and then does some things to handle it
+class loaded_project_t : non_copyable_t
+{
+	// project
+	project_t project;
+
+	// connections
+	const std::vector<rtosc_con> cons;
+	std::vector<rtosc_con> make_cons() const;
+//	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
+
+	// commands
+//	command_table commands;
+
+	// player
+	player_t player;
+public:
+	loaded_project_t(project_t&& project);
+	~loaded_project_t();
 };
 
 }
