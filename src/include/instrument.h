@@ -25,6 +25,7 @@
 #include <vector>
 #include <memory>
 #include <iostream> // TODO
+#include <limits>
 
 namespace mmms
 {
@@ -42,6 +43,41 @@ public:
 	p_char(char c) : c(c) {}
 	static char sign() { return 'c'; }
 };
+
+template<class T>
+class func
+{
+	using id_t = std::size_t;
+	static id_t next_id;
+public:
+	id_t id;
+	func() : id(next_id++) {}
+};
+
+template<class T>
+typename func<T>::id_t func<T>::next_id;
+
+template<class T>
+class con
+{
+	using id_t = std::size_t;
+	static id_t no_id() { return std::numeric_limits<id_t>::max(); }
+public:
+	id_t id;
+	T value;
+	bool is_fixed() const { return id == no_id(); }
+	con(const T& fixed_value) :
+		id(no_id()),
+		value(fixed_value)
+	{
+	}
+	con(const func<T>& func) :
+		id(func.id),
+		value(0)
+	{
+	}
+};
+
 
 class command_base
 {
@@ -66,12 +102,12 @@ template<class ...Args>
 class command : public command_base
 {
 	using self = command<Args...>;
-	std::tuple<Args...> args;
+	std::tuple<con<Args>...> args;
 
 
 
 public:
-	command(const char* _path, Args... args) :
+	command(const char* _path, con<Args>... args) :
 		command_base(_path),
 		args(args...) {}
 
@@ -180,6 +216,7 @@ template <char ...Letters> class fixed_str {
 	static std::string make_str() { return std::string(Letters...); }
 };
 
+
 class zynaddsubfx_t : public instrument_t
 {
 	// TODO: read from options file
@@ -200,6 +237,7 @@ public:
 		note_on(const char* _path, Args ...args) : command(_path, ...args) {}
 	};
 	class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };*/
+
 
 	class note_on : public command<p_char, p_char, p_char> { //using command::command;
 	public:

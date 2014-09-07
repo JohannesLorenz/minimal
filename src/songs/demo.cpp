@@ -60,6 +60,8 @@ void init(project_t& p)
 	notes.notes(note_geom_t(2, 1)) = maj;
 	notes.notes(note_geom_t(4, 2)) = maj;
 	notes.notes(note_geom_t(5, 3)) = maj;
+
+	zynaddsubfx_t::note_on cmd();
 }
 
 }
