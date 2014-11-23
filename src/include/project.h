@@ -22,10 +22,12 @@
 
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "instrument.h"
 #include "utils.h"
 #include "tuple_helpers.h"
+#include "lfo.h"
 
 namespace mmms
 {
@@ -85,130 +87,113 @@ public:
 
 };
 
+namespace daw_visit {
 
-namespace daw
-{
-	class geom_t
-	{
-	public:
-		float start;
-		geom_t(float start) : start(start) {}
-		static geom_t zero() { return geom_t(0.0f); }
-	};
+	using namespace daw;
 
-	class note_geom_t
+	inline std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t& n)
 	{
-	public:
-		float start;
-		int offs;
-		note_geom_t(float start, int offs) : start(start), offs(offs) {}
-	};
+		return std::make_pair(offset, n);
+	}
 
-	template<class Geom, class ...Children>
-	class seg_base // : non_copyable_t
+	inline std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t& ns)
 	{
-	public:
-		// TODO: private and protected accessors?
-		Geom geom;
-		seg_base(Geom geom) : geom(geom) {}
-	protected:
-		std::tuple<std::vector<Children>...> children;
-		template<class T, class ...Args>
-		T& make(Args ...args) {
-			auto& v = tuple_helpers::get<std::vector<T>>(children);
-			v.emplace_back(args...);
-			return v.back();
+		// TODO: can we not use vectors? -> linear time
+		note_geom_t abs_offs = ns.geom + offset;
+		std::multimap<note_geom_t, note_t> res;
+		for(const notes_t::pair_t<note_t>& p : ns.get<note_t>())
+		{
+		//	std::pair<note_geom_t, note_t> p = visit(n);
+			res.insert(visit(abs_offs, *p.second));
 		}
-		template<class T>
-		void add(const T& t) {
-			auto& v = tuple_helpers::get<std::vector<T>>(children);
-			v.push_back(t); // TODO: push back pointer, id, ... ?
+		for(const notes_t::pair_t<notes_t>& ns2 : ns.get<notes_t>())
+		{
+			std::multimap<note_geom_t, note_t> res2 = visit(abs_offs, *ns2.second);
+			std::move(res2.begin(), res2.end(), std::inserter(res, res.begin()));
 		}
-	};
+		return res;
+	}
 
-
-	/*template<class Self, class ...Children>
-	class daw_base
+	inline cmd_vectors visit(const track_t& t)
 	{
-	};*/
+		cmd_vectors result;
 
-	struct note_event_t {
-		int inst_id; float pos;
-	public:
-		note_event_t(int inst_id, float pos) : inst_id(inst_id), pos(pos) {}
-	};
-
-	class note_t : seg_base<note_geom_t> {
-		float propagate() const { return geom.start; } // TODO: also propagate end?
-		using seg_base::seg_base;
-	public:
-	};
-
-	//! just notes, not corresponding to any instrument
-	class notes_t : seg_base<note_geom_t, notes_t, note_t>
-	{
-		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
-		using seg_base::seg_base;
-	public:
-		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
-		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
-	};
-
-	template<class Child>
-	class note_event_propagator
-	{
-	protected:
-		note_event_t propagate(note_event_t ne, Child c) {
-			return note_event(ne.inst_id, ne.pos + c.geom.start);
+		for(const auto& pr : t.get<notes_t>())
+		{
+			std::multimap<note_geom_t, note_t> mm = visit(note_geom_t::zero(), *pr.second);
+			cmd_vectors note_commands =
+				t.instrument()->make_note_commands(mm);
+			std::move(note_commands.begin(), note_commands.end(),
+				std::inserter(result, result.end()));
 		}
-	};
+		//for(t.get<auto_t>) // automation tracks...
 
-	//! notes, corresponding to single instruments
-	//! if you want to use multiple tracks with the same instrument, make them and set them in the ctor
-	//! if you want multiple instruments to play the same, make multiple tracks and use the same notes object
-	class track_t : public seg_base<geom_t, track_t, notes_t>, note_event_propagator<track_t>
-	{
-		using child_type = note_t;
-		using seg_base::seg_base;
-		instrument_t::id_t id;
-	public:
-		void add_notes(const notes& n, geom_t geom) { add<notes_t>(geom); } // TODO: add with geom (maybe default arg?)
-		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
-		//track_t(instrument_t::id_t id) : id(id) {}
-	};
+		return result;
+	}
 
-/*	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
+	// rtosc port (via instrument), commands, times
+	using global_map = std::map<const instrument_t*, cmd_vectors>;
+
+	inline global_map visit(global_t& g)
 	{
-		using child_type = inst_t;
-		note_event_t propagate(note_event_t ne, inst_t i) {
-			return note_event_t(ne.inst_id, ne.pos + i.geom.start);
+		global_map res;
+		for(const auto& pr : g.get<track_t>())
+		{
+			const track_t& t = *pr.second;
+			const instrument_t* ins = t.instrument(); // TODO: should t.instrument ret ref?
+
+			//cmd_vectors v = std::make_pair(&t, visit(t));
+			cmd_vectors _v = visit(t);
+
+			using cmd_pair = std::pair<const command_base*, std::set<float>>;
+
+			for(const cmd_pair pr : _v)
+			{
+				auto ins_itr = res.find(ins);
+				if(ins_itr == res.end())
+				{
+					// simply insert it
+					cmd_vectors new_map { std::make_pair(pr.first, /*std::move*/(pr.second)) };
+					res.emplace_hint(ins_itr, ins, new_map);
+				}
+				else
+				{
+					const auto vt = pr;
+					//for(const cmd_vectors::value_type vt : v)
+					{
+						const command_base& cmd = *vt.first;
+						const std::set<float>& vals = vt.second;
+
+						// if instrument *and* command are equal,
+						// add the set to the known command
+
+						auto ins_cmd = ins_itr->second.find(&cmd);
+						if(ins_cmd == ins_itr->second.end())
+						{
+							ins_itr->second.emplace(&cmd, vals);
+						}
+						else
+						{
+							std::set<float>& vals_existing = ins_cmd->second;
+							vals_existing.insert(vals.begin(), vals.end());
+						}
+
+					}
+				}
+			}
+
+
+			// TODO: geometry of t is unused here?
 		}
-		using seg_base::seg_base;
-	public:
-		inst_t& make_inst(geom_t geom) { return make<inst_t>(geom); }
-	};
-
-	class chunk_list_t : seg_base<chunk_list_t, inst_list_t>, note_event_propagator<inst_list_t>
-	{
-		using child_type = inst_list_t;
-		using seg_base::seg_base;
-	public:
-		inst_list_t& make_inst_list(geom_t geom) { return make<inst_list_t>(geom); }
-	};*/
-
-	//! a pattern of instruments. e.g., different drum patterns are different globals
-	class global_t : seg_base<geom_t, global_t, track_t>, note_event_propagator<track_t>
-	{
-		using child_type = track_t; // TODO: unused?
-	public:
-		void add_track(const track& t) { add<track_t>(geom); }
-		track_t& track(geom_t geom) { return make<track_t>(geom); }
-		global_t& global(geom_t geom) { return make<global_t>(geom); }
-		global_t(geom_t g = geom_t{0}) : seg_base(g) {}
-	};
-
+		/*for(const global_t& g : g.get<global_t>())
+		{
+			res.insert(std::make_pair(t.id(), visit(t)));
+		}*/ // TODO
+		return res;
+	}
 
 }
+
 
 //template<class Self, class Child>
 //Child cseg(Self& );
@@ -243,6 +228,7 @@ class project_t : non_copyable_t
 	float _tempo = 140.0;
 	std::string _title;
 	std::vector<std::unique_ptr<instrument_t>> _instruments;
+	std::vector<effect*> _effects;
 //	std::vector<track_t> _tracks;
 	daw::global_t _global;
 public:
@@ -255,6 +241,7 @@ public:
 	}
 
 	daw::global_t& global() { return _global; }
+	std::vector<effect*>& effects() { return _effects; }
 
 	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 		return _instruments; }

@@ -18,6 +18,7 @@
 /*************************************************************************/
 
 #include "project.h"
+#include "lfo.h"
 
 using namespace mmms;
 
@@ -35,7 +36,9 @@ void init(project_t& p)
 	zynaddsubfx_t& sine_bass = p.emplace<zynaddsubfx_t>("sine bass");
 	//sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
 //	sine_bass.add_command_fixed<command>();
-	sine_bass.add_command_fixed<zynaddsubfx_t::note_on>(0, 42, 10);
+	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
+
+
 
 /*	// tracks
 	track_t& track1 = p.add_track(sine_bass);
@@ -46,7 +49,7 @@ void init(project_t& p)
 
 	using namespace daw;
 
-	notes_t maj(note_geom_t(0, 0)); // TODO: no arg
+/*	notes_t maj(note_geom_t(0, 0)); // TODO: no arg
 	maj.note(note_geom_t(0, 0));
 	maj.note(note_geom_t(4, 1));
 	maj.note(note_geom_t(7, 2));
@@ -59,11 +62,26 @@ void init(project_t& p)
 	notes.notes(note_geom_t(0, 0)) = maj;
 	notes.notes(note_geom_t(2, 1)) = maj;
 	notes.notes(note_geom_t(4, 2)) = maj;
-	notes.notes(note_geom_t(5, 3)) = maj;
+	notes.notes(note_geom_t(5, 3)) = maj;*/
 
-	const auto ftor = [](int c) { return c % 100 + 50; };
+	notes_t maj(note_geom_t(0, 0));
+	maj.add_note(note_t(), note_geom_t(0, 0));
+	maj.add_note(note_t(), note_geom_t(4, 1));
+	maj.add_note(note_t(), note_geom_t(7, 2));
+
+	track_t t1(sine_bass);
+	// 4 major chords
+	t1.add_notes(maj, note_geom_t(0, 0));
+	t1.add_notes(maj, note_geom_t(2, 1));
+	t1.add_notes(maj, note_geom_t(4, 2));
+	t1.add_notes(maj, note_geom_t(5, 3));
+
+	global_t& global = p.global();
+	global.add_track(t1);
+
+/*	const auto ftor = [](int c) { return c % 100 + 50; };
 	func<decltype(ftor), p_char, int> f(ftor);
-	zynaddsubfx_t::note_on cmd(f, 2, 3);
+	zynaddsubfx_t::note_on cmd(f, 2, 3);*/
 }
 
 }

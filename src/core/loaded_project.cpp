@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stack>
 
 #include "loaded_project.h"
 
@@ -91,8 +92,17 @@ std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
 
 mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 	project(std::move(project)),
-	cons(std::move(make_cons()))
+	cons(std::move(make_cons())),
+	_global(daw_visit::visit(project.global()))
 {
+	for(effect* e : project.effects()) // TODO: -> initializer list
+	{
+		if(e->writers.empty())
+		{
+			_effect_root.readers.push_back(e);
+			e->writers.push_back(&_effect_root);
+		}
+	}
 }
 
 
@@ -164,7 +174,47 @@ const {
 }
 
 
-void mmms::player_t::play_until(float dest) {
-	(void)dest;
-	usleep(100);
+void mmms::player_t::update_effects()
+{
+	std::stack<effect*> ready_fx;
+	ready_fx.push(&project.effect_root());
+	do
+	{
+		effect* cur_effect = ready_fx.top();
+		ready_fx.pop();
+
+		cur_effect->proceed(pos);
+
+		for(effect* next: cur_effect->readers)
+		 ready_fx.push(next);
+
+	} while(ready_fx.size());
+}
+
+void mmms::player_t::fill_commands()
+{
+	for(const auto& pr : project.global())
+	{
+		(void)pr; // TODO
+		//std::string
+	}
+}
+
+void mmms::player_t::send_commands()
+{
+
+}
+
+
+
+void mmms::player_t::play_until(float dest)
+{
+	for(; pos < dest; pos += step)
+	{
+		update_effects();
+		fill_commands();
+		send_commands();
+
+		usleep(step);
+	}
 }

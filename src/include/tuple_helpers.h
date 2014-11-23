@@ -66,6 +66,15 @@ inline T& get(std::tuple<Types...>& tuple)
 }
 
 template<class T, class... Types>
+inline const T& get(const std::tuple<Types...>& tuple)
+{
+	static_assert(get_internal<0,T,Types...>::type::found,
+		"You looked up a type which could not be found in the respective tuple.");
+	const T& ret = std::get<get_internal<0,T,Types...>::type::index>(tuple);
+	return ret;
+}
+
+template<class T, class... Types>
 constexpr bool is_in() {
 	return get_internal<0,T,Types...>::type::found;
 };

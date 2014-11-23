@@ -20,6 +20,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <vector>
+
 //! This class is in no way copyable, but movable
 class non_copyable_t
 {
@@ -35,5 +37,67 @@ public:
 		return *this;
 	}
 };
+
+//! counts elements of template parameter list. not thread safe.
+template<class ...>
+class counted_t
+{
+public:
+	using id_t = std::size_t;
+private:
+	id_t _id;
+	static id_t next_id;
+public:
+	const id_t& id() const noexcept { return _id; }
+	counted_t() noexcept : _id(next_id++) {}
+};
+
+template<class ...Args>
+typename counted_t<Args...>::id_t counted_t<Args...>::next_id = 0;
+
+template<class Store, class ...Args>
+class stored_t : public counted_t<Store, Args...>
+{
+private:
+	static std::vector<Store> elems;
+public:
+	template<class ...Constr>
+	Store& create(Constr... c)
+	{
+		return *elems.emplace(c...);
+	}
+	static const Store& at(const id_t& id) { return elems[id]; }
+};
+
+namespace util {
+
+/*
+	templates for structs that you don't want to instantiate
+*/
+
+template<typename ...> struct falsify : public std::false_type { };
+template<typename T, T Arg> class falsify_id : public std::false_type { };
+template<typename ...Args>
+class dont_instantiate_me {
+	static_assert(falsify<Args...>::value, "This should not be instantiated.");
+	constexpr static std::size_t value = 0;
+};
+template<typename T, T Arg>
+class dont_instantiate_me_id {
+	static_assert(falsify_id<T, Arg>::value, "This should not be instantiated.");
+	constexpr static std::size_t value = 0;
+};
+
+template<class T, class ...ConstrArgs>
+constexpr T dont_instantiate_me_func(ConstrArgs... args) {
+	return (void)dont_instantiate_me<T>::value, T(args...);
+}
+
+template<class T, T Arg, class ...ConstrArgs>
+constexpr T dont_instantiate_me_id_func(ConstrArgs... args) {
+	return (void)dont_instantiate_me_id<T, Arg>::value, T(args...);
+}
+
+}
 
 #endif // UTILS_H

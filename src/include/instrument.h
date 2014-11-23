@@ -26,25 +26,20 @@
 #include <memory>
 #include <iostream> // TODO
 #include <limits>
+#include <map>
+#include <set>
+// ...
+// when is it going to end?
+
+#include "types.h"
+#include "utils.h"
+#include "daw.h"
 
 namespace mmms
 {
 
-//! note: if binary gets too large, we might need to not use templates...
 
-class p_arg
-{
-};
-
-class p_char : public p_arg
-{
-	const char c;
-public:
-	const char& value() const { return c; }
-	using base_type = char;
-	p_char(char c) : c(c) {}
-	static char sign() { return 'c'; }
-};
+#if 0
 
 template<class Functor, class Tar, class ...Src>
 class func
@@ -57,6 +52,7 @@ public:
 	func(Functor& ftor) : ftor(ftor), id(next_id++) {}
 	Tar operator()(Src... input) { return ftor(input...); }
 };
+
 
 template<class F, class T, class ...S>
 typename func<F, T, S...>::id_t func<F, T, S...>::next_id;
@@ -75,7 +71,7 @@ public:
 		value(fixed_value)
 	{
 	}
-	con(const typename T::base_type& fixed_value) :
+	con(const typename T::value_type& fixed_value) :
 		id(no_id()),
 		value(fixed_value)
 	{
@@ -96,6 +92,7 @@ public:
 	{
 	}*/
 };
+#endif
 
 
 class command_base
@@ -114,26 +111,221 @@ public:
 
 //	virtual command_base* clone() const = 0; // TODO: generic clone class?
 	virtual ~command_base() = 0;
+
+	virtual bool operator==(const command_base& other) const = 0;
+	virtual bool operator<(const command_base& other) const = 0;
 };
 
+
+namespace detail
+{
+
+	template<class T>
+	constexpr std::size_t length_of() {
+//		return util::dont_instantiate_me_func<std::size_t>();
+		return T::size();
+	}
+//	template<>
+//	constexpr std::size_t length_of<int>() { return 4; }
+
+	template<class... Others>
+	constexpr std::size_t est_length_args();
+
+	template<class Arg1, class ...More>
+	constexpr std::size_t est_length_args_first()
+	{
+		return length_of<Arg1>() + est_length_args<More...>();
+	}
+
+	template<class... Others>
+	constexpr std::size_t est_length_args()
+	{
+		return est_length_args_first<Others...>();
+	}
+
+	template<>
+	constexpr std::size_t est_length_args<>() { return 0; }
+}
+
+template<std::size_t PadSize>
+constexpr std::size_t pad(std::size_t pos) {
+	return pos + ((PadSize - pos % PadSize) % PadSize);
+}
+
+/*std::string to_osc_string(float f) {
+	std::string res = "0000";
+	*(float*)res.data() = f;
+	return res;
+}
+
+std::string to_osc_string(int32_t i) {
+	std::string res = "0000";
+	*(int*)res.data() = i;
+	return res;
+}*/
+
+namespace command_detail
+{
+/*	template<class T>
+	void _append_single(std::string& , const T& ) {
+		// general case: can not append
+	}
+
+	template<class T, char Sign>
+	void _append_single(std::string& s, const variable<no_port<T>, Sign>& v) {
+		s += ' ' + to_osc_string(v.value());
+	}*/
+
+
+	template<bool Printable> // Printable = false
+	struct _append_single
+	{
+		template<class T>
+		static void exec(std::vector<char>& , const T& )
+		{
+			// general case: can not append
+		}
+	};
+
+	template<>
+	struct _append_single<true>
+	{
+		template<class T>
+		static void exec(std::vector<char>& s, const T& elem)
+		{
+			//s += ' ' + elem.to_osc_string(); // TODO: put this into oint etc class
+			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
+			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s));
+		}
+	};
+
+	template<bool Ok, std::size_t N, std::size_t I, class ...Args2>
+	struct _append
+	{
+		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
+		{
+			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
+			_append<tp_at::size_fix(), N, I+1, Args2...>::exec(s, tp);
+		}
+	};
+
+	template<std::size_t N, std::size_t I, class ...Args2>
+	struct _append<false, N, I, Args2...>
+	{
+		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
+		{
+			// not ok
+		}
+	};
+
+	template<bool Ok, std::size_t N, class ...Args2>
+	struct _append<Ok, N, N, Args2...>
+	{
+		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
+		{
+			// end reached
+		}
+	};
+}
 
 template<class ...Args>
 class command : public command_base
 {
 	using self = command<Args...>;
-	std::tuple<con<Args>...> args;
-
+	std::tuple<Args...> args;
 
 
 public:
-	command(const char* _path, con<Args>... args) :
+	mutable std::vector<char> buffer;
+private:
+
+	constexpr std::size_t est_length() const {
+		return pad<4>(path().length() + 1) // path + \0
+			+ pad<4>(sizeof...(Args) + 2)// ,<types>\0
+			+ detail::est_length_args<Args...>();
+	}
+
+/*	template<class ...Args2>
+	void _append(std::string& , Args2... )
+	{
+		// general case: can not be done
+	}
+
+	void _append(std::string& )
+	{
+		// end reached
+	}
+
+	template<class T, char sign, class ...Args2>
+	void _append(std::string& prefix, variable<no_port<T>, sign> v, Args2... more_args)
+	{
+
+		_append(prefix, more_args...);
+	}
+
+	template<class T, char sign, class ...Args2>
+	void _append(std::string& prefix, variable<no_port<T>, sign> v, Args2... more_args)
+	{
+
+		_append::exec(prefix, more_args...);
+	}*/
+
+	std::vector<char> prefill_buffer() const
+	{
+		std::vector<char> res(_path.begin(), _path.end());
+		do {
+		 res.push_back('\0');
+		} while(res.size() % 4);
+		std::string t_s = type_str();
+		std::copy(t_s.begin(), t_s.end(), std::back_inserter(res));
+		do {
+		 res.push_back('\0');
+		} while(res.size() % 4);
+		command_detail::_append<true, sizeof...(Args), 0, Args...>::exec(res, args);
+		return res;
+	}
+
+public:
+	command(const char* _path, Args... args) :
 		command_base(_path),
-		args(args...) {}
+		args(args...),
+		buffer(prefill_buffer()) {
+
+		std::cerr << "est. length: " << est_length() << std::endl;
+	}
+
+	void complete_buffer() const
+	{
+//		command_detail::_complete<sizeof...(Args), 0, Args...>::exec(buffer, args);
+	}
 
 	std::string type_str() const {
-		std::string res { Args::sign()... };
+		std::string res { ',' , Args::sign()... };
 		return res; // TODO: in one line!
 	}
+
+	/*std::string prepare_buffer() {
+
+	}*/
+
+	//
+	virtual bool operator==(const command_base& other) const {
+		return other.path() == _path && other.type_str() == type_str();
+	}
+	virtual bool operator<(const command_base& other) const {
+		std::size_t pathdiff = other.path().compare(_path);
+		if(pathdiff)
+		 return (pathdiff > 0);
+		else
+		 return type_str() < other.type_str();
+	}
+
+/*	template<class ...Args2>
+	bool operator==(const command<Args2...>* other) {
+		return (other->_path == _path) && other->type_str() == type_str();
+	}*/
+
 
 
 
@@ -180,6 +372,18 @@ public:
 	const std::string& name() const { return _name; }
 	named_t(const char* _name) : _name(_name) {}
 };
+
+
+struct map_cmp
+{
+	bool operator()(const command_base* c1, const command_base* c2)
+	{
+		return *c1 < *c2;
+	}
+};
+
+// height, command + times
+using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
 class instrument_t : named_t, non_copyable_t
 {
@@ -229,6 +433,8 @@ public:
 	//! shall return the lo port (UDP) after the program was started
 	virtual port_t get_port(pid_t pid, int fd) const = 0;
 	//instrument_t(instrument_t&& other) = default;
+
+	virtual cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& ) const = 0;
 };
 
 template <char ...Letters> class fixed_str {
@@ -243,24 +449,72 @@ class zynaddsubfx_t : public instrument_t
 		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
 	const char* default_args = "--no-gui -O alsa";*/
 public:
+
+	/*template<template<class> C1, template<class> C2>
+	class note_on : public command<int_f, int_f, int_f> { //using command::command;
+	public:
+		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
+	};*/
+
+
+
+
 	std::string make_start_command() const;
+	cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& mm) const
+	{
+		// channel, note, velocity
+		std::map<int, command_base*> cmd_of;
+
+		cmd_vectors res;
+		for(const std::pair<daw::note_geom_t, daw::note_t>& pr : mm)
+		{
+		//	res.emplace_back(new command<int_f, int_f, int_v>("/noteOn", 0, pr.first.offs, pr.second.velocity()), pr.first.start); // TODO: valgrind!
+
+			auto itr1 = cmd_of.find(pr.first.offs);
+			if(itr1 == cmd_of.end())
+			{
+				// TODO: valgrind
+				command_base* cmd = new command<oint<>, oint<>, oint<>>("/noteOn", 0, pr.first.offs, pr.second.velocity());
+				cmd_of.emplace_hint(itr1, pr.first.offs, cmd);
+
+				// TODO: note_off
+
+				res.emplace(cmd, std::set<float>{pr.first.start});
+			}
+			else
+			{
+				res.find(itr1->second)->second.insert(pr.first.start);
+			}
+
+
+
+		}
+		return res;
+	}
+
 	port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 
 	// TODO: string as template param?
-	/*class note_on : public command<p_char, p_char, p_char>
+/*	class note_on : public command<p_char, p_char, p_char>
 	{
 		static const char* path() { return "/noteOn"; }
 		template<class ...Args>
 		note_on(const char* _path, Args ...args) : command(_path, ...args) {}
-	};
-	class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };*/
+	};*/
 
-
-	class note_on : public command<p_char, p_char, p_char> { //using command::command;
+	//class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };
+	template<class Port1 = no_port<int>, class Port2 = no_port<int>, class Port3 = no_port<int>>
+	class note_on : public command<oint<Port1>, oint<Port2>, oint<Port3>>
+	{
+		using base = command<oint<Port1>, oint<Port2>, oint<Port3>>;
 	public:
-		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
+		static const char* path() { return "/noteOn"; } // TODO: noteOn string is code duplicate
+		note_on(oint<Port1> chan, oint<Port2> note, oint<Port3> velocity)
+			: base("/noteOn", chan, note, velocity)
+		{
+		}
 	};
 };
 

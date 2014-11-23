@@ -27,6 +27,8 @@
 #include "instrument.h"
 #include "project.h"
 #include "ports.h"
+#include "types.h"
+#include "lfo.h"
 
 namespace mmms {
 
@@ -63,13 +65,17 @@ public:
 	}
 };*/
 
+class loaded_project_t;
+
 class player_t // TODO: own header
 {
 	//!< maximum seconds to sleep until wakeup forced
+	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
 
-//	float pos = 0.0f;
-//	const loaded_project_t& project;
+	float step = 0.001f; // suggested by fundamental
+	float pos = 0.0f;
+	loaded_project_t& project; // TODO! must be const
 
 
 	/*struct pq_entry
@@ -87,12 +93,12 @@ class player_t // TODO: own header
 
 	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;*/
 
-public:
-	//player(const loaded_project_t& project)  : project(project)
-	player_t()
-	{
+	void update_effects();
+	void fill_commands();
+	void send_commands();
 
-	}
+public:
+	player_t(loaded_project_t& project)  : project(project) {}
 
 	void play_until(float dest);
 };
@@ -101,6 +107,10 @@ class command_table
 {
 
 
+};
+
+class effect_root_t : public effect {
+	void proceed(float ) {}
 };
 
 //! this class takes a project and then does some things to handle it
@@ -112,14 +122,21 @@ class loaded_project_t : non_copyable_t
 	// connections
 	const std::vector<rtosc_con> cons;
 	std::vector<rtosc_con> make_cons() const;
+
+	effect_root_t _effect_root;
+
 //	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
 
 	// commands
 //	command_table commands;
 
 	// player
-	player_t player;
+	// player_t player;
+
+	daw_visit::global_map _global;
 public:
+	daw_visit::global_map& global() { return _global; };
+	effect_root_t& effect_root() { return _effect_root; }
 	loaded_project_t(project_t&& project);
 	~loaded_project_t();
 };
