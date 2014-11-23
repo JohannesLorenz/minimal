@@ -27,39 +27,46 @@ void inspect_rtosc_string(const std::vector<char>& str,
 
 	for(const char& x : str)
 	{
-		std::cerr << +x << std::endl;
+		stream << +x << std::endl;
 	}
-	std::cerr << std::endl;
+	stream << std::endl;
 
 	if(str[0] != '/')
 	 throw "rtosc string invalid: does not start with `/'";
 	stream << "rtosc msg: \"" << str.data() << "\"" << std::endl;
-	const char* c = str.data() + strlen(str.data());
-	for(; !*c; ++c) ;
-	if(*(c++)!=',')
+	std::vector<char>::const_iterator itr = str.begin() + strlen(str.data());
+	for(; !*itr; ++itr) ;
+	if(*(itr++)!=',')
 	 throw "rtosc string invalid: type string does not start with `,'";
-	std::string args = c;
-	c = c + strlen(c);
-	for(; !*c; ++c) ;
-	for(const char& tp : args)
+	const char* args = &*itr;
+	itr += strlen(&*itr);
+	for(; !*itr; ++itr) ;
+	for(; *args && (itr != str.end()); ++args)
 	{
 		stream << " * ";
-		switch(tp)
+		const char* c = &*itr;
+		switch(*args)
 		{
 			case 'i':
 				stream << (int)(*(int32_t*)c);
-				c += 4;
+				itr += 4;
 				break;
 			case 'f':
 				stream << *(float*)c;
-				c += 4;
+				itr += 4;
 				break;
 			default:
-				stream << "(unknown type: " << tp << ")";
+				stream << "(unknown type: " << *args << ")";
 		}
 		stream << std::endl;
 		//std::cerr << "c - str.data(): " << c - str.data() << std::endl;
 	}
+
+	if(*args) // i.e. itr reached end too early
+	{
+		stream << " -> rtosc string not terminated here." << std::endl;
+	}
+
 
 	// TODO
 }
