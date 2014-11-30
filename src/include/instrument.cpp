@@ -22,6 +22,7 @@
 #include <fstream>
 #include "ports.h"
 #include "instrument.h"
+#include "config.h"
 
 namespace mini {
 
@@ -36,8 +37,8 @@ std::size_t instrument_t::next_id;
 
 std::string zynaddsubfx_t::make_start_command() const
 {
-	const std::string cmd = "/tmp/cprogs/zyn_orig/clang/src/zynaddsubfx "
-		"--no-gui -O alsa"; // TODO: read from options file
+	const std::string cmd = ZYNADDSUBFX_BINARY
+		" --no-gui -O alsa"; // TODO: read from options file
 	return cmd;
 }
 

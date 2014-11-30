@@ -48,6 +48,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 # MESSAGE(" * COMPILER: ${COMPILER} (allowed: [gcc|clang])")
 
 SET(COMPILER "" CACHE STRING "Compiler to use (allowed: [gcc|clang])")
+SET(ZYNADDSUBFX_BINARY "" CACHE STRING "/usr/bin/zynaddsubfx")
 
 # testing
 enable_testing ()
@@ -102,9 +103,9 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
 #
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
-${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
+	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
-${CMAKE_CURRENT_BINARY_DIR}/src/version.h)
+	${CMAKE_CURRENT_BINARY_DIR}/src/version.h)
 
 # if(CUSTOM_INCLUDE_PATHS STREQUAL "")
 # else()

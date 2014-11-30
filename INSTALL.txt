@@ -7,16 +7,18 @@ CONTENTS
 
 0 Requirements
 1 Installation
-2 Debugging
+2 Running
+3 Debugging
 
 0 Requirements
 ::::::::::::::
 
 You will need the following libraries, headers and tools:
 
-  * C++ 4.8 or higher
+  * at least g++ 4.8 or clang 3.3
   * boost
   * cmake
+  * zynaddsubfx, a version from at least November 2014
 
 1 Installation of the commandline interface
 :::::::::::::::::::::::::::::::::::::::::::
@@ -28,9 +30,22 @@ In this directory, type:
   
   mkdir build
   cd build
-  cmake .. # TODO
+  # for a release build using clang (suggested), where /path/to/zynaddsubfx is
+  # the binary executable for zynaddsubfx
+  cmake	-DCOMPILER=clang \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DZYNADDSUBFX_BINARY=/path/to/zynaddsubfx \
+	..
 
-2 Debugging
+2 Running
+:::::::::
+
+You can try playing a song now. Be careful to set the volume to as loud as it
+usually is when you use zynaddsubfx.
+
+  ./src/core/minimal ./src/songs/libdemo.so
+
+3 Debugging
 :::::::::::
 
 TODO

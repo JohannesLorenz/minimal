@@ -35,11 +35,14 @@ SOURCES += src/core/main.cpp \
 	src/test/test_str.cpp \
 	src/include/rtosc_string.cpp
 
-OTHER_FILES += CMakeLists.txt \
+OTHER_FILES += INSTALL.txt \
+	README.txt \
+	CMakeLists.txt \
 	src/CMakeLists.txt \
 	src/core/CMakeLists.txt \
 	src/songs/CMakeLists.txt \
 	src/include/CMakeLists.txt \
-	src/test/CMakeLists.txt
+	src/test/CMakeLists.txt \
+	src/config.h.in
 
 
