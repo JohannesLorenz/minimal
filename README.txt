@@ -5,8 +5,8 @@ Welcome! Thank you for considering the README file.
 
 CONTENTS
 
-1 What is mmms?
-2 Why using mmms?
+1 What is minimal?
+2 Why using minimal?
 3 License
 4 Documentation
 5 Installation & Debugging
@@ -15,35 +15,36 @@ CONTENTS
 8 Links
 9 Contact
 
-1 What is mmms?
-:::::::::::::::
+1 What is minimal?
+::::::::::::::::::
 
-2 Why using mmms?
-:::::::::::::::::
+2 Why using minimal?
+::::::::::::::::::::
 
-The author loved lmms, but still found many things unpractical. mmms fixes
+The author loved lmms, but still found many things unpractical. minimal fixes
 some of those:
 
  * The use of windows VSTs in lmms makes many shared files useless for linux
-   users. Thus, mmms forbids VSTs.
- * The lmms main developpers often do not respond per mail. The mmms main
+   users. Thus, minimal forbids VSTs.
+ * The lmms main developpers often do not respond per mail. The minimal main
    developper always responds fast.
  * You can easily add a license to your songs. In LMMS, you had to edit the
    XML file to be sure.
- * The effects in LMMS were hard to overview. In mmms, you don't only have an
-   overview in your code, but also can dump an effect graph.
- * In LMMS, you could not use the same instrument in multiple tracks. In mmms,
-   this will be possible. Thus, you will save loading times.
- * LMMS takes long to compile and to start. mmms is minimal and thus is way
+ * The effects in LMMS were hard to overview. In minimal, you don't only have
+   an overview in your code, but also can dump an effect graph.
+ * In LMMS, you could not use the same instrument in multiple tracks. In
+   minimal, this will be possible. Thus, you will save loading times.
+ * LMMS takes long to compile and to start. minimal is minimal and thus is way
    faster in compiling and instant in startup.
- * LMMS project files are huge compared to those of mmms.
- * LMMS is not real time compatible, mmms is (hopefully).
+ * LMMS project files are huge compared to those of minimal.
+ * LMMS is not real time compatible, minimal is (hopefully).
  * LMMS can not be used (completely) without a GUI.
- * LMMS does not have macros for its UI. With mmms, you can write a script
+ * LMMS does not have macros for its UI. With minimal, you can write a script
    or a C++ program that does what you like.
- * LMMS is not generally RTOSC compatible. mmms lets you simply write plugins.
+ * LMMS is not generally RTOSC compatible. minimal lets you simply write
+   plugins.
  * The LMMS developpers care about compatibility with old compilers. This
-   restricts the code to old versions of C++. In mmms, coders can use new
+   restricts the code to old versions of C++. In minimal, coders can use new
    versions of C++.
 
 3 License

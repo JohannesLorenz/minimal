@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* demo.cpp - a small demo song for mmms                                 */
+/* demo.cpp - a small demo song for minimal                              */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -20,7 +20,7 @@
 #include "project.h"
 #include "lfo.h"
 
-using namespace mmms;
+using namespace mini;
 
 extern "C"
 {

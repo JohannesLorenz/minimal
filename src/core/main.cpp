@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -25,7 +25,7 @@
 #include "plugin.h"
 #include "ports.h"
 
-using namespace mmms;
+using namespace mini;
 
 void main_init()
 {

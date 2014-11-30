@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* demo.cpp - a small demo song for mmms                                 */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -25,7 +25,7 @@
 #include "utils.h"
 #include "tuple_helpers.h"
 
-namespace mmms {
+namespace mini {
 
 class instrument_t;
 

@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -68,7 +68,7 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 
 
 
-/*mmms::rtosc_con mmms::loaded_project::make_rtosc_con(
+/*mini::rtosc_con mini::loaded_project::make_rtosc_con(
 	const instrument_t& instrument)
 {
 // TODO: move to rtosc_con ctor?
@@ -80,9 +80,9 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 }*/
 
 
-std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
+std::vector<mini::rtosc_con> mini::loaded_project_t::make_cons() const
 {
-	std::vector<mmms::rtosc_con> result;
+	std::vector<mini::rtosc_con> result;
 	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
 	{
 		result.emplace_back(*ins);
@@ -90,7 +90,7 @@ std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
 	return result;
 }
 
-mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
+mini::loaded_project_t::loaded_project_t(mini::project_t&& project) :
 	project(std::move(project)),
 	_cons(std::move(make_cons())),
 	_global(daw_visit::visit(project.global()))
@@ -108,7 +108,7 @@ mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 
 
 
-mmms::loaded_project_t::~loaded_project_t()
+mini::loaded_project_t::~loaded_project_t()
 {
 	for(std::size_t i = 0; i < _cons.size(); ++i)
 	{
@@ -127,14 +127,14 @@ mmms::loaded_project_t::~loaded_project_t()
 }
 
 
-pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
+pid_t mini::rtosc_con::make_fork(const char* start_cmd)
 {
 	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
 	get_input(start_cmd, &pid);
 	return pid;
 }
 
-mmms::rtosc_con::~rtosc_con()
+mini::rtosc_con::~rtosc_con()
 {
 	//sleep(2); // TODO
 //	kill(pid, SIGTERM);
@@ -157,7 +157,7 @@ mmms::rtosc_con::~rtosc_con()
 	sleep(3);
 }
 
-mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
+mini::rtosc_con::rtosc_con(const instrument_t &ins) :
 	pid(make_fork(ins.make_start_command().c_str())),
 	fd(0), // TODO
 	port(ins.get_port(pid, fd)),
@@ -165,7 +165,7 @@ mmms::rtosc_con::rtosc_con(const instrument_t &ins) :
 {
 }
 
-void mmms::rtosc_con::send_rtosc_msg(const char *path, const char *msg_args, ...)
+void mini::rtosc_con::send_rtosc_msg(const char *path, const char *msg_args, ...)
 const {
 	va_list argptr;
 	va_start(argptr, msg_args);
@@ -175,13 +175,13 @@ const {
 	(void)ret; // :-(
 }
 
-void mmms::rtosc_con::send_rtosc_str(const rtosc_string& rt_str) const
+void mini::rtosc_con::send_rtosc_str(const rtosc_string& rt_str) const
 {
 	lo_port.send_raw(rt_str.raw(), rt_str.size());
 }
 
 
-void mmms::player_t::update_effects()
+void mini::player_t::update_effects()
 {
 	std::stack<effect*> ready_fx;
 	ready_fx.push(&project.effect_root());
@@ -198,7 +198,7 @@ void mmms::player_t::update_effects()
 	} while(ready_fx.size());
 }
 
-void mmms::player_t::fill_commands()
+void mini::player_t::fill_commands()
 {
 	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -207,12 +207,12 @@ void mmms::player_t::fill_commands()
 	}
 }
 
-void mmms::player_t::send_commands()
+void mini::player_t::send_commands()
 {
 
 }
 
-mmms::player_t::player_t(mmms::loaded_project_t &project)  : project(project)
+mini::player_t::player_t(mini::loaded_project_t &project)  : project(project)
 {
 	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -223,7 +223,7 @@ mmms::player_t::player_t(mmms::loaded_project_t &project)  : project(project)
 	pq.push({nullptr, nullptr, end_set, end_set.begin()});
 }
 
-void mmms::player_t::play_until(float dest)
+void mini::player_t::play_until(float dest)
 {
 	for(; pos < dest; pos += step)
 	{

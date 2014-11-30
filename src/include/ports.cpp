@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -26,7 +26,7 @@
 #include "rtosc/rtosc.h"
 #include "ports.h"
 
-namespace mmms {
+namespace mini {
 
 int on_receive(const char *path, const char *, lo_arg **, int, lo_message msg, void *)
 {

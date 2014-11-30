@@ -26,7 +26,7 @@ else()
 endif()
 
 #Name your project here
-project(mmms)
+project(minimal)
 
 SET(VERSION_MAJOR "1")
 SET(VERSION_MINOR "0")
@@ -147,7 +147,7 @@ list(APPEND AUDIO_LIBRARIES ${LIBLO_LIBRARIES})
 list(APPEND AUDIO_LIBRARY_DIRS ${LIBLO_LIBRARY_DIRS})
 
 link_directories(${AUDIO_LIBRARY_DIRS})
-#target_link_libraries(mmms ${AUDIO_LIBRARIES})
+#target_link_libraries(minimal ${AUDIO_LIBRARIES})
 
 #find_package(Qt4)
 #if(QT4_FOUND)

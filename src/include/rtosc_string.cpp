@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -25,7 +25,7 @@ constexpr std::size_t pad_next(std::size_t pos) {
 	return ((PadSize - pos % PadSize) % PadSize);
 }
 
-namespace mmms {
+namespace mini {
 
 std::ostream& operator<<(std::ostream& stream,
 	const rtosc_string& r_str)

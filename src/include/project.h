@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -29,7 +29,7 @@
 #include "tuple_helpers.h"
 #include "lfo.h"
 
-namespace mmms
+namespace mini
 {
 
 using octave_t = std::size_t;

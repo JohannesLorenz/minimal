@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -30,7 +30,7 @@
 #include "types.h"
 #include "lfo.h"
 
-namespace mmms {
+namespace mini {
 
 class rtosc_con : non_copyable_t
 {
@@ -137,7 +137,7 @@ class loaded_project_t : non_copyable_t
 
 	effect_root_t _effect_root;
 
-//	static mmms::rtosc_con make_rtosc_con(const instrument_t &instrument);
+//	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
 
 	// commands
 //	command_table commands;

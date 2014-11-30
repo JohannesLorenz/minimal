@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -20,7 +20,7 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-namespace mmms
+namespace mini
 {
 
 class project_t;

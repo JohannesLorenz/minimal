@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* mmms - minimal multimedia studio                                      */
+/* minimal - a minimal rtosc sequencer                                   */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -22,7 +22,7 @@
 
 #include <string>
 
-namespace mmms
+namespace mini
 {
 
 //! note: if binary gets too large, we might need to not use templates...

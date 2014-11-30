@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* test.cpp - test files for mmms                                        */
+/* test.cpp - test files for minimal                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -21,7 +21,7 @@
 #include "lfo.h"
 #include "rtosc_string.h"
 
-using namespace mmms;
+using namespace mini;
 
 int main()
 {
