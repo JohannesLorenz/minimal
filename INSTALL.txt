@@ -34,7 +34,7 @@ In this directory, type:
   # the binary executable for zynaddsubfx
   cmake	-DCOMPILER=clang \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DZYNADDSUBFX_BINARY=/path/to/zynaddsubfx \
+	-DZYN_BINARY=/path/to/zynaddsubfx \
 	..
 
 2 Running

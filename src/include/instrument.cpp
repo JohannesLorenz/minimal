@@ -37,7 +37,7 @@ std::size_t instrument_t::next_id;
 
 std::string zynaddsubfx_t::make_start_command() const
 {
-	const std::string cmd = ZYNADDSUBFX_BINARY
+	const std::string cmd = ZYN_BINARY
 		" --no-gui -O alsa"; // TODO: read from options file
 	return cmd;
 }
