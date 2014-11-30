@@ -92,7 +92,7 @@ std::vector<mmms::rtosc_con> mmms::loaded_project_t::make_cons() const
 
 mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 	project(std::move(project)),
-	cons(std::move(make_cons())),
+	_cons(std::move(make_cons())),
 	_global(daw_visit::visit(project.global()))
 {
 	for(effect* e : project.effects()) // TODO: -> initializer list
@@ -110,7 +110,7 @@ mmms::loaded_project_t::loaded_project_t(mmms::project_t&& project) :
 
 mmms::loaded_project_t::~loaded_project_t()
 {
-	for(std::size_t i = 0; i < cons.size(); ++i)
+	for(std::size_t i = 0; i < _cons.size(); ++i)
 	{
 		const auto& quit_commands = project.instruments()[i]->quit_commands();
 		for(std::size_t j = 0; j < quit_commands.size(); ++j)
@@ -136,11 +136,13 @@ pid_t mmms::rtosc_con::make_fork(const char* start_cmd)
 
 mmms::rtosc_con::~rtosc_con()
 {
-	sleep(2); // TODO
+	//sleep(2); // TODO
 //	kill(pid, SIGTERM);
-	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
-	sleep(2);
+//	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
+	std::cerr << "Closing zasf now... " << std::endl;
 	lo_port.send_rtosc_msg("/close-ui", "");
+	sleep(2);
+	std::cerr << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
 
 	int status;
@@ -173,6 +175,11 @@ const {
 	(void)ret; // :-(
 }
 
+void mmms::rtosc_con::send_rtosc_str(const rtosc_string& rt_str) const
+{
+	lo_port.send_raw(rt_str.raw(), rt_str.size());
+}
+
 
 void mmms::player_t::update_effects()
 {
@@ -194,9 +201,9 @@ void mmms::player_t::update_effects()
 void mmms::player_t::fill_commands()
 {
 	for(const auto& pr : project.global())
+	for(const auto& pr2 : pr.second)
 	{
-		(void)pr; // TODO
-		//std::string
+		pr2.first->complete_buffer();
 	}
 }
 
@@ -205,7 +212,16 @@ void mmms::player_t::send_commands()
 
 }
 
-
+mmms::player_t::player_t(mmms::loaded_project_t &project)  : project(project)
+{
+	for(const auto& pr : project.global())
+	for(const auto& pr2 : pr.second)
+	{
+		pq.push({pr.first, pr2.first, pr2.second, pr2.second.begin()});
+		std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
+	}
+	pq.push({nullptr, nullptr, end_set, end_set.begin()});
+}
 
 void mmms::player_t::play_until(float dest)
 {
@@ -213,8 +229,45 @@ void mmms::player_t::play_until(float dest)
 	{
 		update_effects();
 		fill_commands();
-		send_commands();
+	//	send_commands();
+		std::cerr << "pos:" << pos << std::endl;
+		while(*pq.top().itr <= pos)
+		{
 
-		usleep(step);
+
+			pq_entry top = std::move(pq.top());
+			pq.pop();
+
+			if(top.itr == top.vals.end())
+			 throw "End";
+
+			std::cerr << pos << ": Next: " << *top.itr << std::endl;
+			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
+			//project.cons()[top.ins]
+
+			project.cons().front().send_rtosc_str(top.cmd->buffer());
+
+			++top.itr;
+			if(top.itr != top.vals.end())
+			{
+				pq.push(std::move(top));
+			}
+			else
+			{
+				throw "found end itr, missing sentinel?";
+			}
+
+
+		//	if(top.itr == top.vals.end())
+		//	 throw "end";
+
+			//pq.decrease(pq.top());
+
+			/*if(top().itr == top().vals.end())
+			 pq.insert
+			pq.pop();*/
+		}
+		std::cerr << "done: " << pos << std::endl;
+		usleep(1000000 * step);
 	}
 }

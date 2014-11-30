@@ -25,7 +25,28 @@
 
 namespace mmms {
 
-void inspect_rtosc_string(const std::vector<char> &str, std::ostream& stream = std::cerr);
+class rtosc_string
+{
+	std::vector<char> _data;
+public:
+	const char* raw() const { return _data.data(); }
+	std::size_t size() const { return _data.size(); }
+
+	std::ostream& inspect(std::ostream& stream = std::cerr) const {
+		return stream << *this << std::endl;
+	}
+
+	friend std::ostream& operator<<(std::ostream& stream, const rtosc_string&);
+
+	bool operator==(const rtosc_string& other) const {
+		return _data == other._data; }
+	bool operator<(const rtosc_string& other) const {
+		return _data < other._data; }
+
+	rtosc_string(std::vector<char>& _data) : _data(_data) {}
+	rtosc_string(std::vector<char>&& _data) : _data(std::move(_data)) {}
+	rtosc_string() {}
+};
 
 
 

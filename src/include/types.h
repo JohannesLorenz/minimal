@@ -40,12 +40,12 @@ class input_fixed {};
 template<class T> struct no_port { using type = T; };
 
 template</*class Input, */class InputPort, char _sign>
-class variable : public par_base<decltype(InputPort::get()), _sign>
+class variable : public par_base<typename InputPort::type, _sign>
 {
 	const InputPort& _input;
 public:
 	constexpr static bool is_const() { return false; }
-	using type = decltype(InputPort::get());
+	using type = typename InputPort::type;
 	variable(const InputPort& input) : _input(input) {}
 	const type& value() const { return _input.get(); }
 };
@@ -94,6 +94,15 @@ class oint<false> : public variable<int, 'i'>
 	using variable::variable;
 };*/
 
+inline std::vector<char> store_int32_t(const int32_t i) {
+	constexpr int32_t ff = 0xff;
+	return {
+		static_cast<char>((i>>24) & ff),
+		static_cast<char>((i>>16) & ff),
+		static_cast<char>((i>>8) & ff),
+		static_cast<char>(i & ff) };
+}
+
 template<class InputPort = no_port<int>>
 class oint : public variable<InputPort, 'i'>
 {
@@ -104,9 +113,7 @@ public:
 	constexpr static std::size_t size() { return 4; }
 
 	std::vector<char> to_osc_string() const {
-		std::vector<char> res = { 0, 0, 0, 0 };
-		*(int32_t*)res.data() = (int32_t)base::value();
-		return res;
+		return store_int32_t(base::value());
 	}
 };
 
@@ -120,9 +127,7 @@ public:
 	constexpr static std::size_t size() { return 4; }
 
 	std::vector<char> to_osc_string() const {
-		std::vector<char> res = { 0, 0, 0, 0 };
-		*(float*)res.data() = base::value();
-		return res;
+		return store_int32_t(base::value());
 	}
 
 

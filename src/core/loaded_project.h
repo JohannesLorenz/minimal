@@ -50,6 +50,8 @@ public:
 	rtosc_con(rtosc_con&&) = default;
 	void send_rtosc_msg(const char *path, const char *msg_args, ...)
 		const;
+	void send_rtosc_str(const rtosc_string &rt_str)
+		const;
 };
 
 /*class loaded_instrument
@@ -73,32 +75,42 @@ class player_t // TODO: own header
 	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
 
-	float step = 0.001f; // suggested by fundamental
+	float step = 0.1f; //0.001seconds; // suggested by fundamental
 	float pos = 0.0f;
 	loaded_project_t& project; // TODO! must be const
 
-
-	/*struct pq_entry
+	std::set<float> end_set = { std::numeric_limits<float>::max() };
+	struct pq_entry
 	{
-
+		//float next;
+		const instrument_t* ins;
+		const command_base* cmd;
+		const std::set<float>& vals;
+		std::set<float>::const_iterator itr;
 	};
 
 	struct cmp_func
 	{
-		bool operator() (const pq_entry* lhs, const pq_entry* rhs) const
+		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
 		{
-			return lhs->area < rhs->area;
+			return *lhs.itr > *rhs.itr; // should be <, but we start with small values
+
+		/*	bool left_end = lhs.itr != lhs.vals.end();
+			bool right_end = rhs.itr != rhs.vals.end();
+
+			return (right_end && !left_end) ||*/
 		}
 	};
 
-	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;*/
+	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
+	pq_type pq;
 
 	void update_effects();
 	void fill_commands();
 	void send_commands();
 
 public:
-	player_t(loaded_project_t& project)  : project(project) {}
+	player_t(loaded_project_t& project);
 
 	void play_until(float dest);
 };
@@ -120,7 +132,7 @@ class loaded_project_t : non_copyable_t
 	project_t project;
 
 	// connections
-	const std::vector<rtosc_con> cons;
+	const std::vector<rtosc_con> _cons;
 	std::vector<rtosc_con> make_cons() const;
 
 	effect_root_t _effect_root;
@@ -135,7 +147,9 @@ class loaded_project_t : non_copyable_t
 
 	daw_visit::global_map _global;
 public:
-	daw_visit::global_map& global() { return _global; };
+	const std::vector<rtosc_con>& cons() const { return _cons; }
+
+	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }
 	loaded_project_t(project_t&& project);
 	~loaded_project_t();

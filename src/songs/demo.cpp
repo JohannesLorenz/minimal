@@ -36,6 +36,8 @@ void init(project_t& p)
 	zynaddsubfx_t& sine_bass = p.emplace<zynaddsubfx_t>("sine bass");
 	//sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
 //	sine_bass.add_command_fixed<command>();
+//	(void)sine_bass;
+
 	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
 
 
@@ -66,15 +68,15 @@ void init(project_t& p)
 
 	notes_t maj(note_geom_t(0, 0));
 	maj.add_note(note_t(), note_geom_t(0, 0));
-	maj.add_note(note_t(), note_geom_t(4, 1));
-	maj.add_note(note_t(), note_geom_t(7, 2));
+	maj.add_note(note_t(), note_geom_t(0.33, 1));
+	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
 	track_t t1(sine_bass);
 	// 4 major chords
-	t1.add_notes(maj, note_geom_t(0, 0));
-	t1.add_notes(maj, note_geom_t(2, 1));
-	t1.add_notes(maj, note_geom_t(4, 2));
-	t1.add_notes(maj, note_geom_t(5, 3));
+	t1.add_notes(maj, note_geom_t(0, 62));
+	t1.add_notes(maj, note_geom_t(1, 63));
+	t1.add_notes(maj, note_geom_t(2, 64));
+	t1.add_notes(maj, note_geom_t(3, 65));
 
 	global_t& global = p.global();
 	global.add_track(t1);

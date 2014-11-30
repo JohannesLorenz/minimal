@@ -20,29 +20,41 @@
 #include <cstring>
 #include "rtosc_string.h"
 
+template<std::size_t PadSize>
+constexpr std::size_t pad_next(std::size_t pos) {
+	return ((PadSize - pos % PadSize) % PadSize);
+}
+
 namespace mmms {
 
-void inspect_rtosc_string(const std::vector<char>& str,
-	std::ostream& stream) {
+std::ostream& operator<<(std::ostream& stream,
+	const rtosc_string& r_str)
+{
+	const std::vector<char>& str = r_str._data;
 
-	for(const char& x : str)
+/*	for(const char& x : str)
 	{
 		stream << +x << std::endl;
 	}
-	stream << std::endl;
+	stream << std::endl;*/
 
 	if(str[0] != '/')
 	 throw "rtosc string invalid: does not start with `/'";
 	stream << "rtosc msg: \"" << str.data() << "\"" << std::endl;
 	std::vector<char>::const_iterator itr = str.begin() + strlen(str.data());
-	for(; !*itr; ++itr) ;
+	++itr;
+	itr += pad_next<4>(std::distance(str.begin(), itr));
+	//for(; !*itr; ++itr) ;
 	if(*(itr++)!=',')
 	 throw "rtosc string invalid: type string does not start with `,'";
 	const char* args = &*itr;
 	itr += strlen(&*itr);
-	for(; !*itr; ++itr) ;
+//	for(; !*itr; ++itr) ;
+	++itr;
+	itr += pad_next<4>(std::distance(str.begin(), itr));
 	for(; *args && (itr != str.end()); ++args)
 	{
+		const std::size_t pos = std::distance(str.begin(), itr);
 		stream << " * ";
 		const char* c = &*itr;
 		switch(*args)
@@ -58,7 +70,7 @@ void inspect_rtosc_string(const std::vector<char>& str,
 			default:
 				stream << "(unknown type: " << *args << ")";
 		}
-		stream << std::endl;
+		stream << " (pos: " << pos << ")" << std::endl;
 		//std::cerr << "c - str.data(): " << c - str.data() << std::endl;
 	}
 
@@ -66,9 +78,14 @@ void inspect_rtosc_string(const std::vector<char>& str,
 	{
 		stream << " -> rtosc string not terminated here." << std::endl;
 	}
-
+	else if(itr != str.end())
+	{
+		stream << " -> rtosc string has overfluent bytes." << std::endl;
+	}
 
 	// TODO
+
+	return stream;
 }
 
 }

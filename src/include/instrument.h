@@ -34,6 +34,7 @@
 #include "types.h"
 #include "utils.h"
 #include "daw.h"
+#include "rtosc_string.h"
 
 namespace mmms
 {
@@ -106,10 +107,12 @@ public:
 	const std::string& path() const { return _path; }
 	command_base(const char* _path) : _path(_path) {}
 	virtual std::string type_str() const = 0;
+	virtual const rtosc_string& complete_buffer() const = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
 //	virtual command_base* clone() const = 0; // TODO: generic clone class?
+	virtual const rtosc_string& buffer() const = 0;
 	virtual ~command_base() = 0;
 
 	virtual bool operator==(const command_base& other) const = 0;
@@ -193,11 +196,34 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
 		{
-			//s += ' ' + elem.to_osc_string(); // TODO: put this into oint etc class
+			std::cerr << "app single" << std::endl;
 			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
-			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s));
+			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?
 		}
 	};
+
+	template<bool SizeFix> // SizeFix = false
+	struct _fill_single
+	{
+		template<class T>
+		static void exec(std::vector<char>& )
+		{
+			// general case: can not fill
+		}
+	};
+
+	template<>
+	struct _fill_single<true>
+	{
+		template<class T>
+		static void exec(std::vector<char>& s)
+		{
+			std::cerr << "fill single" << std::endl;
+			s.resize(s.size() + T::size());
+			std::fill(s.end() - T::size(), s.end(), 0); // debug only
+		}
+	};
+
 
 	template<bool Ok, std::size_t N, std::size_t I, class ...Args2>
 	struct _append
@@ -205,8 +231,13 @@ namespace command_detail
 		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+			// case 1: it's const -> fill it in
 			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
-			_append<tp_at::size_fix(), N, I+1, Args2...>::exec(s, tp);
+			// case 2: not const, but fixed size -> buffer it
+			constexpr bool case_2 = (!tp_at::is_const()) && tp_at::size_fix();
+			_fill_single<case_2>::template exec<tp_at>(s);
+			// continue if const or fix
+			_append<tp_at::size_fix() || tp_at::is_const(), N, I+1, Args2...>::exec(s, tp);
 		}
 	};
 
@@ -227,6 +258,58 @@ namespace command_detail
 			// end reached
 		}
 	};
+
+
+
+	template<bool DoComplete> // DoComplete = false
+	struct _complete_single
+	{
+		template<class ...Args2>
+		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		{
+			// general case: can not fill
+		}
+	};
+
+	template<>
+	struct _complete_single<true>
+	{
+		template<class ...Args2>
+		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		{
+			// TODO next
+		}
+	};
+
+
+	template<std::size_t N, std::size_t I, class ...Args2>
+	struct _complete
+	{
+		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp)
+		{
+			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+
+			// TODO: non fix size
+			_complete_single<tp_at::size_fix() && !tp_at::is_const()>::exec(itr, std::get<I>(tp));
+
+		/*	// case 1: it's const -> fill it in
+			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
+			// case 2: not const, but fixed size -> buffer it
+			_fill_single<tp_at::size_fix()>::template exec<tp_at>(s);
+			// continue if const or fix
+			_append<tp_at::size_fix() || tp_at::is_const(), N, I+1, Args2...>::exec(s, tp);*/
+		}
+	};
+
+	template<std::size_t N, class ...Args2>
+	struct _complete<N, N, Args2...>
+	{
+		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		{
+			// end reached
+		}
+	};
+
 }
 
 template<class ...Args>
@@ -237,7 +320,7 @@ class command : public command_base
 
 
 public:
-	mutable std::vector<char> buffer;
+	mutable rtosc_string _buffer;
 private:
 
 	constexpr std::size_t est_length() const {
@@ -271,7 +354,7 @@ private:
 		_append::exec(prefix, more_args...);
 	}*/
 
-	std::vector<char> prefill_buffer() const
+	rtosc_string prefill_buffer() const
 	{
 		std::vector<char> res(_path.begin(), _path.end());
 		do {
@@ -286,19 +369,23 @@ private:
 		return res;
 	}
 
+
 public:
 	command(const char* _path, Args... args) :
 		command_base(_path),
 		args(args...),
-		buffer(prefill_buffer()) {
+		_buffer(prefill_buffer()) {
 
 		std::cerr << "est. length: " << est_length() << std::endl;
 	}
 
-	void complete_buffer() const
+	const rtosc_string& complete_buffer() const
 	{
 //		command_detail::_complete<sizeof...(Args), 0, Args...>::exec(buffer, args);
+		return _buffer;
 	}
+	const rtosc_string& buffer() const { return _buffer; }
+
 
 	std::string type_str() const {
 		std::string res { ',' , Args::sign()... };
@@ -311,14 +398,16 @@ public:
 
 	//
 	virtual bool operator==(const command_base& other) const {
-		return other.path() == _path && other.type_str() == type_str();
+		//return other.path() == _path && other.type_str() == type_str();
+		return _buffer.operator==(other.buffer());
 	}
 	virtual bool operator<(const command_base& other) const {
-		std::size_t pathdiff = other.path().compare(_path);
+		return _buffer.operator<(other.buffer());
+	/*	std::size_t pathdiff = other.path().compare(_path);
 		if(pathdiff)
 		 return (pathdiff > 0);
 		else
-		 return type_str() < other.type_str();
+		 return type_str() < other.type_str();*/
 	}
 
 /*	template<class ...Args2>
@@ -385,7 +474,7 @@ struct map_cmp
 // height, command + times
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t : named_t, non_copyable_t
+class instrument_t : public named_t, non_copyable_t
 {
 public:
 	using id_t = std::size_t;
@@ -463,6 +552,8 @@ public:
 	cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& mm) const
 	{
 		// channel, note, velocity
+
+		// note offset <-> command
 		std::map<int, command_base*> cmd_of;
 
 		cmd_vectors res;
@@ -480,15 +571,27 @@ public:
 				// TODO: note_off
 
 				res.emplace(cmd, std::set<float>{pr.first.start});
+				std::cerr << "New note command: " << cmd << std::endl;
+
+				cmd = new command<oint<>, oint<>>("/noteOff", 0, pr.first.offs);
+				res.emplace(cmd, std::set<float>{pr.first.start + pr.second.length()});
+
+				std::cerr << "Map content now: " << std::endl;
+				for(const auto& p : res)
+				{
+					std::cerr << p.first->buffer() << std::endl;
+				}
 			}
 			else
 			{
 				res.find(itr1->second)->second.insert(pr.first.start);
+				std::cerr << "Found note command." << std::endl;
 			}
 
 
 
 		}
+		std::cerr << "Added " << res.size() << " note commands to track." << std::endl;
 		return res;
 	}
 

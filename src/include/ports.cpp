@@ -18,8 +18,11 @@
 /*************************************************************************/
 
 #include <cstdarg>
+#include <cstring>
 #include <lo/lo.h>
+#include <iostream>
 
+#include "rtosc_string.h"
 #include "rtosc/rtosc.h"
 #include "ports.h"
 
@@ -79,19 +82,58 @@ lo_port_t::~lo_port_t()
 	lo_address_free(dest);
 }
 
+bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
+{
+	std::vector<char> v(buffer, buffer + len);
+	rtosc_string rt(v);
+	std::cerr << "sending raw: " << std::endl;
+	rt.inspect();
+
+	int result;
+	lo_message msg = lo_message_deserialise((void*)buffer, len, &result);
+	if(!msg)
+	{
+		std::cerr << "lo error: " << result << std::endl;
+		throw "lo_message_deserialise";
+	}
+	if(dest)
+	{
+		int res = lo_send_message(dest, buffer, msg);
+		std::cerr << "lo_send: " << res << std::endl;
+	}
+	else
+	 throw "dest";
+	return true;
+}
+
 bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const
 {
 	va_list va;
 	va_start(va, msg_args);
 	char buffer[2048];
 	size_t len = rtosc_vmessage(buffer, 2048, path, msg_args, va);
+	if(!len)
+	{
+		throw "rtosc_vmessage";
+	}
 	va_end(va);
 
-	lo_message msg = lo_message_deserialise(buffer, len, NULL);
+	return send_raw(buffer, len);
+}
+
+
+/*bool lo_port_t::send_rtosc_msg(const char *path) const
+{
+	char buffer[2048];
+	strncpy(buffer, path, 2048);
+	std::cerr << "buffer" << std::endl;
+	lo_message msg = lo_message_deserialise(buffer, strlen(buffer), nullptr);
+	if(!msg)
+	 std::cerr << "NO MESSAGE!" << std::endl;
 	if(dest)
 	 lo_send_message(dest, buffer, msg);
 	return true; // TODO
-}
+}*/
 
 lo_server_t::lo_server_t()
 	: srv(lo_server_new_with_proto(NULL, LO_UDP, error_cb))

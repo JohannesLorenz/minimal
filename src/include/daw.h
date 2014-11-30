@@ -101,7 +101,7 @@ namespace daw
 		template<class T>
 		void add(const T& t, const geom_t& geom) {
 			map_t<T>& m = get<T>();
-			m.emplace(geom, &t); // TODO: push back pointer, id, ... ?
+			m.emplace(geom, new T(t)); // TODO: push back pointer, id, ... ?
 		}
 	};
 
@@ -120,8 +120,10 @@ namespace daw
 	class note_t
 	{
 		char _velocity = 64;
+		float _length = 0.25;
 	public:
 		char velocity() const { return _velocity; }
+		float length() const { return _length; }
 	};
 
 	/*class note_t : public seg_base<note_geom_t> {
@@ -137,6 +139,9 @@ namespace daw
 		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
 	public:
 		void add_note(const note_t& n, geom_t geom = geom_t::zero()) { add<note_t>(n, geom); }
+		/*notes_t(const note_geom_t& geom) : seg_base(geom) {
+			add_note(note_t(), note_geom_t(std::numeric_limits<float>::max(), 0));
+		}*/
 		using seg_base::seg_base;
 //		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
@@ -162,7 +167,7 @@ namespace daw
 	public:
 		const instrument_t* instrument() const { return ins; }
 		using seg_base::seg_base;
-		void add_notes(const notes_t& n, note_geom_t geom = geom_t::zero()) { add<notes_t>(n, geom); } // TODO: add with geom (maybe default arg?)
+		void add_notes(const notes_t& n, note_geom_t geom = geom_t::zero()) { add<notes_t>(n, geom); }
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 		track_t(instrument_t& ins) : /*ins_id(ins.id()),*/ ins(&ins) {}
 	};

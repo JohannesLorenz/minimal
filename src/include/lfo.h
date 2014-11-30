@@ -44,7 +44,7 @@ public:
 
 
 template<class T>
-class out_port : base_port<T, T&>
+class out_port : public base_port<T, T&>
 {
 	using base = base_port<T, T&>;
 public:
@@ -54,7 +54,7 @@ public:
 
 
 template<class T>
-class in_port : base_port<T, const T&>
+class in_port : public base_port<T, const T&>
 {
 	using base = base_port<T, const T&>;
 public:
@@ -72,7 +72,7 @@ public:
 	virtual void proceed(float time) = 0;
 };
 
-struct lfo : effect
+struct lfo_t : effect
 {
 	float val;
 	out_port<float> out;
@@ -80,7 +80,7 @@ struct lfo : effect
 	{
 		val = sinf(time);
 	}
-	lfo() : out(this, val) {}
+	lfo_t() : out(this, val) {}
 };
 
 }

@@ -57,7 +57,7 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 }
 
 zynaddsubfx_t::zynaddsubfx_t(const char *name) :
-	instrument_t(name, { new command<>("/quit") })
+	instrument_t(name, { new command<>("/quit") }) // TODO! close-ui?
 	{}
 
 instrument_t::~instrument_t()
