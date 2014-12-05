@@ -17,37 +17,11 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
-#include "ports.h"
-#include "instrument.h"
+#include "command.h"
 
 namespace mini {
 
-std::size_t instrument_t::next_id;
-
-/*void instrument_t::set_param_fixed(const char *param, ...)
-{
-	ports::send_rtosc_msg(param, "?", "...");
-}*/
-
-instrument_t::~instrument_t()
-{
-	std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
-	{
-		std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
-	}
-}
-
-/*instrument_t *instrument_t::clone() const
-{
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
+command_base::~command_base() {}
 
 }
 

@@ -145,6 +145,12 @@ namespace daw_visit {
 			//	std::inserter(result, result.end()));
 		}
 		//for(t.get<auto_t>) // automation tracks...
+
+		for(const auto& pr : t.get<command_base>())
+		{
+			result.emplace(pr.second, std::set<float>{});
+		}
+
 		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
 		return result;
 	}

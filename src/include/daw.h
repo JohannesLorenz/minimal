@@ -24,6 +24,7 @@
 #include <map>
 #include "utils.h"
 #include "tuple_helpers.h"
+#include "command.h" // TODO: forward declare?
 
 namespace mini {
 
@@ -98,9 +99,9 @@ namespace daw
 				std::forward_as_tuple(T),
 				std::forward_as_tuple(Args...)).second;
 		}*/
-		template<class T>
+		template<class T, class StoreT = T>
 		void add(const T& t, const geom_t& geom) {
-			map_t<T>& m = get<T>();
+			map_t<StoreT>& m = get<StoreT>();
 			m.emplace(geom, new T(t)); // TODO: push back pointer, id, ... ?
 		}
 	};
@@ -159,7 +160,8 @@ namespace daw
 	//! notes, corresponding to single instruments
 	//! if you want to use multiple tracks with the same instrument, make them and set them in the ctor
 	//! if you want multiple instruments to play the same, make multiple tracks and use the same notes object
-	class track_t : public seg_base<note_geom_t, notes_t>, note_event_propagator<track_t>
+
+	class track_t : public seg_base<note_geom_t, notes_t, command_base>, note_event_propagator<track_t>
 	{
 		using child_type = note_t;
 		//instrument_t::id_t ins_id;
@@ -168,6 +170,10 @@ namespace daw
 		const instrument_t* instrument() const { return ins; }
 		using seg_base::seg_base;
 		void add_notes(const notes_t& n, note_geom_t geom = geom_t::zero()) { add<notes_t>(n, geom); }
+
+		template<class Command>
+		void add_command(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
+
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 		track_t(instrument_t& ins) : /*ins_id(ins.id()),*/ ins(&ins) {}
 	};

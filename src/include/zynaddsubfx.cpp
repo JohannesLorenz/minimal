@@ -17,37 +17,39 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
-#include "ports.h"
-#include "instrument.h"
+#include <unistd.h> // TODO
+#include <fstream>
+
+#include "config.h"
+#include "zynaddsubfx.h"
 
 namespace mini {
 
-std::size_t instrument_t::next_id;
-
-/*void instrument_t::set_param_fixed(const char *param, ...)
+std::string zynaddsubfx_t::make_start_command() const
 {
-	ports::send_rtosc_msg(param, "?", "...");
-}*/
-
-instrument_t::~instrument_t()
-{
-	std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
-	{
-		std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
-	}
+	const std::string cmd = ZYN_BINARY
+		" --no-gui -O alsa"; // TODO: read from options file
+	return cmd;
 }
 
-/*instrument_t *instrument_t::clone() const
+instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 {
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
+	port_t port;
+	std::string tmp_filename = "/tmp/zynaddsubfx_"
+		+ std::to_string(pid);
+	std::cout << "Reading " << tmp_filename << std::endl;
+	sleep(1); // wait for zyn to be started... (TODO)
+	std::ifstream stream(tmp_filename);
+	if(!stream.good()) {
+		throw "Error: Communication to zynaddsubfx failed.";
+	}
+	stream >> port;
+	return port;
+}
+
+zynaddsubfx_t::zynaddsubfx_t(const char *name) :
+	instrument_t(name, { new command<>("/quit") }) // TODO! close-ui?
+	{}
 
 }
 

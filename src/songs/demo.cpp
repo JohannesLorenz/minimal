@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include "zynaddsubfx.h"
 #include "project.h"
 #include "lfo.h"
 
@@ -78,8 +79,18 @@ void init(project_t& p)
 	t1.add_notes(maj, note_geom_t(2, 64));
 	t1.add_notes(maj, note_geom_t(3, 65));
 
+	lfo_t* m_lfo = new lfo_t;
+	p.effects().push_back(m_lfo);
+
+	command<oint<out_port<float>>> cmd("part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
+	t1.add_command(cmd);
+
 	global_t& global = p.global();
 	global.add_track(t1);
+
+
+	// PEnable
+	// "part0/kit0/adpars/voice0/AmpEnvelope/Penvsustain:i"
 
 /*	const auto ftor = [](int c) { return c % 100 + 50; };
 	func<decltype(ftor), p_char, int> f(ftor);
