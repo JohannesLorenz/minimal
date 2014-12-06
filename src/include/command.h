@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -24,7 +24,7 @@
 #include <string>
 #include <algorithm>
 #include <tuple>
-#include "rtosc_string.h"
+#include "osc_string.h"
 
 namespace mini
 {
@@ -41,12 +41,12 @@ public:
 	command_base(const char* _path) :
 		_path(_path) {}
 	virtual std::string type_str() const = 0;
-	virtual const rtosc_string& complete_buffer() const = 0;
+	virtual const osc_string& complete_buffer() const = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
 //	virtual command_base* clone() const = 0; // TODO: generic clone class?
-	virtual const rtosc_string& buffer() const = 0;
+	virtual const osc_string& buffer() const = 0;
 	virtual ~command_base() = 0;
 
 	virtual bool operator==(const command_base& other) const = 0;
@@ -237,7 +237,7 @@ class command : public command_base
 
 
 public:
-	mutable rtosc_string _buffer;
+	mutable osc_string _buffer;
 private:
 
 	constexpr std::size_t est_length() const {
@@ -271,7 +271,7 @@ private:
 		_append::exec(prefix, more_args...);
 	}*/
 
-	rtosc_string prefill_buffer() const
+	osc_string prefill_buffer() const
 	{
 		std::vector<char> res(_path.begin(), _path.end());
 		do {
@@ -296,12 +296,12 @@ public:
 		std::cerr << "est. length: " << est_length() << std::endl;
 	}
 
-	const rtosc_string& complete_buffer() const
+	const osc_string& complete_buffer() const
 	{
 //		command_detail::_complete<sizeof...(Args), 0, Args...>::exec(buffer, args);
 		return _buffer;
 	}
-	const rtosc_string& buffer() const { return _buffer; }
+	const osc_string& buffer() const { return _buffer; }
 
 
 	std::string type_str() const {

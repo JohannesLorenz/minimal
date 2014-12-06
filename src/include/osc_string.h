@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -25,7 +25,7 @@
 
 namespace mini {
 
-class rtosc_string
+class osc_string
 {
 	std::vector<char> _data;
 public:
@@ -36,16 +36,16 @@ public:
 		return stream << *this << std::endl;
 	}
 
-	friend std::ostream& operator<<(std::ostream& stream, const rtosc_string&);
+	friend std::ostream& operator<<(std::ostream& stream, const osc_string&);
 
-	bool operator==(const rtosc_string& other) const {
+	bool operator==(const osc_string& other) const {
 		return _data == other._data; }
-	bool operator<(const rtosc_string& other) const {
+	bool operator<(const osc_string& other) const {
 		return _data < other._data; }
 
-	rtosc_string(std::vector<char>& _data) : _data(_data) {}
-	rtosc_string(std::vector<char>&& _data) : _data(std::move(_data)) {}
-	rtosc_string() {}
+	osc_string(std::vector<char>& _data) : _data(_data) {}
+	osc_string(std::vector<char>&& _data) : _data(std::move(_data)) {}
+	osc_string() {}
 };
 
 

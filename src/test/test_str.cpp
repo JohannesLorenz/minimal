@@ -19,7 +19,7 @@
 
 #include "project.h"
 #include "lfo.h"
-#include "rtosc_string.h"
+#include "osc_string.h"
 
 using namespace mini;
 

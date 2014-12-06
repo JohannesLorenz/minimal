@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -48,9 +48,9 @@ public:
 	rtosc_con(const instrument_t& ins);
 	rtosc_con(rtosc_con&) = delete;
 	rtosc_con(rtosc_con&&) = default;
-	void send_rtosc_msg(const char *path, const char *msg_args, ...)
+	void send_osc_msg(const char *path, const char *msg_args, ...)
 		const;
-	void send_rtosc_str(const rtosc_string &rt_str)
+	void send_osc_str(const osc_string &rt_str)
 		const;
 };
 

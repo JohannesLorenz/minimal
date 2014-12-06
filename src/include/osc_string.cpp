@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -18,7 +18,7 @@
 /*************************************************************************/
 
 #include <cstring>
-#include "rtosc_string.h"
+#include "osc_string.h"
 
 template<std::size_t PadSize>
 constexpr std::size_t pad_next(std::size_t pos) {
@@ -28,7 +28,7 @@ constexpr std::size_t pad_next(std::size_t pos) {
 namespace mini {
 
 std::ostream& operator<<(std::ostream& stream,
-	const rtosc_string& r_str)
+	const osc_string& r_str)
 {
 	const std::vector<char>& str = r_str._data;
 

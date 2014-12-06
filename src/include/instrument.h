@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -34,7 +34,7 @@
 #include "types.h"
 #include "utils.h"
 #include "daw.h"
-#include "rtosc_string.h"
+#include "osc_string.h"
 #include "command.h"
 
 namespace mini

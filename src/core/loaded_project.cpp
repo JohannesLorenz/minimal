@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -165,7 +165,7 @@ mini::rtosc_con::rtosc_con(const instrument_t &ins) :
 {
 }
 
-void mini::rtosc_con::send_rtosc_msg(const char *path, const char *msg_args, ...)
+void mini::rtosc_con::send_osc_msg(const char *path, const char *msg_args, ...)
 const {
 	va_list argptr;
 	va_start(argptr, msg_args);
@@ -175,7 +175,7 @@ const {
 	(void)ret; // :-(
 }
 
-void mini::rtosc_con::send_rtosc_str(const rtosc_string& rt_str) const
+void mini::rtosc_con::send_osc_str(const osc_string& rt_str) const
 {
 	lo_port.send_raw(rt_str.raw(), rt_str.size());
 }
@@ -252,7 +252,7 @@ auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 //			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
 			//project.cons()[top.ins]
 
-			project.cons().front().send_rtosc_str(top.cmd->buffer());
+			project.cons().front().send_osc_str(top.cmd->buffer());
 
 
 			top.itr->operator ++();

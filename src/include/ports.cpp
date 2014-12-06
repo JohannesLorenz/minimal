@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal rtosc sequencer                                   */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -22,7 +22,7 @@
 #include <lo/lo.h>
 #include <iostream>
 
-#include "rtosc_string.h"
+#include "osc_string.h"
 #include "rtosc/rtosc.h"
 #include "ports.h"
 
@@ -85,7 +85,7 @@ lo_port_t::~lo_port_t()
 bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 {
 	std::vector<char> v(buffer, buffer + len);
-	rtosc_string rt(v);
+	osc_string rt(v);
 	std::cerr << "sending raw: " << std::endl;
 	rt.inspect();
 

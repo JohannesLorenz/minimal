@@ -22,7 +22,7 @@ HEADERS += src/core/plugin.h \
 	src/include/util.h \
 	src/include/lfo.h \
 	src/include/types.h \
-	src/include/rtosc_string.h
+    src/include/osc_string.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -33,7 +33,7 @@ SOURCES += src/core/main.cpp \
 	src/core/loaded_project.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
-	src/include/rtosc_string.cpp
+    src/include/osc_string.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \
