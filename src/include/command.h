@@ -171,24 +171,51 @@ namespace command_detail
 	};
 
 
+	// TODO: generalize all this: template<class ...Args, bool Active> action { exec(); }... then inherit
 
-	template<bool DoComplete> // DoComplete = false
+
+	template<bool DoComplete, bool EndReached> // DoComplete = true, EndReached = true
 	struct _complete_single
 	{
-		template<class ...Args2>
-		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		template<class T>
+		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
 		{
-			// general case: can not fill
+		/*	std::cerr << "app single" << std::endl;
+			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
+			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?*/
+
+			_append_single<true>::exec(v, elem);
+			*itr = v.end(); // obviously...
+
+
+		//	v.resize();
 		}
 	};
 
 	template<>
-	struct _complete_single<true>
+	struct _complete_single<true, false> // DoComplete = true, EndReached = false
 	{
-		template<class ...Args2>
-		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		template<class T>
+		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
 		{
-			// TODO next
+			std::cerr << "app single" << std::endl;
+			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
+			// note the difference: no inserter here
+			std::cerr << "test before: " << osc_string(v) << std::endl;
+			std::copy(osc_str.begin(), osc_str.end(), *itr); // TODO: move?
+			std::cerr << "test now: " << osc_string(v) << std::endl;
+
+			*itr += osc_str.size();
+		}
+	};
+
+	template<bool EndReached> // DoComplete = false => do nothing
+	struct _complete_single<false, EndReached>
+	{
+		template<class T>
+		static void exec(std::vector<char>& , std::vector<char>::iterator* , const T& )
+		{
+			// do not complete
 		}
 	};
 
@@ -196,16 +223,16 @@ namespace command_detail
 	template<bool All, std::size_t N, std::size_t I, class ...Args2> // All = false
 	struct _complete
 	{
-		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp)
+		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const std::tuple<Args2...>& tp)
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
 
 			// TODO: non fix size
 			constexpr bool cond1 = !tp_at::is_const() || All;
-			_complete_single<cond1>::exec(itr, std::get<I>(tp));
+			_complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
 
 			constexpr bool next_all = All || !tp_at::size_fix(); // first non fix marks
-			_complete<next_all, N, I+1, Args2...>::exec(itr, tp);
+			_complete<next_all, N, I+1, Args2...>::exec(v, itr, tp);
 
 		/*	// case 1: it's const -> fill it in
 			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
@@ -216,10 +243,10 @@ namespace command_detail
 		}
 	};
 
-	template<std::size_t N, std::size_t I, class ...Args2>
-	struct _complete<true, N, I, Args2...>
+	template<bool All, std::size_t N, class ...Args2>
+	struct _complete<All, N, N, Args2...>
 	{
-		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		static void exec(std::vector<char>& , std::vector<char>::iterator* , const std::tuple<Args2...>& )
 		{
 			// end reached
 		}
@@ -298,8 +325,9 @@ public:
 
 	const osc_string& complete_buffer() const
 	{
-//		command_detail::_complete<sizeof...(Args), 0, Args...>::exec(buffer, args);
-		return _buffer;
+		auto itr = _buffer.get_itr_first_arg();
+		command_detail::_complete<false, sizeof...(Args), 0, Args...>::exec(_buffer.data(), &itr, args);
+		return buffer();
 	}
 	const osc_string& buffer() const { return _buffer; }
 

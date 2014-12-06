@@ -20,11 +20,6 @@
 #include <cstring>
 #include "osc_string.h"
 
-template<std::size_t PadSize>
-constexpr std::size_t pad_next(std::size_t pos) {
-	return ((PadSize - pos % PadSize) % PadSize);
-}
-
 namespace mini {
 
 std::ostream& operator<<(std::ostream& stream,

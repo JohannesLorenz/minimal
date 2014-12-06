@@ -126,7 +126,7 @@ class command_table
 
 };
 
-class effect_root_t : public effect {
+class effect_root_t : public effect_t {
 	void proceed(float ) {}
 };
 

@@ -268,7 +268,7 @@ class project_t : non_copyable_t
 	float _tempo = 140.0;
 	std::string _title;
 	std::vector<std::unique_ptr<instrument_t>> _instruments;
-	std::vector<effect*> _effects;
+	std::vector<effect_t*> _effects;
 //	std::vector<track_t> _tracks;
 	daw::global_t _global;
 public:
@@ -281,7 +281,7 @@ public:
 	}
 
 	daw::global_t& global() { return _global; }
-	std::vector<effect*>& effects() { return _effects; }
+	std::vector<effect_t*>& effects() { return _effects; }
 
 	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 		return _instruments; }

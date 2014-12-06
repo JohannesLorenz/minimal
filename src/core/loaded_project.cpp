@@ -95,7 +95,7 @@ mini::loaded_project_t::loaded_project_t(mini::project_t&& project) :
 	_cons(std::move(make_cons())),
 	_global(daw_visit::visit(project.global()))
 {
-	for(effect* e : project.effects()) // TODO: -> initializer list
+	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
 		if(e->writers.empty())
 		{
@@ -183,16 +183,16 @@ void mini::rtosc_con::send_osc_str(const osc_string& rt_str) const
 
 void mini::player_t::update_effects()
 {
-	std::stack<effect*> ready_fx;
+	std::stack<effect_t*> ready_fx;
 	ready_fx.push(&project.effect_root());
 	do
 	{
-		effect* cur_effect = ready_fx.top();
+		effect_t* cur_effect = ready_fx.top();
 		ready_fx.pop();
 
 		cur_effect->proceed(pos);
 
-		for(effect* next: cur_effect->readers)
+		for(effect_t* next: cur_effect->readers)
 		 ready_fx.push(next);
 
 	} while(ready_fx.size());
@@ -222,8 +222,6 @@ mini::player_t::player_t(mini::loaded_project_t &project)  : project(project)
 	}
 	pq.push({nullptr, nullptr, &end_set, end_set.make_itr()}); // = sentinel
 }
-
-#include <typeinfo>
 
 void mini::player_t::play_until(float dest)
 {

@@ -22,15 +22,35 @@
 
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 namespace mini {
+
+template<std::size_t PadSize>
+constexpr inline std::size_t pad_next(std::size_t pos) {
+	return ((PadSize - pos % PadSize) % PadSize);
+}
 
 class osc_string
 {
 	std::vector<char> _data;
 public:
+	std::vector<char>& data() { return _data; }
+	const std::vector<char>& data() const { return _data; }
 	const char* raw() const { return _data.data(); }
 	std::size_t size() const { return _data.size(); }
+
+	std::vector<char>::iterator get_itr_first_arg() {
+		std::vector<char>::iterator itr = _data.begin() + strlen(_data.data());
+		++itr;
+		itr += pad_next<4>(std::distance(_data.begin(), itr));
+		if(*(itr++)!=',')
+		 throw "rtosc string invalid: type string does not start with `,'";
+		itr += strlen(&*itr);
+		++itr;
+		itr += pad_next<4>(std::distance(_data.begin(), itr));
+		return itr;
+	}
 
 	std::ostream& inspect(std::ostream& stream = std::cerr) const {
 		return stream << *this << std::endl;

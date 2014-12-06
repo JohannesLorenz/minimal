@@ -27,18 +27,18 @@
 namespace mini
 {
 
-class effect;
+class effect_t;
 
 template<class T, class RefT>
 class base_port
 {
 protected:
-	effect* ef_ref;
+	effect_t* ef_ref;
 	RefT ref;
 public:
 	using type = T;
 	RefT get() const { return ref; }
-	base_port(effect* ef_ref, RefT ref) :
+	base_port(effect_t* ef_ref, RefT ref) :
 		ef_ref(ef_ref), ref(ref) {}
 };
 
@@ -65,14 +65,14 @@ public:
 	using base_port<T, T&>::base_port;
 };
 
-class effect
+class effect_t
 {
 public:
-	std::vector<effect*> readers, writers;
+	std::vector<effect_t*> readers, writers;
 	virtual void proceed(float time) = 0;
 };
 
-struct lfo_t : effect
+struct lfo_t : effect_t
 {
 	float val;
 	out_port<float> out;
