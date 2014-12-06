@@ -217,11 +217,13 @@ mini::player_t::player_t(mini::loaded_project_t &project)  : project(project)
 	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
 	{
-		pq.push({pr.first, pr2.first, pr2.second, pr2.second.begin()});
-		std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
+		pq.push({pr.first, pr2.first, pr2.second, pr2.second->make_itr()});
+//		std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
-	pq.push({nullptr, nullptr, end_set, end_set.begin()});
+	pq.push({nullptr, nullptr, &end_set, end_set.make_itr()}); // = sentinel
 }
+
+#include <typeinfo>
 
 void mini::player_t::play_until(float dest)
 {
@@ -231,31 +233,49 @@ void mini::player_t::play_until(float dest)
 		fill_commands();
 	//	send_commands();
 		std::cerr << "pos:" << pos << std::endl;
-		while(*pq.top().itr <= pos)
+		while(**pq.top().itr <= pos)
 		{
+
 
 
 			pq_entry top = std::move(pq.top());
 			pq.pop();
+ // TODO !!! ??
+/* auto x4 = dynamic_cast<const activator_events*>(top.activator);
+auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 
-			if(top.itr == top.vals.end())
-			 throw "End";
+			if(x3 == x4->events.end())
+			 throw "End";*/
 
-			std::cerr << pos << ": Next: " << *top.itr << std::endl;
-			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
+
+//			std::cerr << pos << ": Next: " << *top.itr << std::endl;
+//			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
 			//project.cons()[top.ins]
 
 			project.cons().front().send_rtosc_str(top.cmd->buffer());
 
-			++top.itr;
-			if(top.itr != top.vals.end())
+
+			top.itr->operator ++();
+
+/*			if(!top.activator)
+			 throw "TACTIV";
+			if(!top.itr)
+			 throw "TOPITR";*/
+
+			pq.push(std::move(top));
+/*
+auto x2 = dynamic_cast<const activator_events*>(top.activator);
+auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
+			if(x1
+			!= x2->events.end())
+		//	if(top.itr != top.activator.end())
 			{
 				pq.push(std::move(top));
 			}
 			else
 			{
 				throw "found end itr, missing sentinel?";
-			}
+			}*/
 
 
 		//	if(top.itr == top.vals.end())

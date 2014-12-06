@@ -127,18 +127,17 @@ namespace daw_visit {
 			cmd_vectors note_commands =
 				t.instrument()->make_note_commands(mm);
 			for(auto& pr : note_commands) {
-				pr.second.insert(std::numeric_limits<float>::max()); // sentinel
+				dynamic_cast<activator_events*>(pr.second)->insert(std::numeric_limits<float>::max()); // sentinel
 			}
 			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
 
-			for(const auto& pr : note_commands)
+			for(auto& pr : note_commands)
 			{
 				auto itr = result.find(pr.first);
 				if(itr == result.end())
-				 result.emplace(pr.first, std::move(pr.second));
+				 result.emplace(pr.first, pr.second);
 				else
-				 std::move(pr.second.begin(), pr.second.end(),
-					std::inserter(itr->second, itr->second.end()));
+				 dynamic_cast<activator_events*>(itr->second)->move_from(dynamic_cast<activator_events*>(pr.second));
 			}
 
 			//std::move(note_commands.begin(), note_commands.end(),
@@ -148,7 +147,7 @@ namespace daw_visit {
 
 		for(const auto& pr : t.get<command_base>())
 		{
-			result.emplace(pr.second, std::set<float>{});
+			result.emplace(pr.second, new activator_poll());
 		}
 
 		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
@@ -171,9 +170,9 @@ namespace daw_visit {
 			//cmd_vectors v = std::make_pair(&t, visit(t));
 			cmd_vectors _v = visit(t);
 
-			using cmd_pair = std::pair<const command_base*, std::set<float>>;
+			using cmd_pair = std::pair<const command_base*, activator_base*>;
 
-			for(const cmd_pair pr : _v)
+			for(cmd_pair pr : _v)
 			{
 				auto ins_itr = res.find(ins);
 				if(ins_itr == res.end())
@@ -184,11 +183,11 @@ namespace daw_visit {
 				}
 				else
 				{
-					const auto vt = pr;
+					auto vt = pr;
 					//for(const cmd_vectors::value_type vt : v)
 					{
 						const command_base& cmd = *vt.first;
-						const std::set<float>& vals = vt.second;
+						activator_base* & vals = vt.second;
 
 						// if instrument *and* command are equal,
 						// add the set to the known command
@@ -200,8 +199,11 @@ namespace daw_visit {
 						}
 						else
 						{
-							std::set<float>& vals_existing = ins_cmd->second;
-							vals_existing.insert(vals.begin(), vals.end());
+						//	std::set<float>& vals_existing = ins_cmd->second;
+						//	vals_existing.insert(vals.begin(), vals.end());
+							activator_events* vals_existing = dynamic_cast<activator_events*>(ins_cmd->second);
+							//vals_existing.insert(vals.begin(), vals.end());
+							vals_existing->move_from(dynamic_cast<activator_events*>(vals)); // TODO: is move ok here?
 						}
 
 					}
@@ -216,7 +218,7 @@ namespace daw_visit {
 		}*/ // TODO
 
 
-		for(const auto& pr : res)
+	/*	for(const auto& pr : res)
 		{
 			std::cerr << "Summary: contents of instrument " << pr.first->name() << ": " << std::endl;
 			for(const auto& pr2 : pr.second)
@@ -225,7 +227,7 @@ namespace daw_visit {
 				for(const float& f : pr2.second)
 				 std::cerr << "  * note at: " << f << std::endl;
 			}
-		}
+		}*/
 
 		return res;
 	}

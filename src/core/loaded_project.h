@@ -79,21 +79,26 @@ class player_t // TODO: own header
 	float pos = 0.0f;
 	loaded_project_t& project; // TODO! must be const
 
-	std::set<float> end_set = { std::numeric_limits<float>::max() };
+	activator_events end_set = { std::set<float>{ std::numeric_limits<float>::max() }};
 	struct pq_entry
 	{
 		//float next;
 		const instrument_t* ins;
 		const command_base* cmd;
-		const std::set<float>& vals;
-		std::set<float>::const_iterator itr;
+		//const std::set<float>& vals;
+
+		const activator_base* const activator;
+		activator_base_itr* const itr;
+		//float next_val;
+		//std::set<float>::const_iterator itr;
+
 	};
 
 	struct cmp_func
 	{
 		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
 		{
-			return *lhs.itr > *rhs.itr; // should be <, but we start with small values
+			return **lhs.itr > **rhs.itr; // should be <, but we start with small values
 
 		/*	bool left_end = lhs.itr != lhs.vals.end();
 			bool right_end = rhs.itr != rhs.vals.end();

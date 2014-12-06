@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <tuple>
 #include "rtosc_string.h"
 
 namespace mini
@@ -37,7 +38,8 @@ public:
 	using call_functor = void (*)(const char*, const char*, ...);
 
 	const std::string& path() const { return _path; }
-	command_base(const char* _path) : _path(_path) {}
+	command_base(const char* _path) :
+		_path(_path) {}
 	virtual std::string type_str() const = 0;
 	virtual const rtosc_string& complete_buffer() const = 0;
 
@@ -87,31 +89,8 @@ constexpr std::size_t pad(std::size_t pos) {
 	return pos + ((PadSize - pos % PadSize) % PadSize);
 }
 
-/*std::string to_osc_string(float f) {
-	std::string res = "0000";
-	*(float*)res.data() = f;
-	return res;
-}
-
-std::string to_osc_string(int32_t i) {
-	std::string res = "0000";
-	*(int*)res.data() = i;
-	return res;
-}*/
-
 namespace command_detail
 {
-/*	template<class T>
-	void _append_single(std::string& , const T& ) {
-		// general case: can not append
-	}
-
-	template<class T, char Sign>
-	void _append_single(std::string& s, const variable<no_port<T>, Sign>& v) {
-		s += ' ' + to_osc_string(v.value());
-	}*/
-
-
 	template<bool Printable> // Printable = false
 	struct _append_single
 	{

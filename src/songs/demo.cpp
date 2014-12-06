@@ -82,7 +82,7 @@ void init(project_t& p)
 	lfo_t* m_lfo = new lfo_t;
 	p.effects().push_back(m_lfo);
 
-	command<oint<out_port<float>>> cmd("part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
+	command<oint<out_port<float>>> cmd("/part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
 	t1.add_command(cmd);
 
 	global_t& global = p.global();

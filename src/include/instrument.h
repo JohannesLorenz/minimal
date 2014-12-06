@@ -105,6 +105,7 @@ class named_t
 public:
 	const std::string& name() const { return _name; }
 	named_t(const char* _name) : _name(_name) {}
+	named_t(const std::string& _name) : _name(_name) {}
 };
 
 
@@ -116,8 +117,70 @@ struct map_cmp
 	}
 };
 
+class activator_events;
+class activator_poll;
+
+class activator_base_itr
+{
+public:
+	virtual float operator*() const = 0;
+	virtual activator_base_itr& operator++() = 0;
+};
+
+class activator_events_itr : public activator_base_itr
+{
+ public: // TODO
+	std::set<float>::const_iterator itr;
+public:
+	activator_events_itr(const activator_events& ab);
+	virtual float operator*() const { return *itr; }
+	virtual activator_base_itr& operator++() {
+		return ++itr, *this;
+	}
+};
+
+class activator_poll_itr : public activator_base_itr
+{
+public:
+	activator_poll_itr(const activator_poll& )
+		//itr(ab.begin())
+	{
+	}
+	virtual float operator*() const { return 0.0f; }
+	virtual activator_base_itr& operator++() { return *this; }
+};
+
+
+
+class activator_base
+{
+public:
+	virtual activator_base_itr* make_itr() const = 0;
+};
+
+class activator_events : public activator_base
+{ public: // TODO
+	std::set<float> events;
+	//std::set<float>::const_iterator itr = events.begin();
+	friend class activator_events_itr;
+public:
+	activator_events(const std::set<float>& events) : events(events) {}
+	void insert(const float& val) { events.insert(val); }
+	void move_from(activator_events* src) { // TODO: should pass rvalue?
+		std::move(src->events.begin(), src->events.end(), // TODO: use move!
+			std::inserter(events, events.end()));
+	}
+	activator_events_itr* make_itr() const { return new activator_events_itr(*this); }
+};
+
+class activator_poll : public activator_base
+{
+public:
+	activator_poll_itr* make_itr() const { return new activator_poll_itr(*this); }
+};
+
 // height, command + times
-using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
+using cmd_vectors = std::map<const command_base*, activator_base*, map_cmp>; // TODO: prefer vector?
 
 class instrument_t : public named_t, non_copyable_t
 {

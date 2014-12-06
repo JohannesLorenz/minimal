@@ -25,7 +25,25 @@
 namespace mini
 {
 
-class zynaddsubfx_t : public instrument_t
+class node_t : public named_t
+{
+public:
+	node_t(const std::string& base, const std::string& ext)
+		: named_t(base + ext) {}
+
+	//node(std::string base, std::string ext, std::size_t id)
+	//	: node(base, ext + std::to_string(id)) {}
+
+	node_t spawn(const std::string& ext) const {
+		return node_t(name(), ext);
+	}
+
+	node_t spawn(const std::string& ext, std::size_t id) const {
+		return spawn(ext + std::to_string(id));
+	}
+};
+
+class zynaddsubfx_t : public instrument_t, node_t
 {
 	// TODO: read from options file
 /*	const char* binary
@@ -64,11 +82,11 @@ public:
 
 				// TODO: note_off
 
-				res.emplace(cmd, std::set<float>{pr.first.start});
+				res.emplace(cmd, new activator_events(std::set<float>{pr.first.start}));
 				std::cerr << "New note command: " << cmd << std::endl;
 
 				cmd = new command<oint<>, oint<>>("/noteOff", 0, pr.first.offs);
-				res.emplace(cmd, std::set<float>{pr.first.start + pr.second.length()});
+				res.emplace(cmd, new activator_events(std::set<float>{pr.first.start + pr.second.length()}));
 
 				std::cerr << "Map content now: " << std::endl;
 				for(const auto& p : res)
@@ -78,7 +96,7 @@ public:
 			}
 			else
 			{
-				res.find(itr1->second)->second.insert(pr.first.start);
+				dynamic_cast<activator_events*>(res.find(itr1->second)->second)->insert(pr.first.start);
 				std::cerr << "Found note command." << std::endl;
 			}
 
@@ -113,6 +131,10 @@ public:
 		{
 		}
 	};
+
+	node_t add0() const {
+		return spawn("part0/kit0/adpars/");
+	}
 };
 
 }

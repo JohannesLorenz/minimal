@@ -40,6 +40,11 @@ instrument_t::~instrument_t()
 	}
 }
 
+activator_events_itr::activator_events_itr(const activator_events &ab) :
+	itr(ab.events.begin())
+{
+}
+
 /*instrument_t *instrument_t::clone() const
 {
 	instrument_t* result = new instrument_t();
