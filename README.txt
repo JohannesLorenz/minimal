@@ -21,7 +21,7 @@ CONTENTS
 2 Why using minimal?
 ::::::::::::::::::::
 
-The author loved lmms, but still found many things unpractical. minimal fixes
+The author liked lmms, but still found many things unpractical. minimal fixes
 some of those:
 
  * The use of windows VSTs in lmms makes many shared files useless for linux

@@ -20,12 +20,10 @@
 #ifndef INSTRUMENT_H
 #define INSTRUMENT_H
 
-#include <tuple>
 #include <string>
 #include <vector>
 #include <memory>
 #include <iostream> // TODO
-#include <limits>
 #include <map>
 #include <set>
 // ...
@@ -34,8 +32,8 @@
 #include "types.h"
 #include "utils.h"
 #include "daw.h"
-#include "osc_string.h"
 #include "command.h"
+#include "effect.h"
 
 namespace mini
 {
@@ -96,9 +94,6 @@ public:
 };
 #endif
 
-
-#include "utils.h" // TODO
-
 class named_t
 {
 	const std::string _name;
@@ -117,6 +112,7 @@ struct map_cmp
 	}
 };
 
+#if 0
 class activator_events;
 class activator_poll;
 
@@ -181,8 +177,11 @@ public:
 
 // height, command + times
 using cmd_vectors = std::map<const command_base*, activator_base*, map_cmp>; // TODO: prefer vector?
+#endif
 
-class instrument_t : public named_t, non_copyable_t
+using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
+
+class instrument_t : public named_t, non_copyable_t, public effect_t
 {
 public:
 	using id_t = std::size_t;
@@ -220,10 +219,14 @@ public:
 	}*/
 
 
-	template<class C, class ...Args>
+/*	template<class C, class ...Args>
 	void add_command_fixed(Args ...args) {
 		commands.push_back(new C(args...));
-	}
+	}*/
+
+
+	//template<class Command>
+	//void add_port(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
 
 	void set_param_fixed(const char* param, ...);
 	virtual std::string make_start_command() const = 0;
@@ -232,6 +235,17 @@ public:
 	//instrument_t(instrument_t&& other) = default;
 
 	virtual cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& ) const = 0;
+
+
+
+
+
+	virtual float proceed(float time)
+	{
+		(void)time;
+		return 0.0;
+		// TODO
+	}
 };
 
 template <char ...Letters> class fixed_str {

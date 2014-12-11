@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include "loaded_project.h"
 #include "plugin.h"
-#include "ports.h"
+#include "lo_port.h"
 
 using namespace mini;
 

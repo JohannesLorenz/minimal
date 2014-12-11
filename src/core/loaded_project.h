@@ -26,33 +26,12 @@
 
 #include "instrument.h"
 #include "project.h"
-#include "ports.h"
+#include "lo_port.h"
 #include "types.h"
 #include "lfo.h"
+#include "daw_visit.h"
 
 namespace mini {
-
-class rtosc_con : non_copyable_t
-{
-private:
-	static pid_t make_fork(const char *start_cmd);
-	rtosc_con(const rtosc_con& other) = delete;
-public:
-	const pid_t pid;
-	const int fd;
-	const int port; // TODO: port_t
-	const lo_port_t lo_port;
-
-	std::string port_as_str() { return std::to_string(port); }
-	~rtosc_con();
-	rtosc_con(const instrument_t& ins);
-	rtosc_con(rtosc_con&) = delete;
-	rtosc_con(rtosc_con&&) = default;
-	void send_osc_msg(const char *path, const char *msg_args, ...)
-		const;
-	void send_osc_str(const osc_string &rt_str)
-		const;
-};
 
 /*class loaded_instrument
 {
@@ -67,6 +46,28 @@ public:
 	}
 };*/
 
+using tick_t = std::size_t;
+
+class m_time_t
+{
+	constexpr static double time_per_tick = 1000000 / 1024.0; // in useconds
+public:
+	tick_t pos; // represents 1/1024 seconds // suggested by fundamental
+	void tick() { usleep(time_per_tick); }
+	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
+};
+
+class bars_t
+{
+//	tick_t n, c;
+public:
+//	bars_t(tick_t n, tick_t c) : n(n), c(c) {}
+};
+
+
+
+
+
 class loaded_project_t;
 
 class player_t // TODO: own header
@@ -75,30 +76,98 @@ class player_t // TODO: own header
 	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
 
-	float step = 0.1f; //0.001seconds; // suggested by fundamental
+	float step = 0.1f; //0.001seconds;
 	float pos = 0.0f;
 	loaded_project_t& project; // TODO! must be const
 
-	activator_events end_set = { std::set<float>{ std::numeric_limits<float>::max() }};
-	struct pq_entry
+	std::set<float> end_set = { std::numeric_limits<float>::max() };
+
+	class task_base
+	{
+//		const command_base* cmd;
+		float _next_time;
+	protected:
+		void update_next_time(float new_value) {
+			_next_time = new_value;
+		}
+	public:
+		virtual void proceed(float time) = 0;
+		float next_time() const { return _next_time; }
+		task_base(float next_time) : _next_time(next_time) {}
+//		virtual float next() = 0;
+	};
+
+	/*struct pq_entry
 	{
 		//float next;
-		const instrument_t* ins;
+	//	const instrument_t* ins;
 		const command_base* cmd;
 		//const std::set<float>& vals;
 
-		const activator_base* const activator;
+		//const activator_base* const activator;
 		activator_base_itr* const itr;
+
+
+
 		//float next_val;
 		//std::set<float>::const_iterator itr;
 
+	};*/
+
+	class task_events : public task_base
+	{
+	//	const loaded_project_t& project;
+		const loaded_instrument_t* ins;
+		const command_base* cmd;
+		std::set<float>::const_iterator itr;
+	public:
+		void proceed(float); // TODO: really cpp?
+
+		//float next() { return *itr; }
+		// TODO: no idea why I can not use initializer lists
+		task_events(//const loaded_project_t& project,
+			const loaded_instrument_t* ins,
+			const command_base* cmd,
+			const std::set<float>::const_iterator& itr) :
+			task_base(*itr),
+			//project(project),
+			ins(ins),
+			cmd(cmd),
+			itr(itr)
+		{
+		}
 	};
+
+	class task_effect : public task_base
+	{
+	//	const instrument_t* ins;
+		effect_t* effect;
+		//const command_base* cmd;
+		task_effect() :
+			// TODO: 0 is wrong if we don't start playback at 0
+			task_base(0.0f)
+		{
+
+		}
+
+		void proceed(float time) {
+			float next_time = effect->proceed(time);
+			update_next_time(next_time);
+		}
+	};
+
+	/*struct pq_entry
+	{
+		task_base* task;
+		float next_time;
+	};*/
+	using pq_entry = task_base*; // TODO: redundancy
 
 	struct cmp_func
 	{
 		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
 		{
-			return **lhs.itr > **rhs.itr; // should be <, but we start with small values
+			return lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
 
 		/*	bool left_end = lhs.itr != lhs.vals.end();
 			bool right_end = rhs.itr != rhs.vals.end();
@@ -127,7 +196,7 @@ class command_table
 };
 
 class effect_root_t : public effect_t {
-	void proceed(float ) {}
+	float proceed(float ) { return 0.0f; }
 };
 
 //! this class takes a project and then does some things to handle it
@@ -137,8 +206,10 @@ class loaded_project_t : non_copyable_t
 	project_t project;
 
 	// connections
-	const std::vector<rtosc_con> _cons;
-	std::vector<rtosc_con> make_cons() const;
+//	const std::vector<rtosc_con> _cons;
+//	std::vector<rtosc_con> make_cons() const;
+	const std::vector<loaded_instrument_t> _ins;
+	std::vector<loaded_instrument_t> make_ins() const;
 
 	effect_root_t _effect_root;
 
@@ -152,7 +223,7 @@ class loaded_project_t : non_copyable_t
 
 	daw_visit::global_map _global;
 public:
-	const std::vector<rtosc_con>& cons() const { return _cons; }
+	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 
 	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }

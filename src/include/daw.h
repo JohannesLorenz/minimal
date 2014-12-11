@@ -171,8 +171,8 @@ namespace daw
 		using seg_base::seg_base;
 		void add_notes(const notes_t& n, note_geom_t geom = geom_t::zero()) { add<notes_t>(n, geom); }
 
-		template<class Command>
-		void add_command(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
+	//	template<class Command>
+	//	void add_command(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
 
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 		track_t(instrument_t& ins) : /*ins_id(ins.id()),*/ ins(&ins) {}

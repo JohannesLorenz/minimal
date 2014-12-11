@@ -17,44 +17,74 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
+#ifndef DAW_VISIT_H
+#define DAW_VISIT_H
+
+#include <string>
+
+#include "utils.h"
 #include "lo_port.h"
 #include "instrument.h"
 
 namespace mini {
 
-std::size_t instrument_t::next_id;
-
-/*void instrument_t::set_param_fixed(const char *param, ...)
+// TODO: own header
+class rtosc_con : non_copyable_t
 {
-	ports::send_rtosc_msg(param, "?", "...");
-}*/
+private:
+	static pid_t make_fork(const char *start_cmd);
+	rtosc_con(const rtosc_con& other) = delete;
+public:
+	const pid_t pid;
+	const int fd;
+	const int port; // TODO: port_t
+	const lo_port_t lo_port;
 
-instrument_t::~instrument_t()
+	std::string port_as_str() { return std::to_string(port); }
+	~rtosc_con();
+	rtosc_con(const instrument_t& ins);
+	rtosc_con(rtosc_con&) = delete;
+	rtosc_con(rtosc_con&&) = default;
+	void send_osc_msg(const char *path, const char *msg_args, ...)
+		const;
+	void send_osc_str(const osc_string &rt_str)
+		const;
+};
+
+class loaded_instrument_t
 {
-	std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
+	static int next_id;
+public:
+	const instrument_t& ins;
+	rtosc_con con;
+	int id;
+	loaded_instrument_t(const instrument_t& ins)
+		: ins(ins), con(ins), id(++next_id)
 	{
-		std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
 	}
+	bool operator<(const loaded_instrument_t& rhs) const
+	{
+		return id < rhs.id;
+	}
+};
+
+namespace daw_visit {
+
+	using namespace daw;
+
+	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t& n);
+
+	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t& ns);
+
+	cmd_vectors visit(const track_t& t);
+
+	// rtosc port (via instrument), commands, times
+	using global_map = std::map<const loaded_instrument_t, cmd_vectors>;
+
+	global_map visit(global_t& g);
+
 }
 
-#if 0
-activator_events_itr::activator_events_itr(const activator_events &ab) :
-	itr(ab.events.begin())
-{
-}
-#endif
-
-/*instrument_t *instrument_t::clone() const
-{
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
-
 }
 
+#endif // DAW_VISIT_H

@@ -25,25 +25,110 @@
 namespace mini
 {
 
+namespace zyn {
+
 class node_t : public named_t
 {
+// the inheriting class must define the sub-nodes
+protected:
+	template<class NodeT>
+	NodeT spawn(const std::string& ext) const {
+		return NodeT(name(), ext);
+	}
+
+	template<class NodeT>
+	NodeT spawn(const std::string& ext, std::size_t id) const {
+		return spawn<NodeT>(ext + std::to_string(id));
+	}
 public:
 	node_t(const std::string& base, const std::string& ext)
 		: named_t(base + ext) {}
 
 	//node(std::string base, std::string ext, std::size_t id)
 	//	: node(base, ext + std::to_string(id)) {}
+};
 
-	node_t spawn(const std::string& ext) const {
-		return node_t(name(), ext);
+class node_port_t : node_t
+{
+	// todo: disallow spawn here
+	template<class NodeT>
+	NodeT spawn(const std::string& ext, std::size_t id) const {
+		return spawn<NodeT>(ext + std::to_string(id));
 	}
 
-	node_t spawn(const std::string& ext, std::size_t id) const {
-		return spawn(ext + std::to_string(id));
+	using node_t::node_t;
+};
+
+
+/*class p_envsustain : node_port_t
+{
+public:
+	using node_port_t::node_port_t;
+};*/
+
+
+
+template<class Port1 = no_port<int>>
+class p_envsustain : public command<oint<Port1>>
+{
+	using base = command<oint<Port1>>;
+public:
+	static const char* path() { return "PEnvsustain"; } // TODO: noteOn string is code duplicate
+	p_envsustain(oint<Port1> value) // TODO: "ref?"
+		: base("/PEnvsustain", value)
+	{
 	}
 };
 
-class zynaddsubfx_t : public instrument_t, node_t
+
+
+
+
+class amp_env : node_t
+{
+public:
+	using node_t::node_t;
+	template<class Port1>
+	zyn::p_envsustain<Port1> envsustain(Port1& con) const {
+		return envsustain(oint<Port1>(con));
+	}
+	template<class Port1>
+	zyn::p_envsustain<Port1> envsustain(oint<Port1> con) const {
+		return p_envsustain<Port1>(con);
+	}
+};
+
+class global : node_t
+{
+public:
+	using node_t::node_t;
+	zyn::amp_env amp_env() const {
+		return spawn<zyn::amp_env>("AmpEnvelope/");
+	}
+};
+
+
+class voice0 : node_t
+{
+public:
+	using node_t::node_t;
+};
+
+class adpars : node_t
+{
+public:
+	using node_t::node_t;
+	zyn::voice0 voice0() const {
+		return spawn<zyn::voice0>("voice0/");
+	}
+	zyn::global global() const {
+		return spawn<zyn::global>("global/");
+	}
+};
+
+}
+
+class zynaddsubfx_t : public instrument_t, zyn::node_t
 {
 	// TODO: read from options file
 /*	const char* binary
@@ -61,51 +146,7 @@ public:
 
 
 	std::string make_start_command() const;
-	cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& mm) const
-	{
-		// channel, note, velocity
-
-		// note offset <-> command
-		std::map<int, command_base*> cmd_of;
-
-		cmd_vectors res;
-		for(const std::pair<daw::note_geom_t, daw::note_t>& pr : mm)
-		{
-		//	res.emplace_back(new command<int_f, int_f, int_v>("/noteOn", 0, pr.first.offs, pr.second.velocity()), pr.first.start); // TODO: valgrind!
-
-			auto itr1 = cmd_of.find(pr.first.offs);
-			if(itr1 == cmd_of.end())
-			{
-				// TODO: valgrind
-				command_base* cmd = new command<oint<>, oint<>, oint<>>("/noteOn", 0, pr.first.offs, pr.second.velocity());
-				cmd_of.emplace_hint(itr1, pr.first.offs, cmd);
-
-				// TODO: note_off
-
-				res.emplace(cmd, new activator_events(std::set<float>{pr.first.start}));
-				std::cerr << "New note command: " << cmd << std::endl;
-
-				cmd = new command<oint<>, oint<>>("/noteOff", 0, pr.first.offs);
-				res.emplace(cmd, new activator_events(std::set<float>{pr.first.start + pr.second.length()}));
-
-				std::cerr << "Map content now: " << std::endl;
-				for(const auto& p : res)
-				{
-					std::cerr << p.first->buffer() << std::endl;
-				}
-			}
-			else
-			{
-				dynamic_cast<activator_events*>(res.find(itr1->second)->second)->insert(pr.first.start);
-				std::cerr << "Found note command." << std::endl;
-			}
-
-
-
-		}
-		std::cerr << "Added " << res.size() << " note commands to track." << std::endl;
-		return res;
-	}
+	cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& mm) const;
 
 	port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);
@@ -132,8 +173,8 @@ public:
 		}
 	};
 
-	node_t add0() const {
-		return spawn("part0/kit0/adpars/");
+	zyn::adpars add0() const {
+		return spawn<zyn::adpars>("part0/kit0/adpars/");
 	}
 };
 

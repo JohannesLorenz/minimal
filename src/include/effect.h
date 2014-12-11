@@ -17,58 +17,78 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef LFO_H
-#define LFO_H
+#ifndef EFFECT_H
+#define EFFECT_H
 
-#include <cmath>
-#include <limits>
-#include "effect.h"
+#include <vector>
+#include "types.h"
+
+const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
 namespace mini
 {
 
-template<class OutType = float>
-struct lfo_t : effect_t
-{
-	const float min, max, mm2, middle;
-	const float start, end, times, outside, step;
-	const float repeat;
-	out_port<OutType> out;
-	//float time =
-	float proceed(float time)
-	{
-		if(time < start) {
-			out.set(outside);
-			return start;
-		}
-		else if(time < end)
-		{
-			out.set(middle + sinf(time-start) * mm2);
-			// TODO: repeat etc.
+class effect_t;
 
-			return time + step;
-		}
-		else
-		{
-			out.set(outside);
-			return std::numeric_limits<float>::max();
-		}
-	//	return 0.0f; // TODO
+template<class T, class RefT>
+class base_port
+{
+protected:
+	effect_t* ef_ref;
+	RefT ref;
+	//RefT last_value;
+	bool _changed;
+	void reset_value(const T& new_value) {
+		_changed = (ref != new_value);
+		ref = new_value;
 	}
-	lfo_t(float min, float max, float start, float end, float times = 1.0f, float outside = 0.0f, float step = default_step) :
-		min(min),
-		max(max),
-		mm2((max - min)/2.0f),
-		middle(min + mm2),
-		start(start),
-		end(end),
-		times(times),
-		outside(outside),
-		step(step),
-		repeat((end - start)/times),
-		out(*this) {}
+
+public:
+	const effect_t* get_ef_ref() const { return ef_ref; }
+	effect_t* get_ef_ref() { return ef_ref; }
+	bool changed() { return changed; }
+	using type = T;
+	const RefT& get() const { return ref; }
+	base_port(effect_t& ef_ref) :
+		ef_ref(&ef_ref) {}
+};
+
+
+template<class T>
+class out_port : public base_port<T, T>
+{
+	using base = base_port<T, T>;
+public:
+	const T& set(const T& new_val) { return base::ref = new_val; }
+	using base_port<T, T>::base_port;
+};
+
+
+template<class T>
+class in_port : public base_port<T, T>
+{
+	using base = base_port<T, T>;
+	const out_port<T>* out_p;
+public:
+	void connect(out_port<T>& op) {
+		out_p = &op;
+		op.get_ef_ref()->readers.push_back(base::ef_ref);
+		base::ef_ref->writers.push_back(op.get_ef_ref());
+	}
+
+	void update() { reset_value(out_p->get()); }
+
+	using base_port<T, T>::base_port;
+};
+
+class effect_t
+{
+public:
+	std::vector<effect_t*> readers, writers;
+	// returns the next time when the effect must be started
+	virtual float proceed(float time) = 0;
 };
 
 }
 
-#endif // LFO_H
+#endif // EFFECT_H

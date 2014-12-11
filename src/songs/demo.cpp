@@ -39,7 +39,7 @@ void init(project_t& p)
 //	sine_bass.add_command_fixed<command>();
 //	(void)sine_bass;
 
-	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
+//	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
 
 
 
@@ -79,11 +79,18 @@ void init(project_t& p)
 	t1.add_notes(maj, note_geom_t(2, 64));
 	t1.add_notes(maj, note_geom_t(3, 65));
 
-	lfo_t* m_lfo = new lfo_t;
+/*	lfo_t* m_lfo = new lfo_t;
 	p.effects().push_back(m_lfo);
 
 	command<oint<out_port<float>>> cmd("/part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
-	t1.add_command(cmd);
+//	t1.add_command(cmd);
+*/
+	lfo_t<int>* m_lfo = new lfo_t<int>(0.0, 127.0, 0.0, 4.0);
+	p.effects().push_back(m_lfo);
+	in_port<int> ip(sine_bass);
+	ip.connect(m_lfo->out);
+	auto envsustain = sine_bass.add0().global().amp_env().envsustain(/*m_lfo->out*/ ip); // todo: need discretizer
+//	t1.add_command(cmd);
 
 	global_t& global = p.global();
 	global.add_track(t1);

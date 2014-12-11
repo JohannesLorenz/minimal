@@ -14,7 +14,6 @@ INCLUDEPATH += src/include/ \
 HEADERS += src/core/plugin.h \
 	src/include/project.h \
 	src/include/instrument.h \
-	src/include/ports.h \
 	src/core/loaded_project.h \
 	src/include/utils.h \
 	src/include/tuple_helpers.h \
@@ -22,18 +21,22 @@ HEADERS += src/core/plugin.h \
 	src/include/util.h \
 	src/include/lfo.h \
 	src/include/types.h \
-    src/include/osc_string.h
+	src/include/zynaddsubfx.h \
+    src/include/osc_string.h \
+    src/include/lo_port.h \
+      src/include/command.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
 	src/include/project.cpp \
 	src/songs/demo.cpp \
 	src/include/instrument.cpp \
-	src/include/ports.cpp \
 	src/core/loaded_project.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
-    src/include/osc_string.cpp
+	src/include/zynaddsubfx.cpp \
+    src/include/osc_string.cpp \
+    src/include/lo_port.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

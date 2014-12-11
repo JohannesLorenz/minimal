@@ -24,7 +24,7 @@
 
 #include "osc_string.h"
 #include "rtosc/rtosc.h"
-#include "ports.h"
+#include "lo_port.h"
 
 namespace mini {
 

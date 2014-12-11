@@ -27,48 +27,11 @@
 
 #include "loaded_project.h"
 
-// TODO: move this out?
-bool get_input(const char* shell_command, pid_t* _childs_pid)
+namespace mini
 {
-	int pipefd[2];
-	pid_t childs_pid;
-
-	if (pipe(pipefd) == -1) {
-		std::cerr << "pipe() failed -> no zyn" << std::endl;
-		return false;
-	}
-
-//	fcntl(pipefd[0], F_SETFL, O_NONBLOCK); // ?????
-
-	// fork sh
-	childs_pid=fork();
-	if(childs_pid < 0) {
-		std::cerr << "fork() failed -> no zyn" << std::endl;
-		return false;
-	}
-	else if(childs_pid == 0) {
-
-		close(pipefd[0]); /* Close unused read end */
-
-		dup2(pipefd[1], STDOUT_FILENO);
-
-		execlp("/bin/sh", "sh"	, "-c", shell_command, NULL);
-
-		close(pipefd[1]); /* Reader will see EOF */
-		exit(0);
-	}
-
-	close(pipefd[1]); /* Close unused write end */
-	dup2(pipefd[0], STDIN_FILENO);
-
-	if(_childs_pid)
-	 *_childs_pid = childs_pid;
-	return true;
-}
 
 
-
-/*mini::rtosc_con mini::loaded_project::make_rtosc_con(
+/*rtosc_con loaded_project::make_rtosc_con(
 	const instrument_t& instrument)
 {
 // TODO: move to rtosc_con ctor?
@@ -80,9 +43,9 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 }*/
 
 
-std::vector<mini::rtosc_con> mini::loaded_project_t::make_cons() const
+std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 {
-	std::vector<mini::rtosc_con> result;
+	std::vector<loaded_instrument_t> result;
 	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
 	{
 		result.emplace_back(*ins);
@@ -90,9 +53,9 @@ std::vector<mini::rtosc_con> mini::loaded_project_t::make_cons() const
 	return result;
 }
 
-mini::loaded_project_t::loaded_project_t(mini::project_t&& project) :
+loaded_project_t::loaded_project_t(project_t&& project) :
 	project(std::move(project)),
-	_cons(std::move(make_cons())),
+	_ins(std::move(make_ins())),
 	_global(daw_visit::visit(project.global()))
 {
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
@@ -108,9 +71,9 @@ mini::loaded_project_t::loaded_project_t(mini::project_t&& project) :
 
 
 
-mini::loaded_project_t::~loaded_project_t()
+loaded_project_t::~loaded_project_t()
 {
-	for(std::size_t i = 0; i < _cons.size(); ++i)
+	for(std::size_t i = 0; i < _ins.size(); ++i)
 	{
 		const auto& quit_commands = project.instruments()[i]->quit_commands();
 		for(std::size_t j = 0; j < quit_commands.size(); ++j)
@@ -126,62 +89,7 @@ mini::loaded_project_t::~loaded_project_t()
 	}
 }
 
-
-pid_t mini::rtosc_con::make_fork(const char* start_cmd)
-{
-	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
-	get_input(start_cmd, &pid);
-	return pid;
-}
-
-mini::rtosc_con::~rtosc_con()
-{
-	//sleep(2); // TODO
-//	kill(pid, SIGTERM);
-//	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
-	std::cerr << "Closing zasf now... " << std::endl;
-	lo_port.send_rtosc_msg("/close-ui", "");
-	sleep(2);
-	std::cerr << "zasf should be closed now... " << std::endl;
-	// TODO: kill() if this did not work
-
-	int status;
-	while (-1 == waitpid(pid, &status, 0)) {
-		puts("...");
-		usleep(10000); // TODO: what is a good value here?
-	}
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
-		exit(1);
-	}
-	sleep(3);
-}
-
-mini::rtosc_con::rtosc_con(const instrument_t &ins) :
-	pid(make_fork(ins.make_start_command().c_str())),
-	fd(0), // TODO
-	port(ins.get_port(pid, fd)),
-	lo_port(port_as_str().c_str())
-{
-}
-
-void mini::rtosc_con::send_osc_msg(const char *path, const char *msg_args, ...)
-const {
-	va_list argptr;
-	va_start(argptr, msg_args);
-	bool ret = lo_port.send_rtosc_msg(path, msg_args, argptr);
-	va_end(argptr);
-	//return ret;
-	(void)ret; // :-(
-}
-
-void mini::rtosc_con::send_osc_str(const osc_string& rt_str) const
-{
-	lo_port.send_raw(rt_str.raw(), rt_str.size());
-}
-
-
-void mini::player_t::update_effects()
+void player_t::update_effects()
 {
 	std::stack<effect_t*> ready_fx;
 	ready_fx.push(&project.effect_root());
@@ -198,7 +106,7 @@ void mini::player_t::update_effects()
 	} while(ready_fx.size());
 }
 
-void mini::player_t::fill_commands()
+void player_t::fill_commands()
 {
 	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -207,23 +115,28 @@ void mini::player_t::fill_commands()
 	}
 }
 
-void mini::player_t::send_commands()
+void player_t::send_commands()
 {
 
 }
 
-mini::player_t::player_t(mini::loaded_project_t &project)  : project(project)
+player_t::player_t(loaded_project_t &project)  : project(project)
 {
 	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
+	if(pr2.second.empty()) // marks a poll
 	{
-		pq.push({pr.first, pr2.first, pr2.second, pr2.second->make_itr()});
-//		std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
+		//pq.push(new task_poll());
 	}
-	pq.push({nullptr, nullptr, &end_set, end_set.make_itr()}); // = sentinel
+	else
+	{
+		pq.push(new task_events(&pr.first, pr2.first, pr2.second.begin()));
+	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
+	}
+	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel
 }
 
-void mini::player_t::play_until(float dest)
+void player_t::play_until(float dest)
 {
 	for(; pos < dest; pos += step)
 	{
@@ -231,11 +144,21 @@ void mini::player_t::play_until(float dest)
 		fill_commands();
 	//	send_commands();
 		std::cerr << "pos:" << pos << std::endl;
-		while(**pq.top().itr <= pos)
+		while(pq.top()->next_time() <= pos)
 		{
 
+			pq_entry top = std::move(pq.top());
+			pq.pop();
 
 
+			/*const bool reinsert = top->proceed(pos);
+			if(reinsert)
+			 pq.push(top);*/
+			top->proceed(pos); // will update the next-time event
+			pq.push(top);
+
+
+#if 0
 			pq_entry top = std::move(pq.top());
 			pq.pop();
  // TODO !!! ??
@@ -261,6 +184,8 @@ auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 			 throw "TOPITR";*/
 
 			pq.push(std::move(top));
+
+#endif
 /*
 auto x2 = dynamic_cast<const activator_events*>(top.activator);
 auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
@@ -288,4 +213,29 @@ auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 		std::cerr << "done: " << pos << std::endl;
 		usleep(1000000 * step);
 	}
+}
+
+
+void player_t::task_events::proceed(float)
+{
+
+	// TODO !!! ??
+	/* auto x4 = dynamic_cast<const activator_events*>(top.activator);
+auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
+
+			if(x3 == x4->events.end())
+			 throw "End";*/
+
+
+	//			std::cerr << pos << ": Next: " << *top.itr << std::endl;
+	//			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
+	//project.cons()[top.ins]
+
+	if(!cmd)
+	 throw "CMD";
+	ins->con.send_osc_str(cmd->buffer());
+	update_next_time(*++itr);
+
+}
+
 }

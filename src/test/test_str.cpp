@@ -36,7 +36,7 @@ int main()
 		//inspect_rtosc_string(fl.buffer);
 		fl.complete_buffer().inspect();
 
-		lfo_t lfo;
+		lfo_t<> lfo(-42.0, +42.0, 0.0f, 4.0f);
 		command<oint<>, ofloat<out_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
 		c2._buffer.inspect();
 		c2.complete_buffer().inspect();

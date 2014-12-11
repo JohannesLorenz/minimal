@@ -20,14 +20,15 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include <sys/types.h>
+
 #include <vector>
 #include <map>
 #include <algorithm>
 
 #include "instrument.h"
-#include "utils.h"
 #include "tuple_helpers.h"
-#include "lfo.h"
+#include "effect.h"
 
 namespace mini
 {
@@ -86,153 +87,6 @@ class segment_t
 public:
 
 };
-
-namespace daw_visit {
-
-	using namespace daw;
-
-	inline std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t& n)
-	{
-		std::cerr << "Adding note, offset: " << offset.offs << ", start: " << offset.start << std::endl;
-		return std::make_pair(offset, n);
-	}
-
-	inline std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t& ns)
-	{
-		// TODO: can we not use vectors? -> linear time
-		note_geom_t abs_offs = ns.geom + offset;
-		std::multimap<note_geom_t, note_t> res;
-		for(const notes_t::pair_t<note_t>& p : ns.get<note_t>())
-		{
-		//	std::pair<note_geom_t, note_t> p = visit(n);
-			res.insert(visit(abs_offs + p.first, *p.second));
-		}
-		for(const notes_t::pair_t<notes_t>& ns2 : ns.get<notes_t>())
-		{
-			std::multimap<note_geom_t, note_t> res2 = visit(abs_offs, *ns2.second);
-			std::move(res2.begin(), res2.end(), std::inserter(res, res.begin()));
-		}
-		std::cerr << "Added " << res.size() << " notes." << std::endl;
-		return res;
-	}
-
-	inline cmd_vectors visit(const track_t& t)
-	{
-		cmd_vectors result;
-		std::cerr << "sz: " << t.get<notes_t>().size() << std::endl;
-
-		for(const auto& pr : t.get<notes_t>())
-		{
-			std::multimap<note_geom_t, note_t> mm = visit(t.geom + pr.first, *pr.second);
-			cmd_vectors note_commands =
-				t.instrument()->make_note_commands(mm);
-			for(auto& pr : note_commands) {
-				dynamic_cast<activator_events*>(pr.second)->insert(std::numeric_limits<float>::max()); // sentinel
-			}
-			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
-
-			for(auto& pr : note_commands)
-			{
-				auto itr = result.find(pr.first);
-				if(itr == result.end())
-				 result.emplace(pr.first, pr.second);
-				else
-				 dynamic_cast<activator_events*>(itr->second)->move_from(dynamic_cast<activator_events*>(pr.second));
-			}
-
-			//std::move(note_commands.begin(), note_commands.end(),
-			//	std::inserter(result, result.end()));
-		}
-		//for(t.get<auto_t>) // automation tracks...
-
-		for(const auto& pr : t.get<command_base>())
-		{
-			result.emplace(pr.second, new activator_poll());
-		}
-
-		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
-		return result;
-	}
-
-	// rtosc port (via instrument), commands, times
-	using global_map = std::map<const instrument_t*, cmd_vectors>;
-
-	inline global_map visit(global_t& g)
-	{
-		global_map res;
-		std::cerr << "sz0: " << g.get<track_t>().size() << std::endl;
-
-		for(const auto& pr : g.get<track_t>())
-		{
-			const track_t& t = *pr.second;
-			const instrument_t* ins = t.instrument(); // TODO: should t.instrument ret ref?
-
-			//cmd_vectors v = std::make_pair(&t, visit(t));
-			cmd_vectors _v = visit(t);
-
-			using cmd_pair = std::pair<const command_base*, activator_base*>;
-
-			for(cmd_pair pr : _v)
-			{
-				auto ins_itr = res.find(ins);
-				if(ins_itr == res.end())
-				{
-					// simply insert it
-					cmd_vectors new_map { std::make_pair(pr.first, /*std::move*/(pr.second)) };
-					res.emplace_hint(ins_itr, ins, new_map);
-				}
-				else
-				{
-					auto vt = pr;
-					//for(const cmd_vectors::value_type vt : v)
-					{
-						const command_base& cmd = *vt.first;
-						activator_base* & vals = vt.second;
-
-						// if instrument *and* command are equal,
-						// add the set to the known command
-
-						auto ins_cmd = ins_itr->second.find(&cmd);
-						if(ins_cmd == ins_itr->second.end())
-						{
-							ins_itr->second.emplace(&cmd, vals);
-						}
-						else
-						{
-						//	std::set<float>& vals_existing = ins_cmd->second;
-						//	vals_existing.insert(vals.begin(), vals.end());
-							activator_events* vals_existing = dynamic_cast<activator_events*>(ins_cmd->second);
-							//vals_existing.insert(vals.begin(), vals.end());
-							vals_existing->move_from(dynamic_cast<activator_events*>(vals)); // TODO: is move ok here?
-						}
-
-					}
-				}
-			}
-
-			// TODO: geometry of t is unused here?
-		}
-		/*for(const global_t& g : g.get<global_t>())
-		{
-			res.insert(std::make_pair(t.id(), visit(t)));
-		}*/ // TODO
-
-
-	/*	for(const auto& pr : res)
-		{
-			std::cerr << "Summary: contents of instrument " << pr.first->name() << ": " << std::endl;
-			for(const auto& pr2 : pr.second)
-			{
-				std::cerr << " - track: " << pr2.first->buffer() << std::endl;
-				for(const float& f : pr2.second)
-				 std::cerr << "  * note at: " << f << std::endl;
-			}
-		}*/
-
-		return res;
-	}
-
-}
 
 
 //template<class Self, class Child>
