@@ -200,14 +200,17 @@ namespace daw_visit {
 
 			using cmd_pair = std::pair<const command_base*, std::set<float>>;
 
+			res.emplace/*_hint*/(/*res.end(),*/ *ins, _v);
+
 			for(cmd_pair pr : _v)
 			{
 				//	auto ins_itr = res.find(ins);
 				//	if(ins_itr == res.end())
 				{
 					// simply insert it
-					cmd_vectors new_map { std::make_pair(pr.first, /*std::move*/(pr.second)) };
-					res.emplace/*_hint*/(/*res.end(),*/ *ins, new_map);
+				//	cmd_vectors new_map { std::make_pair(pr.first, /*std::move*/(pr.second)) };
+					//res.emplace_hint(/*res.end(),*/ *ins, new_map);
+				//	itr->second
 				}
 #if 0
 				else

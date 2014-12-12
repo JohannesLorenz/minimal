@@ -177,7 +177,7 @@ class loaded_project_t : non_copyable_t
 	// connections
 //	const std::vector<rtosc_con> _cons;
 //	std::vector<rtosc_con> make_cons() const;
-	const std::vector<loaded_instrument_t> _ins;
+	/*const*/ std::vector<loaded_instrument_t> _ins;
 	std::vector<loaded_instrument_t> make_ins() const;
 
 	effect_root_t _effect_root;

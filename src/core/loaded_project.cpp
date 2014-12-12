@@ -46,10 +46,10 @@ namespace mini
 std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 {
 	std::vector<loaded_instrument_t> result;
-	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
+/*	for(const std::unique_ptr<instrument_t>& ins : project.instruments())
 	{
 		result.emplace_back(*ins);
-	}
+	}*/
 	return result;
 }
 

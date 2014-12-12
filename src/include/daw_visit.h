@@ -51,7 +51,7 @@ public:
 		const;
 };
 
-class loaded_instrument_t
+class loaded_instrument_t : non_copyable_t
 {
 	static int next_id;
 public:
