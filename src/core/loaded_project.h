@@ -22,7 +22,6 @@
 
 #include <unistd.h>
 //#include <lo/lo_types.h>
-#include <boost/heap/fibonacci_heap.hpp>
 
 #include "instrument.h"
 #include "project.h"
@@ -30,6 +29,7 @@
 #include "types.h"
 #include "lfo.h"
 #include "daw_visit.h"
+#include "work_queue.h"
 
 namespace mini {
 
@@ -70,7 +70,8 @@ public:
 
 class loaded_project_t;
 
-class player_t // TODO: own header
+
+class player_t : public work_queue_t // TODO: own header
 {
 	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
@@ -81,21 +82,6 @@ class player_t // TODO: own header
 	loaded_project_t& project; // TODO! must be const
 
 	std::set<float> end_set = { std::numeric_limits<float>::max() };
-
-	class task_base
-	{
-//		const command_base* cmd;
-		float _next_time;
-	protected:
-		void update_next_time(float new_value) {
-			_next_time = new_value;
-		}
-	public:
-		virtual void proceed(float time) = 0;
-		float next_time() const { return _next_time; }
-		task_base(float next_time) : _next_time(next_time) {}
-//		virtual float next() = 0;
-	};
 
 	/*struct pq_entry
 	{
@@ -161,23 +147,6 @@ class player_t // TODO: own header
 		task_base* task;
 		float next_time;
 	};*/
-	using pq_entry = task_base*; // TODO: redundancy
-
-	struct cmp_func
-	{
-		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
-		{
-			return lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
-
-		/*	bool left_end = lhs.itr != lhs.vals.end();
-			bool right_end = rhs.itr != rhs.vals.end();
-
-			return (right_end && !left_end) ||*/
-		}
-	};
-
-	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
-	pq_type pq;
 
 	void update_effects();
 	void fill_commands();
