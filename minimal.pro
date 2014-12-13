@@ -24,7 +24,9 @@ HEADERS += src/core/plugin.h \
 	src/include/zynaddsubfx.h \
     src/include/osc_string.h \
     src/include/lo_port.h \
-      src/include/command.h
+      src/include/command.h \
+    src/include/effect.h \
+src/include/work_queue.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -35,7 +37,7 @@ SOURCES += src/core/main.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
 	src/include/zynaddsubfx.cpp \
-    src/include/osc_string.cpp \
+        src/include/osc_string.cpp \
     src/include/lo_port.cpp \
     src/include/daw_visit.cpp
 

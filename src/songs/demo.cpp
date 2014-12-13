@@ -36,8 +36,6 @@ void init(project_t& p)
 	// TODO: disallow "zynaddsubfx sine_base ...."
 	zynaddsubfx_t& sine_bass = p.emplace<zynaddsubfx_t>("sine bass");
 	//sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
-//	sine_bass.add_command_fixed<command>();
-//	(void)sine_bass;
 
 //	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
 

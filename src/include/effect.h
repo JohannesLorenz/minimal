@@ -20,8 +20,10 @@
 #ifndef EFFECT_H
 #define EFFECT_H
 
+#include <set>
 #include <vector>
 #include "types.h"
+#include "work_queue.h"
 
 const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
@@ -87,6 +89,33 @@ public:
 	std::vector<effect_t*> readers, writers;
 	// returns the next time when the effect must be started
 	virtual float proceed(float time) = 0;
+};
+
+constexpr unsigned char MAX_NOTES_PRESSED = 32;
+
+class note_line_t : public effect_t, public work_queue_t
+{
+	int notes_pressed[MAX_NOTES_PRESSED];
+	using notes_pressed_ref = int*;
+	out_port<notes_pressd_ref> notes_pressed;
+
+	struct note_task_t : public task_base
+	{
+		const loaded_instrument_t* ins;
+		const command_base* cmd;
+		std::set<float>::const_iterator itr;
+
+		void proceed(float time) {
+			ins->con.send_osc_str(cmd->buffer());
+			update_next_time(*++itr);
+		}
+	};
+
+
+
+	float proceed(float time) {
+
+	}
 };
 
 }

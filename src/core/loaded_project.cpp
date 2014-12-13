@@ -91,6 +91,8 @@ loaded_project_t::~loaded_project_t()
 
 void player_t::update_effects()
 {
+	// TODO: use player's copies
+
 	std::stack<effect_t*> ready_fx;
 	ready_fx.push(&project.effect_root());
 	do

@@ -34,6 +34,7 @@
 #include "daw.h"
 #include "command.h"
 #include "effect.h"
+#include "work_queue.h"
 
 namespace mini
 {
@@ -181,7 +182,7 @@ using cmd_vectors = std::map<const command_base*, activator_base*, map_cmp>; // 
 
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t : public named_t, non_copyable_t, public effect_t
+class instrument_t : public named_t, non_copyable_t, public effect_t, work_queue_t
 {
 public:
 	using id_t = std::size_t;
@@ -237,7 +238,23 @@ public:
 	virtual cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& ) const = 0;
 
 
+	class task_direct : public task_base
+	{
+	//	const instrument_t* ins;
+		effect_t* effect;
+		//const command_base* cmd;
+		task_effect() :
+			// TODO: 0 is wrong if we don't start playback at 0
+			task_base(0.0f)
+		{
 
+		}
+
+		void proceed(float time) {
+			float next_time = effect->proceed(time);
+			update_next_time(next_time);
+		}
+	};
 
 
 	virtual float proceed(float time)

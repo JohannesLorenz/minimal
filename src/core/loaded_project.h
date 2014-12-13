@@ -180,7 +180,7 @@ class loaded_project_t : non_copyable_t
 	/*const*/ std::vector<loaded_instrument_t> _ins;
 	std::vector<loaded_instrument_t> make_ins() const;
 
-	effect_root_t _effect_root;
+	effect_root_t _effect_root, _new_effect_root;
 
 //	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
 
@@ -196,6 +196,7 @@ public:
 
 	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }
+	effect_root_t& new_effect_root() { return _new_effect_root; }
 	loaded_project_t(project_t&& project);
 	~loaded_project_t();
 };
