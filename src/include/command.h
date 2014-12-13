@@ -41,7 +41,9 @@ public:
 	command_base(const char* _path) :
 		_path(_path) {}
 	virtual std::string type_str() const = 0;
+	virtual bool update() = 0;
 	virtual const osc_string& complete_buffer() const = 0;
+	virtual float get_next_time() = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
@@ -243,7 +245,7 @@ namespace command_detail
 		}
 	};
 
-	template<bool All, std::size_t N, class ...Args2>
+	template<bool All, std::size_t N, class ...Args2> // All = false
 	struct _complete<All, N, N, Args2...>
 	{
 		static void exec(std::vector<char>& , std::vector<char>::iterator* , const std::tuple<Args2...>& )
@@ -252,7 +254,52 @@ namespace command_detail
 		}
 	};
 
+	template<std::size_t N, std::size_t I>
+	struct _update
+	{
+		template<class ...Args2>
+		static bool exec(std::tuple<Args2...>& tpl)
+		{
+			bool this_up = variable_detail::update(std::get<I>(tpl));
+			bool last_up = _update<N, I+1>::template exec<Args2...>(tpl);
+			return this_up || last_up;
+		}
+	};
 
+	template<std::size_t N>
+	struct _update<N, N>
+	{
+		template<class ...Args2>
+		static bool exec(std::tuple<Args2...>& )
+		{
+			return false; // no value updated at start
+			// end reached
+		}
+	};
+
+	template<std::size_t N, std::size_t I>
+	struct _next_time
+	{
+		template<class ...Args2>
+		static float exec(std::tuple<Args2...>& tpl)
+		{
+			return std::min(
+					variable_detail::get_next_time(std::get<I>(tpl)),
+					_next_time<N, I+1>::template exec<Args2...>(tpl)
+				);
+		}
+	};
+
+	template<std::size_t N>
+	struct _next_time<N, N>
+	{
+		template<class ...Args2>
+		static float exec(std::tuple<Args2...>& )
+		{
+			return std::numeric_limits<float>::max();
+			// end reached
+		}
+	};
 
 }
 
@@ -321,6 +368,19 @@ public:
 		_buffer(prefill_buffer()) {
 
 		std::cerr << "est. length: " << est_length() << std::endl;
+	}
+
+	bool update()
+	{
+		bool changes = command_detail::_update<sizeof...(Args), 0>::template exec<Args...>(args);
+		if(changes)
+		 complete_buffer();
+		return changes;
+	}
+
+	float get_next_time() {
+		//float result = std::numeric_limits<float>::max();
+		return command_detail::_next_time<sizeof...(Args), 0>::template exec<Args...>(args);
 	}
 
 	const osc_string& complete_buffer() const

@@ -51,7 +51,7 @@ public:
 		const;
 };
 
-class loaded_instrument_t : non_copyable_t
+class loaded_instrument_t : non_copyable_t, public effect_t, work_queue_t
 {
 	static int next_id;
 public:
@@ -66,6 +66,37 @@ public:
 	{
 		return id < rhs.id;
 	}
+
+	template<class Cmd>
+	class command_task_t : public task_base
+	{
+	//	const instrument_t* ins;
+		const command_base* cmd;
+
+		task_t() :
+			// TODO: 0 is wrong if we don't start playback at 0
+			task_base(0.0f)
+		{
+		}
+
+		void proceed(float time) {
+			if(cmd->update())
+			 con.send_osc_str(cmd->buffer());
+
+//			float next_time = effect->proceed(time);
+//			update_next_time(next_time);
+
+		}
+	};
+
+
+	virtual float proceed(float time)
+	{
+		(void)time;
+		return 0.0;
+		// TODO
+	}
+
 };
 
 namespace daw_visit {

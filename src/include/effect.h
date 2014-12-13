@@ -89,10 +89,17 @@ public:
 	std::vector<effect_t*> readers, writers;
 	// returns the next time when the effect must be started
 	virtual float proceed(float time) = 0;
+	virtual float get_next_time() const = 0;
+	float get_childrens_next_time() const {
+		float result = std::numeric_limits<float>::max();
+		for(const effect_t* e : writers)
+		 result = std::min(result, e->get_next_time());
+		return result;
+	}
 };
 
 constexpr unsigned char MAX_NOTES_PRESSED = 32;
-
+/*
 class note_line_t : public effect_t, public work_queue_t
 {
 	int notes_pressed[MAX_NOTES_PRESSED];
@@ -116,7 +123,7 @@ class note_line_t : public effect_t, public work_queue_t
 	float proceed(float time) {
 
 	}
-};
+};*/
 
 }
 

@@ -20,6 +20,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <limits>
+#include <vector>
 #include <string>
 
 namespace mini
@@ -48,6 +50,8 @@ public:
 	using type = typename InputPort::type;
 	variable(const InputPort& input) : _input(input) {}
 	const type& value() const { return _input.get(); }
+	bool update() { _input.update(); return _input.changed(); }
+	float get_next_time() { return _input.get_outs_next_time(); }
 };
 
 template<class T, char _sign> // TODO: should be constexpr
@@ -134,6 +138,32 @@ public:
 
 
 };
+
+namespace variable_detail
+{
+
+template<class Variable>
+bool update(Variable& v) {
+	return v.update();
+}
+
+template<template<class > class Variable, class T>
+bool update(Variable<no_port<T>>& ) {
+	return false;
+}
+
+template<class Variable>
+float get_next_time(const Variable& v) {
+	v.get_next_time();
+}
+
+template<template<class > class Variable, class T>
+float get_next_time(const Variable<no_port<T>>& ) {
+	return std::numeric_limits<float>::max();
+}
+
+}
+
 
 }
 
