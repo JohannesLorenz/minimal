@@ -33,9 +33,10 @@ struct lfo_t : effect_t
 	const float min, max, mm2, middle;
 	const float start, end, times, outside, step;
 	const float repeat;
+	float next_time; // TODO?
 	out_port<OutType> out;
 	//float time =
-	float proceed(float time)
+	float _proceed(float time)
 	{
 		if(time < start) {
 			out.set(outside);
@@ -55,6 +56,7 @@ struct lfo_t : effect_t
 		}
 	//	return 0.0f; // TODO
 	}
+
 	lfo_t(float min, float max, float start, float end, float times = 1.0f, float outside = 0.0f, float step = default_step) :
 		min(min),
 		max(max),

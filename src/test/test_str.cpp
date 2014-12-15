@@ -35,12 +35,12 @@ int main()
 		command<ofloat<>, oint<>> fl("/float", 42.0, 1);
 		//inspect_rtosc_string(fl.buffer);
 		fl.complete_buffer().inspect();
-
+#if 0 // TODO
 		lfo_t<> lfo(-42.0, +42.0, 0.0f, 4.0f);
-		command<oint<>, ofloat<out_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
+		command<oint<>, ofloat<in_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
 		c2._buffer.inspect();
 		c2.complete_buffer().inspect();
-
+#endif
 	} catch (const char* s)
 	{
 		std::cerr << s << std::endl;

@@ -145,6 +145,7 @@ namespace daw_visit {
 		return res;
 	}
 
+#if 0
 	cmd_vectors visit(const track_t &t)
 	{
 		cmd_vectors result;
@@ -266,6 +267,81 @@ namespace daw_visit {
 
 		return res;
 	}
+#endif
+
+
+
+
+	cmd_vectors visit(const track_t &t)
+	{
+		cmd_vectors result;
+		std::cerr << "sz: " << t.get<notes_t>().size() << std::endl;
+
+		if(t.get<notes_t>().size() > 1)
+		 throw "depreceated: 2 notes_t in one track. add them to 1 notes_t.";
+
+		for(const auto& pr : t.get<notes_t>())
+		{
+		//	std::multimap<note_geom_t, note_t> mm = visit(t.geom + pr.first, *pr.second);
+			note_line_t nlt(visit(t.geom + pr.first, *pr.second));
+			// TODO: create loaded_instrument, connect it, make note_commands in there
+
+			cmd_vectors note_commands =
+					t.instrument()->make_note_commands(mm);
+			for(auto& pr : note_commands) {
+				pr.second.insert(std::numeric_limits<float>::max()); // sentinel
+			}
+			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
+
+			for(auto& pr : note_commands)
+			{
+				auto itr = result.find(pr.first);
+				if(itr == result.end())
+					result.emplace(pr.first, pr.second);
+				else
+					std::move(pr.second.begin(), pr.second.end(), // TODO: use move!
+						  std::inserter(itr->second, itr->second.end()));
+			}
+
+		}
+
+	/*	for(const auto& pr : t.get<command_base>())
+		{
+			result.emplace(pr.second, std::set<float>{});
+		}
+*/
+		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
+		return result;
+	}
+
+	global_map visit(global_t &g)
+	{
+		global_map res;
+		std::cerr << "sz0: " << g.get<track_t>().size() << std::endl;
+
+		for(const auto& pr : g.get<track_t>())
+		{
+			const track_t& t = *pr.second;
+			const instrument_t* ins = t.instrument(); // TODO: should t.instrument ret ref?
+
+			//cmd_vectors v = std::make_pair(&t, visit(t));
+			cmd_vectors _v = visit(t);
+
+			using cmd_pair = std::pair<const command_base*, std::set<float>>;
+
+			// creation of loaded_istrument_t
+			res.emplace/*_hint*/(/*res.end(),*/ *ins, _v);
+
+				// TODO: geometry of t is unused here?
+		}
+
+		return res;
+	}
+
+
+
+
+
 
 
 

@@ -26,7 +26,8 @@ HEADERS += src/core/plugin.h \
     src/include/lo_port.h \
       src/include/command.h \
     src/include/effect.h \
-src/include/work_queue.h
+src/include/work_queue.h \
+src/include/daw_visit.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \

@@ -61,6 +61,24 @@ protected:
 	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
 	pq_type pq;
 
+	float run_tasks(float pos)
+	{
+		while(pq.top()->next_time() <= pos)
+		{
+
+			pq_entry top = std::move(pq.top());
+			pq.pop();
+
+
+			/*const bool reinsert = top->proceed(pos);
+			if(reinsert)
+			 pq.push(top);*/
+			top->proceed(pos); // will update the next-time event
+			pq.push(top);
+
+		}
+		return pq.top()->next_time();
+	}
 };
 
 }

@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <tuple>
 #include "osc_string.h"
+#include "types.h"
 
 namespace mini
 {

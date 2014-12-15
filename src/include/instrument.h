@@ -182,7 +182,7 @@ using cmd_vectors = std::map<const command_base*, activator_base*, map_cmp>; // 
 
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t : public named_t, non_copyable_t, public effect_t
+class instrument_t : public named_t, non_copyable_t//, public effect_t
 {
 public:
 	using id_t = std::size_t;

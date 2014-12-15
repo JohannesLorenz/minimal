@@ -51,7 +51,7 @@ public:
 		const;
 };
 
-class loaded_instrument_t : non_copyable_t, public effect_t, work_queue_t
+class loaded_instrument_t : non_copyable_t, public effect_t, protected work_queue_t
 {
 	static int next_id;
 public:
@@ -70,31 +70,30 @@ public:
 	template<class Cmd>
 	class command_task_t : public task_base
 	{
-	//	const instrument_t* ins;
-		const command_base* cmd;
+		const loaded_instrument_t* ins; // TODO: ref?
+		command_base* cmd;
 
-		task_t() :
+		command_task_t(const loaded_instrument_t* ins,
+			command_base* cmd) :
 			// TODO: 0 is wrong if we don't start playback at 0
-			task_base(0.0f)
+			task_base(0.0f),
+			ins(ins),
+			cmd(cmd)
 		{
 		}
 
-		void proceed(float time) {
-			if(cmd->update())
-			 con.send_osc_str(cmd->buffer());
-
-//			float next_time = effect->proceed(time);
-//			update_next_time(next_time);
-
+		void proceed(float ) {
+			if(cmd->update()) // TODO: only fetch values if they changed?
+			 ins->con.send_osc_str(cmd->buffer());
+			float next_time = cmd->get_next_time();
+			update_next_time(next_time);
 		}
 	};
 
 
-	virtual float proceed(float time)
+	virtual float _proceed(float time)
 	{
-		(void)time;
-		return 0.0;
-		// TODO
+		return run_tasks(time);
 	}
 
 };

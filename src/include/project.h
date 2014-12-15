@@ -154,11 +154,16 @@ public:
 	void add_instrument(const T&& ins) {
 		_instruments.push_back(std::unique_ptr<T>(std::move(ins)));
 	}*/
+
+
 	template<class T, class ...Args>
 	T& emplace(Args ...args) {
 		_instruments.emplace_back(new T(args...));
 		return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
 	}
+
+
+
 //	track_t& add_track(const instrument_t& ins);
 
 	void invalidate() { valid = false; }

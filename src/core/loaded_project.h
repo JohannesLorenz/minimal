@@ -59,14 +59,31 @@ public:
 
 class bars_t
 {
-//	tick_t n, c;
+	tick_t n, c;
 public:
-//	bars_t(tick_t n, tick_t c) : n(n), c(c) {}
+	constexpr bars_t(tick_t n, tick_t c) : n(n), c(c) {}
+	const bars_t operator+(const bars_t& rhs) const {
+		return bars_t(n * rhs.c + rhs.n * c, c * rhs.c);
+	}
 };
 
+namespace bars
+{
 
+constexpr bars_t _1(1, 1),
+	_2(1, 2),
+	_3(1, 3),
+	_4(1, 4),
+	_6(1, 6),
+	_8(1, 8),
+	_12(1, 12),
+	_16(1, 16),
+	_24(1, 24),
+	_32(1, 32),
+	_48(1, 18),
+	_64(1, 64);
 
-
+}
 
 class loaded_project_t;
 
@@ -165,7 +182,7 @@ class command_table
 };
 
 class effect_root_t : public effect_t {
-	float proceed(float ) { return 0.0f; }
+	float _proceed(float ) { return 0.0f; }
 };
 
 //! this class takes a project and then does some things to handle it
@@ -199,6 +216,11 @@ public:
 	effect_root_t& new_effect_root() { return _new_effect_root; }
 	loaded_project_t(project_t&& project);
 	~loaded_project_t();
+private:
+	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t &n) const;
+	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t &ns) const;
+	cmd_vectors visit(const track_t &t) const;
+	global_map visit(global_t &g) const;
 };
 
 }

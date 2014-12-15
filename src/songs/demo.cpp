@@ -70,7 +70,7 @@ void init(project_t& p)
 	maj.add_note(note_t(), note_geom_t(0.33, 1));
 	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
-	track_t t1(sine_bass);
+	track_t t1/*(sine_bass)*/;
 	// 4 major chords
 	t1.add_notes(maj, note_geom_t(0, 62));
 	t1.add_notes(maj, note_geom_t(1, 63));

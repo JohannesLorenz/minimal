@@ -22,6 +22,7 @@
 
 #include <set>
 #include <vector>
+#include "daw.h"
 #include "types.h"
 #include "work_queue.h"
 
@@ -85,11 +86,17 @@ public:
 
 class effect_t
 {
+	float next_time;
+protected:
+	virtual float _proceed(float time) = 0;
 public:
 	std::vector<effect_t*> readers, writers;
 	// returns the next time when the effect must be started
-	virtual float proceed(float time) = 0;
-	virtual float get_next_time() const = 0;
+	float proceed(float time) {
+		return next_time = _proceed(time);
+	}
+
+	float get_next_time() const { return next_time; }
 	float get_childrens_next_time() const {
 		float result = std::numeric_limits<float>::max();
 		for(const effect_t* e : writers)
@@ -98,32 +105,73 @@ public:
 	}
 };
 
+template<class T>
+class has_lfo_out
+{
+	out_port<T> lfo_out;
+};
+
+class abstract_effect_t
+{
+
+};
+
 constexpr unsigned char MAX_NOTES_PRESSED = 32;
-/*
+
+using namespace daw; // TODO
+
 class note_line_t : public effect_t, public work_queue_t
 {
-	int notes_pressed[MAX_NOTES_PRESSED];
-	using notes_pressed_ref = int*;
-	out_port<notes_pressd_ref> notes_pressed;
 
+	std::multimap<note_geom_t, note_t> note_events;
+
+
+	int _notes_pressed[MAX_NOTES_PRESSED];
+	using notes_pressed_ref = int*;
+	out_port<notes_pressed_ref> notes_pressed;
+
+	note_line_t(std::multimap<note_geom_t, note_t>&& note_events) :
+		note_events(note_events),
+		notes_pressed(*this)
+	{
+		notes_pressed.set(_notes_pressed);
+	}
 	struct note_task_t : public task_base
 	{
-		const loaded_instrument_t* ins;
-		const command_base* cmd;
+		//const loaded_instrument_t* ins;
+		//const command_base* cmd;
+		note_line_t* nl_ref;
+		int* last_key;
+		const int note_height;
 		std::set<float>::const_iterator itr;
 
-		void proceed(float time) {
-			ins->con.send_osc_str(cmd->buffer());
+		void proceed(float /* time*/) {
+
+			//ins->con.send_osc_str(cmd->buffer());
+
+			*(last_key++) = note_height;
+
 			update_next_time(*++itr);
+		}
+		note_task_t(note_line_t& nl_ref,
+			const int& note_height,
+			const std::set<float>& values,
+			float first_event = 0.0f) :
+			task_base(first_event),
+			nl_ref(&nl_ref),
+			last_key(nl_ref.notes_pressed.get()),
+			note_height(note_height),
+			itr(values.begin())
+		{
 		}
 	};
 
 
 
 	float proceed(float time) {
-
+		return run_tasks(time);
 	}
-};*/
+};
 
 }
 
