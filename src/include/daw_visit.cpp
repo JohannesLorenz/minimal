@@ -270,7 +270,7 @@ namespace daw_visit {
 #endif
 
 
-
+#if 0
 
 	cmd_vectors visit(const track_t &t)
 	{
@@ -339,7 +339,7 @@ namespace daw_visit {
 	}
 
 
-
+#endif
 
 
 

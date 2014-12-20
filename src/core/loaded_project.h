@@ -207,11 +207,11 @@ class loaded_project_t : non_copyable_t
 	// player
 	// player_t player;
 
-	daw_visit::global_map _global;
+//	daw_visit::global_map _global;
 public:
 	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 
-	daw_visit::global_map& global() { return _global; }
+//	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }
 	effect_root_t& new_effect_root() { return _new_effect_root; }
 	loaded_project_t(project_t&& project);
@@ -220,7 +220,7 @@ private:
 	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t &n) const;
 	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t &ns) const;
 	cmd_vectors visit(const track_t &t) const;
-	global_map visit(global_t &g) const;
+//	global_map visit(global_t &g) const;
 };
 
 }

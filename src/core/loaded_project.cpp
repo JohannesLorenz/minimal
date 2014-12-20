@@ -55,8 +55,8 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 
 loaded_project_t::loaded_project_t(project_t&& project) :
 	project(std::move(project)),
-	_ins(std::move(make_ins())),
-	_global(daw_visit::visit(project.global()))
+	_ins(std::move(make_ins()))
+//	_global(daw_visit::visit(project.global()))
 {
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
@@ -110,11 +110,11 @@ void player_t::update_effects()
 
 void player_t::fill_commands()
 {
-	for(const auto& pr : project.global())
+/*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
 	{
 		pr2.first->complete_buffer();
-	}
+	}*/
 }
 
 void player_t::send_commands()
@@ -124,7 +124,7 @@ void player_t::send_commands()
 
 player_t::player_t(loaded_project_t &project)  : project(project)
 {
-	for(const auto& pr : project.global())
+/*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
 	if(pr2.second.empty()) // marks a poll
 	{
@@ -135,7 +135,7 @@ player_t::player_t(loaded_project_t &project)  : project(project)
 		pq.push(new task_events(&pr.first, pr2.first, pr2.second.begin()));
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
-	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel
+	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 }
 
 void player_t::play_until(float dest)

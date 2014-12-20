@@ -105,11 +105,30 @@ public:
 	}
 };
 
+class ef_con_base
+{
+	virtual effect_t* instantiate() = 0;
+};
+
+template<class T>
+class ef_con_t
+{
+	T* instantiate() { return new T; } // TODO: smart ptr?
+};
+
+template<class OutType>
+struct freq_lfo_out
+{
+	const effect_t& ef_ref;
+	out_port<OutType> out;
+	freq_lfo_out(const effect_t& ef_ref) : ef_ref(ef_ref) {}
+};
+/*
 template<class T>
 class has_lfo_out
 {
 	out_port<T> lfo_out;
-};
+};*/
 
 class abstract_effect_t
 {
@@ -123,19 +142,24 @@ using namespace daw; // TODO
 class note_line_t : public effect_t, public work_queue_t
 {
 
-	std::multimap<note_geom_t, note_t> note_events;
+	std::multimap<note_geom_t, notes_t> note_events;
 
 
 	int _notes_pressed[MAX_NOTES_PRESSED];
 	using notes_pressed_ref = int*;
 	out_port<notes_pressed_ref> notes_pressed;
-
-	note_line_t(std::multimap<note_geom_t, note_t>&& note_events) :
-		note_events(note_events),
+public:
+	note_line_t(/*std::multimap<note_geom_t, note_t>&& note_events*/) :
+		/*note_events(note_events),*/
 		notes_pressed(*this)
 	{
 		notes_pressed.set(_notes_pressed);
 	}
+
+	void add_notes(const notes_t& n, const note_geom_t& ng) {
+		note_events.emplace(ng, n);
+	}
+
 	struct note_task_t : public task_base
 	{
 		//const loaded_instrument_t* ins;
@@ -168,9 +192,67 @@ class note_line_t : public effect_t, public work_queue_t
 
 
 
-	float proceed(float time) {
+	float _proceed(float time) {
 		return run_tasks(time);
 	}
+};
+
+
+#if 0
+ template<const out_port<float>& ref>
+class has_lfo_out
+{
+/*	const out_port<OutType>& ref;
+public:
+	has_lfo_out(const out_port<OutType>& ref) : ref(ref) {}*/
+	const out_port<float>& port_lfo_out() const { return ref; }
+};
+
+template<class Tp>
+class _port_end
+{
+	Tp tp;
+};
+
+template<std::size_t I, class Tp, template<const out_port<float>&> class First, template<const out_port<float>&> class ...Args>
+class _port_chain : public First<std::get<I>(_port_chain<I+1, Tp, Args...>::tp)>, _port_chain<I+1, Tp, Args...>
+{
+};
+
+template<std::size_t I, class Tp, template<const out_port<float>&> class First> class _port_chain<I, Tp, First>
+	: public _port_end<Tp>, public First<std::get<I>(_port_end<Tp>::tp)>
+{
+	Tp tp;
+};
+
+template<class ...Args>
+class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
+{
+};
+#endif
+
+template<class OutType>
+class has_lfo_out
+{
+	const out_port<OutType>& ref;
+public:
+	has_lfo_out(const out_port<OutType>& ref) : ref(ref) {}
+	const out_port<OutType>& port_lfo_out() const { return ref; }
+};
+
+template<std::size_t I, class Tp, class First, class ...Args>
+class _port_chain : public First, _port_chain<I+1, Args...>
+{
+};
+
+template<std::size_t I, class Tp, class First> class _port_chain<I, Tp, First> : public First
+{
+	Tp tp;
+};
+
+template<class ...Args>
+class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
+{
 };
 
 }

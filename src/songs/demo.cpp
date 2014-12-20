@@ -70,12 +70,20 @@ void init(project_t& p)
 	maj.add_note(note_t(), note_geom_t(0.33, 1));
 	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
+	note_line_t nl;
+	nl.add_notes(maj, note_geom_t(0, 62));
+	nl.add_notes(maj, note_geom_t(1, 63));
+	nl.add_notes(maj, note_geom_t(2, 64));
+	nl.add_notes(maj, note_geom_t(3, 65));
+
+#if 0
 	track_t t1/*(sine_bass)*/;
 	// 4 major chords
 	t1.add_notes(maj, note_geom_t(0, 62));
 	t1.add_notes(maj, note_geom_t(1, 63));
 	t1.add_notes(maj, note_geom_t(2, 64));
 	t1.add_notes(maj, note_geom_t(3, 65));
+#endif
 
 /*	lfo_t* m_lfo = new lfo_t;
 	p.effects().push_back(m_lfo);
