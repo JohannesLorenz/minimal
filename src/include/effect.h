@@ -241,7 +241,7 @@ public:
 };
 
 template<std::size_t I, class Tp, class First, class ...Args>
-class _port_chain : public First, _port_chain<I+1, Args...>
+class _port_chain : public First, _port_chain<I+1, Tp, Args...>
 {
 };
 
@@ -253,6 +253,11 @@ template<std::size_t I, class Tp, class First> class _port_chain<I, Tp, First> :
 template<class ...Args>
 class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
 {
+};
+
+struct _test
+{
+	port_chain<has_lfo_out<float>, has_lfo_out<float>> ch;
 };
 
 }
