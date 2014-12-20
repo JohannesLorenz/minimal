@@ -231,27 +231,42 @@ class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
 };
 #endif
 
-template<class OutType>
-class has_lfo_out
+
+
+template<class PortType>
+class has_port
 {
-	const out_port<OutType>& ref;
 public:
-	has_lfo_out(const out_port<OutType>& ref) : ref(ref) {}
-	const out_port<OutType>& port_lfo_out() const { return ref; }
+	using port_type = PortType;
+protected:
+	const port_type& ref;
+public:
+	has_port(const port_type& ref) : ref(ref) {}
+};
+
+template<class OutType>
+class has_lfo_out : public has_port<out_port<OutType>>
+{
+public:
+	using port_type = typename has_port<out_port<OutType>>::port_type;
+	const port_type& port_lfo_out() const { return this->ref; }
 };
 
 template<std::size_t I, class Tp, class First, class ...Args>
 class _port_chain : public First, _port_chain<I+1, Tp, Args...>
 {
+	_port_chain() : First(std::get<I>(this->tp)) {} // TODO: "this"
 };
 
 template<std::size_t I, class Tp, class First> class _port_chain<I, Tp, First> : public First
 {
+protected:
 	Tp tp;
+	_port_chain() : First(std::get<I>(tp)) {}
 };
 
 template<class ...Args>
-class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
+class port_chain : public _port_chain<0, std::tuple<typename Args::port_type...>, Args...>
 {
 };
 
