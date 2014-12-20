@@ -54,6 +54,7 @@ public:
 	const RefT& get() const { return ref; }
 	base_port(effect_t& ef_ref) :
 		ef_ref(&ef_ref) {}
+	base_port() {} // TODO: remove?
 };
 
 
@@ -198,41 +199,48 @@ public:
 };
 
 
-#if 0
- template<const out_port<float>& ref>
-class has_lfo_out
+#if 1
+template<class OutType>
+class lfo_out
 {
-/*	const out_port<OutType>& ref;
 public:
-	has_lfo_out(const out_port<OutType>& ref) : ref(ref) {}*/
-	const out_port<float>& port_lfo_out() const { return ref; }
+	out_port<OutType> port;
 };
 
-template<class Tp>
-class _port_end
+template<class OutType>
+class lfo_in
 {
-	Tp tp;
+public:
+	out_port<OutType> port;
 };
 
-template<std::size_t I, class Tp, template<const out_port<float>&> class First, template<const out_port<float>&> class ...Args>
-class _port_chain : public First<std::get<I>(_port_chain<I+1, Tp, Args...>::tp)>, _port_chain<I+1, Tp, Args...>
+
+template<std::size_t I, class Tp, class First, class ...Args>
+class _port_chain : public First, public _port_chain<I+1, Tp, Args...>
 {
+	using base = _port_chain<I+1, Tp, Args...>;
+public:
+	_port_chain(effect_t& ef_ref) : First { ef_ref }, base(ef_ref) {}
+	//_port_chain() : First(std::get<I>(this->tp)) {} // TODO: "this"
 };
 
-template<std::size_t I, class Tp, template<const out_port<float>&> class First> class _port_chain<I, Tp, First>
-	: public _port_end<Tp>, public First<std::get<I>(_port_end<Tp>::tp)>
+template<std::size_t I, class Tp, class First> class _port_chain<I, Tp, First> : public First
 {
-	Tp tp;
+protected:
+	_port_chain(effect_t& ef_ref) : First { ef_ref } {}
 };
 
 template<class ...Args>
-class port_chain : public _port_chain<0, std::tuple<Args...>, Args...>
+class port_chain : public _port_chain<0, void, Args...>
 {
+	using base = _port_chain<0, void, Args...>;
+public:
+	std::tuple<decltype(Args::port)&...> tp;
+	port_chain(effect_t& ef_ref) : base(ef_ref),
+		tp(Args::port...) {}
 };
-#endif
 
-
-
+#elif 0
 template<class PortType>
 class has_port
 {
@@ -270,9 +278,64 @@ class port_chain : public _port_chain<0, std::tuple<typename Args::port_type...>
 {
 };
 
-struct _test
+#else
+
+
+
+template<const out_port<float>& Ref>
+class has_lfo_out
 {
-	port_chain<has_lfo_out<float>, has_lfo_out<float>> ch;
+public:
+	using port_type = out_port<float>;
+protected:
+	//const port_type& ref;
+public:
+	//has_port(const port_type& ref) : ref(ref) {}
+	const port_type& port_lfo_out() const { return Ref; }
+};
+/*
+template<class OutType>
+class has_lfo_out : public has_port<out_port<OutType>>
+{
+public:
+	using port_type = typename has_port<out_port<OutType>>::port_type;
+	const port_type& port_lfo_out() const { return this->ref; }
+};*/
+
+template<std::size_t I, class Tp, template<const out_port<float>& > class First, template<const out_port<float>& > class ...Args>
+class _port_chain : public First<std::get<I>(_port_chain<I+1, Tp, Args...>::tp)>, _port_chain<I+1, Tp, Args...>
+{
+	//_port_chain() : First(std::get<I>(this->tp)) {} // TODO: "this"
+};
+
+template<class Tp>
+struct _port_head
+{
+	Tp tp;
+};
+
+template<std::size_t I, class Tp, template<const out_port<float>& > class First>
+class _port_chain<I, Tp, First> : public _port_head<Tp>, First<std::get<I>(_port_head<Tp>::tp)>
+{
+protected:
+	//Tp tp;
+	//_port_chain() : First(std::get<I>(tp)) {}
+};
+
+template<template<const out_port<float>& > class ...Args>
+class port_chain : public _port_chain<0, std::tuple<out_port<float>, out_port<float>>, Args...>
+{
+};
+
+#endif
+
+struct _test : effect_t
+{
+	port_chain<lfo_out<float>, lfo_in<float>> ch;
+	_test() : ch(*this) {
+		auto p = ch.lfo_out<float>::port;
+		(void)p;
+	}
 };
 
 }

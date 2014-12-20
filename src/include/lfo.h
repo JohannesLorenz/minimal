@@ -27,48 +27,49 @@
 namespace mini
 {
 
-template<class OutType = float>
+/*template<class OutType = float>
 struct lfo_t;
 
 template<class OutType = float>
 struct lfo_con : ef_con_t<lfo_t<OutType>>, public port_chain<freq_lfo_out<OutType>>
 {
-};
+};*/
 
 template<class OutType>
-struct lfo_t : effect_t, public lfo_con<OutType>
+struct lfo_t : effect_t, public port_chain<lfo_out<OutType>>
 {
+	using base = port_chain<lfo_out<OutType>>;
 	const float min, max, mm2, middle;
 	const float start, end, times, outside, step;
 	const float repeat;
 	float next_time; // TODO?
 	//float time =
 
-	using lfo_out = freq_lfo_out<OutType>;
+	//using lfo_out = lfo_out<OutType>;
 
 	float _proceed(float time)
 	{
 		if(time < start) {
-			lfo_out::out.set(outside);
+			lfo_out<OutType>::port.set(outside);
 			return start;
 		}
 		else if(time < end)
 		{
-			lfo_out::out.set(middle + sinf(time-start) * mm2);
+			lfo_out<OutType>::port.set(middle + sinf(time-start) * mm2);
 			// TODO: repeat etc.
 
 			return time + step;
 		}
 		else
 		{
-			lfo_out::out.set(outside);
+			lfo_out<OutType>::port.set(outside);
 			return std::numeric_limits<float>::max();
 		}
 	//	return 0.0f; // TODO
 	}
 
 	lfo_t(float min, float max, float start, float end, float times = 1.0f, float outside = 0.0f, float step = default_step) :
-		lfo_out(*this),
+		base(*this),
 		min(min),
 		max(max),
 		mm2((max - min)/2.0f),
