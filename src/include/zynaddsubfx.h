@@ -25,15 +25,21 @@
 namespace mini
 {
 
+
+class zynaddsubfx_t;
+
 namespace zyn {
 
+template<class InstClass>
 class node_t : public named_t
 {
+public: // TODO
+	InstClass* ins;
 // the inheriting class must define the sub-nodes
 protected:
 	template<class NodeT>
 	NodeT spawn(const std::string& ext) const {
-		return NodeT(name(), ext);
+		return NodeT(ins, name(), ext);
 	}
 
 	template<class NodeT>
@@ -41,14 +47,17 @@ protected:
 		return spawn<NodeT>(ext + std::to_string(id));
 	}
 public:
-	node_t(const std::string& base, const std::string& ext)
-		: named_t(base + ext) {}
+	node_t(InstClass* ins, const std::string& base, const std::string& ext)
+		: named_t(base + ext), ins(ins) {}
+
+
 
 	//node(std::string base, std::string ext, std::size_t id)
 	//	: node(base, ext + std::to_string(id)) {}
 };
 
-class node_port_t : node_t
+template<class T>
+class node_port_t : node_t<T>
 {
 	// todo: disallow spawn here
 	template<class NodeT>
@@ -56,7 +65,7 @@ class node_port_t : node_t
 		return spawn<NodeT>(ext + std::to_string(id));
 	}
 
-	using node_t::node_t;
+	using node_t<T>::node_t;
 };
 
 
@@ -68,7 +77,7 @@ public:
 
 
 
-template<class Port1 = no_port<int>>
+/*template<class Port1 = no_port<int>>
 class p_envsustain : public command<oint<Port1>>
 {
 	using base = command<oint<Port1>>;
@@ -78,46 +87,91 @@ public:
 		: base("/PEnvsustain", value)
 	{
 	}
+};*/
+
+
+
+template<class PortType, class VarType>
+struct in_port_with_command : PortType, command<VarType> { // TODO: instrument.h
+	// a bit non-conform to store the command here, but working...
+	//using base = command<oint<Port1>>;
+public:
+	template<class ...Args>
+	in_port_with_command(effect_t& e, const char* path) :
+		PortType(e),
+		command<VarType>(path, *this)
+	{
+	}
+
+/*out_port_with_command(oint<Port1> value) // TODO: "ref?"
+		: base("/PEnvsustain", value)
+	{
+	}*/
+};
+
+using znode_t = node_t<zynaddsubfx_t>;
+
+template<class PortT>
+struct p_envsustain : znode_t, public in_port_with_command<in_port_templ<int>, oint<PortT>>
+{
+	using base = in_port_with_command<in_port_templ<int>, oint<PortT>>;
+	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
+		znode_t(ins, base, ext),
+		in_port_with_command<in_port_templ<int>, oint<PortT>>(*ins, name().c_str()) {
+		reinterpret_cast<instrument_t*>(ins)->add_in_port(this);
+	}
 };
 
 
+#if 0
+ss znode_t : node_t
+{
+	/*zynaddsubfx_t& zyn;
+	znode_t(const zynaddsubfx_t& zyn, const std::string& base, const std::string& ext)
+		: node_t(base, ext), zyn(zyn) {}*/
+}
+#endif
 
-
-
-class amp_env : node_t
+class amp_env : znode_t
 {
 public:
-	using node_t::node_t;
-	template<class Port1>
-	zyn::p_envsustain<Port1> envsustain(Port1& con) const {
-		return envsustain(oint<Port1>(con));
+	using znode_t::znode_t;
+	/*template<class Port1>*/
+/*	zyn::p_envsustain envsustain() const {
+		ins->add_in_port(new );
+		//return p_envsustain();
+	}*/
+	template<class Port>
+	zyn::p_envsustain<Port> envsustain() const {
+		return spawn<zyn::p_envsustain<Port>>("PEnvsustain");
 	}
-	template<class Port1>
+
+	/*template<class Port1>
 	zyn::p_envsustain<Port1> envsustain(oint<Port1> con) const {
 		return p_envsustain<Port1>(con);
-	}
+	}*/
 };
 
-class global : node_t
+class global : znode_t
 {
 public:
-	using node_t::node_t;
+	using znode_t::znode_t;
 	zyn::amp_env amp_env() const {
 		return spawn<zyn::amp_env>("AmpEnvelope/");
 	}
 };
 
 
-class voice0 : node_t
+class voice0 : znode_t
 {
 public:
-	using node_t::node_t;
+	using znode_t::znode_t;
 };
 
-class adpars : node_t
+class adpars : znode_t
 {
 public:
-	using node_t::node_t;
+	using znode_t::znode_t;
 	zyn::voice0 voice0() const {
 		return spawn<zyn::voice0>("voice0/");
 	}
@@ -128,7 +182,7 @@ public:
 
 }
 
-class zynaddsubfx_t : public instrument_t, zyn::node_t
+class zynaddsubfx_t : public instrument_t, zyn::znode_t
 {
 	// TODO: read from options file
 /*	const char* binary

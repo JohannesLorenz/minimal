@@ -30,7 +30,7 @@ const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
 namespace mini
 {
-
+#if 0
 class effect_t;
 
 template<class T, class RefT>
@@ -84,10 +84,37 @@ public:
 
 	using base_port<T, T>::base_port;
 };
+#endif
 
-class effect_t
+class in_port_base;
+class out_port_base;
+/*
+struct port_chain
 {
+	std::vector<out_port_base*> in_ports, out_ports;
+};*/
+/*
+template<class ...Args>
+struct arg_ptrs
+{
+
+};*/
+
+class effect_t //: public port_chain
+{
+public:
+	std::vector<in_port_base*> in_ports;
+	std::vector<out_port_base*> out_ports; // TODO: not public
+private:
 	float next_time;
+	template<class T, class Tpl, int ...Is>
+	static std::vector<T> make_vector(const Tpl& tpl, util::seq<Is...> ) {
+		return std::vector<T>{ &std::get<Is>(tpl)... };
+	}
+	template<class T, class ...Args>
+	static std::vector<T> make_vector(const std::tuple<Args...>& tpl) {
+		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
+	}
 protected:
 	virtual float _proceed(float time) = 0;
 public:
@@ -104,6 +131,20 @@ public:
 		 result = std::min(result, e->get_next_time());
 		return result;
 	}
+
+	template<class ...Args1, class ...Args2>
+	effect_t(const std::tuple<Args1&...>& in_ports, const std::tuple<Args2&...>& out_ports) // TODO: fwd?
+		: in_ports(in_ports), out_ports(out_ports)
+	{
+	}
+
+	template<class ...Args2>
+	effect_t(const std::tuple<Args2&...>& out_ports)
+		: out_ports(make_vector<out_port_base*>(out_ports))
+	{
+	}
+
+	effect_t() {}
 };
 
 class ef_con_base
@@ -117,6 +158,7 @@ class ef_con_t
 	T* instantiate() { return new T; } // TODO: smart ptr?
 };
 
+#if 0
 template<class OutType>
 struct freq_lfo_out
 {
@@ -124,6 +166,7 @@ struct freq_lfo_out
 	out_port<OutType> out;
 	freq_lfo_out(const effect_t& ef_ref) : ef_ref(ef_ref) {}
 };
+#endif
 /*
 template<class T>
 class has_lfo_out
@@ -136,21 +179,170 @@ class abstract_effect_t
 
 };
 
-template<class OutType>
-class lfo_out
+class out_port_base
 {
+protected:
+	effect_t* e;
 public:
+	bool changed = true;
+	out_port_base(effect_t& ef) :
+		e(&ef)
+	{
+	}
+
+	virtual const void* get_value() const = 0; // void* is not good...
+	float next_time = std::numeric_limits<float>::max();
+
+	//virtual void connect(const in_port_base& ) ;
+};
+
+template<class T>
+class out_port_templ : public out_port_base
+{
+protected:
+	T data;
+
+	//operator const T&() { return data; }
+public:
+	//void connect(const in_port_templ& ip) { target = &ip; }
+
+	using type = T;
+
+	out_port_templ(effect_t& e) : out_port_base(e)
+		//: data(e)
+	{
+		e.out_ports.push_back(this);
+	}
+
+	const T& get() const { return data; }
+	void set(const T& new_val) { /*return base::ref*/ data = new_val; }
+
+	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
+
+};
+
+// TODO: abstract port base
+class in_port_base
+{
+protected:
+	effect_t* e;
+public:
+	bool unread_changes = true; // initally send values
+	const out_port_base* source = nullptr;
+	in_port_base(effect_t& ef) :
+		e(&ef)
+	{
+	}
+
+	in_port_base(effect_t& ef, const out_port_base& source) :
+		e(&ef),
+		source(&source)
+	{
+	}
+
+	float get_outs_next_time() const {
+		return source->next_time;
+	}
+};
+
+template<class T>
+class in_port_templ : public in_port_base
+{
+protected:
+	T data;
+
+	in_port_templ(effect_t& ef) :
+		in_port_base(ef)
+	//	: data(e)
+	{
+		ef.in_ports.push_back(this);
+	}
+
+	//operator const T&() { return data; }
+	in_port_templ(effect_t& ef, const out_port_base& source) :
+		in_port_base(ef, source)
+	//	: data(e)
+	{
+		ef.in_ports.push_back(this);
+	}
+
+	bool set(const T& new_value) {
+		if(!unread_changes)
+		 throw "omitted a vlue";
+		unread_changes = (data == new_value);
+		if(unread_changes)
+		{
+			data = new_value;
+		}
+		return unread_changes;
+	}
+
+public:
+
+	const T& get() const { return data; }
+
+	bool update() {
+		bool out_port_changed = source->changed;
+		return (out_port_changed) && set(*(static_cast<const T*>(source->get_value())));
+	}
+
+	using type = T;
+};
+
+template<class T>
+void operator<<(in_port_templ<T>& ipt, out_port_templ<T>& opt)
+{
+	if(ipt.source != nullptr)
+	 throw "double connect to in port";
+	ipt.source = &opt;
+}
+
+
+template<class T>
+struct freq_lfo_out : out_port_templ<T>
+{
+	using out_port_templ<T>::out_port_templ;
+};
+
+struct note_signal_t
+{
+	//! whether a note at height <int> is on or off
+	std::multimap<int, bool> lines;
+	//! the recently switched lines
+	std::vector<int> changed_hint;
+};
+
+struct notes_out : out_port_templ<note_signal_t>
+{
+};
+
+
+/*
+template<class OutType>
+struct lfo_out
+{
 	out_port<OutType> port;
 };
 
 template<class OutType>
-class lfo_in
+struct lfo_in
 {
-public:
-	out_port<OutType> port;
+	in_port<OutType> port;
 };
 
+struct notes_out
+{
+	out_port<int*> port;
+};
 
+struct notes_in
+{
+	in_port<int*> port;
+};*/
+
+
+
+#if 0
 template<std::size_t I, class Tp, class First, class ...Args>
 class _port_chain : public First, public _port_chain<I+1, Tp, Args...>
 {
@@ -167,44 +359,47 @@ protected:
 };
 
 template<class ...Args>
-class port_chain : public _port_chain<0, void, Args...>
+class port_chain : public Args...
 {
 	using base = _port_chain<0, void, Args...>;
 public:
 	std::tuple<decltype(Args::port)&...> tp;
-	port_chain(effect_t& ef_ref) : base(ef_ref),
+	port_chain(effect_t& ef_ref):
 		tp(Args::port...) {}
 };
 
 struct _test : effect_t
 {
-	port_chain<lfo_out<float>, lfo_in<float>> ch;
+	port_chain<lfo_in<float>, lfo_out<float>> ch;
 	_test() : ch(*this) {
-		auto p = ch.lfo_out<float>::port;
+		auto p = ch.lfo_in<float>::port;
 		(void)p;
 	}
 };
+#endif
+
 
 
 constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
 using namespace daw; // TODO
 
-class note_line_t : public effect_t, public work_queue_t
+class note_line_t : public notes_out, effect_t, work_queue_t
 {
-
 	std::multimap<note_geom_t, notes_t> note_events;
 
 
-	int _notes_pressed[MAX_NOTES_PRESSED];
-	using notes_pressed_ref = int*;
-	out_port<notes_pressed_ref> notes_pressed;
+	//int _notes_pressed[MAX_NOTES_PRESSED];
+	out_port_templ<note_signal_t> notes_pressed; // TODO: pointer?
 public:
 	note_line_t(/*std::multimap<note_geom_t, note_t>&& note_events*/) :
 		/*note_events(note_events),*/
-		notes_pressed(*this)
+//		port_chain<notes_out>((effect_t&)*this),
+		notes_out(*this),
+		effect_t(*this),
+		notes_pressed((effect_t&)*this)
 	{
-		notes_pressed.set(_notes_pressed);
+		//notes_pressed.set(_notes_pressed);
 	}
 
 	void add_notes(const notes_t& n, const note_geom_t& ng) {
@@ -216,7 +411,7 @@ public:
 		//const loaded_instrument_t* ins;
 		//const command_base* cmd;
 		note_line_t* nl_ref;
-		int* last_key;
+		//int* last_key;
 		const int note_height;
 		std::set<float>::const_iterator itr;
 
@@ -224,7 +419,7 @@ public:
 
 			//ins->con.send_osc_str(cmd->buffer());
 
-			*(last_key++) = note_height;
+			//*(last_key++) = note_height;
 
 			update_next_time(*++itr);
 		}
@@ -234,7 +429,7 @@ public:
 			float first_event = 0.0f) :
 			task_base(first_event),
 			nl_ref(&nl_ref),
-			last_key(nl_ref.notes_pressed.get()),
+			//last_key(nl_ref.notes_pressed.get()),
 			note_height(note_height),
 			itr(values.begin())
 		{

@@ -44,14 +44,14 @@ template<class T> struct no_port { using type = T; };
 template</*class Input, */class InputPort, char _sign>
 class variable : public par_base<typename InputPort::type, _sign>
 {
-	const InputPort& _input;
+	InputPort* _input;
 public:
 	constexpr static bool is_const() { return false; }
 	using type = typename InputPort::type;
-	variable(const InputPort& input) : _input(input) {}
-	const type& value() const { return _input.get(); }
-	bool update() { _input.update(); return _input.changed(); }
-	float get_next_time() { return _input.get_outs_next_time(); }
+	variable(InputPort& input) : _input(&input) {}
+	const type& value() const { return _input->get(); }
+	bool update() { return _input->update(); }
+	float get_next_time() const { return _input->get_outs_next_time(); }
 };
 
 template<class T, char _sign> // TODO: should be constexpr

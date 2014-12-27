@@ -98,6 +98,15 @@ constexpr T dont_instantiate_me_id_func(ConstrArgs... args) {
 	return (void)dont_instantiate_me_id<T, Arg>::value, T(args...);
 }
 
+template<int... Is>
+struct seq { };
+
+template<int N, int... Is>
+struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
+
+template<int... Is>
+struct gen_seq<0, Is...> : seq<Is...> { };
+
 }
 
 #endif // UTILS_H

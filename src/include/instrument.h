@@ -182,9 +182,16 @@ using cmd_vectors = std::map<const command_base*, activator_base*, map_cmp>; // 
 
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t : public named_t, non_copyable_t//, public effect_t
+class instrument_t : public named_t, non_copyable_t, public effect_t, protected work_queue_t
 {
 public:
+	void add_in_port(in_port_base* ipb) {
+		in_ports.push_back(ipb);
+	}
+	void add_out_port(out_port_base* ipb) {
+		out_ports.push_back(ipb);
+	}
+
 	using id_t = std::size_t;
 private:
 	static std::size_t next_id;
@@ -192,6 +199,23 @@ private:
 	std::vector<command_base*> commands; // TODO: unique?
 	const std::vector<command_base*> _quit_commands;
 public:
+
+	class port_work : task_base
+	{
+		in_port_base* ip;
+	public:
+		port_work(in_port_base* ip) : task_base(0.0f), ip(ip) {}
+		void proceed(float time) {
+			(void)time;
+			(void)ip;
+// TODO
+		}
+	};
+
+	float _proceed(float time) {
+		return work_queue_t::run_tasks(time);
+	}
+
 	const std::vector<command_base*>& quit_commands() const {
 		return _quit_commands;
 	}
