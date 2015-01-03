@@ -219,7 +219,7 @@ public:
 private:
 	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t &n) const;
 	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t &ns) const;
-	cmd_vectors visit(const track_t &t) const;
+//	cmd_vectors visit(const track_t &t) const;
 //	global_map visit(global_t &g) const;
 };
 

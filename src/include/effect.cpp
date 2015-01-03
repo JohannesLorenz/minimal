@@ -17,74 +17,59 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef WORK_QUEUE_H
-#define WORK_QUEUE_H
+#include "effect.h"
 
-#include <boost/heap/fibonacci_heap.hpp>
-
-namespace mini {
-
-class work_queue_t
+namespace mini
 {
-protected:
-	class task_base
+
+note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
+{
+	for(const auto& pr : ref->notes.get<note_t>())
 	{
-//		const command_base* cmd;
-		float _next_time;
-	protected:
-		void update_next_time(float new_value) {
-			_next_time = new_value;
-		}
-	public:
-		virtual void proceed(float time) = 0;
-		float next_time() const { return _next_time; }
-		task_base(float next_time) : _next_time(next_time) {}
-//		virtual float next() = 0;
-	};
-
-
-	using pq_entry = task_base*; // TODO: redundancy
-
-	struct cmp_func
-	{
-		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
-		{
-			return lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
-
-		/*	bool left_end = lhs.itr != lhs.vals.end();
-			bool right_end = rhs.itr != rhs.vals.end();
-
-			return (right_end && !left_end) ||*/
-		}
-	};
-
-	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
-	pq_type pq;
-
-	float run_tasks(float pos)
-	{
-		while(pq.top()->next_time() <= pos)
-		{
-
-			pq_entry top = std::move(pq.top());
-			pq.pop();
-
-
-			/*const bool reinsert = top->proceed(pos);
-			if(reinsert)
-			 pq.push(top);*/
-			top->proceed(pos); // will update the next-time event
-			pq.push(top);
-
-		}
-		return pq.top()->next_time();
+		int note_height = ref->notes.geom.offs + pr.first.offs;
+		int start = ref->notes.geom.start + pr.first.start;
+		note_lines[note_height].emplace(start, *pr.second);
 	}
 
-	void add_task(task_base* new_task) {
-		pq.push(new_task);
+	for(const auto& pr : note_lines)
+	{
+		add_task(new note_task_t(*this, pr.first, pr.second, pr.second.begin()->first));
 	}
-};
+}
+
+void note_line_impl::note_task_t::proceed(float time)
+{
+	note_signal_t& notes_out = nl_ref->ref->notes_out::data;
+
+	if(time != nl_ref->last_time)
+	{
+		notes_out.last_changed_hint = notes_out.changed_hint;
+	}
+
+	//ins->con.send_osc_str(cmd->buffer());
+
+	//*(last_key++) = note_height;
+
+	//const float& cur_start = itr->first;
+	const note_t& cur_note = itr->second;
+
+	*(notes_out.last_changed_hint++) = note_height;
+
+	if(is_on)
+	{
+		update_next_time((++itr)->first);
+	}
+	else
+	{
+		update_next_time(time + cur_note.length());
+	}
+
+	is_on = !is_on;
+	notes_out.lines[note_height] = is_on;
+
+	nl_ref->last_time = time;
 
 }
 
-#endif // WORK_QUEUE_H
+}
+

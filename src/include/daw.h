@@ -28,6 +28,7 @@
 
 namespace mini {
 
+//template<class Impl>
 class instrument_t;
 
 namespace daw
@@ -59,6 +60,9 @@ namespace daw
 		}
 		note_geom_t operator+(const note_geom_t& rhs) const {
 			return note_geom_t(start + rhs.start, offs + rhs.offs);
+		}
+		note_geom_t operator-(const note_geom_t& rhs) const {
+			return note_geom_t(start - rhs.start, offs - rhs.offs);
 		}
 	};
 
@@ -139,6 +143,14 @@ namespace daw
 	{
 		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
 	public:
+		void add_notes(const notes_t& notes, geom_t other_geom)
+		{
+			for(const auto pr : notes.get<note_t>())
+			{
+				add_note(*pr.second, other_geom - geom + pr.first);
+			}
+		}
+
 		void add_note(const note_t& n, geom_t geom = geom_t::zero()) { add<note_t>(n, geom); }
 		/*notes_t(const note_geom_t& geom) : seg_base(geom) {
 			add_note(note_t(), note_geom_t(std::numeric_limits<float>::max(), 0));
@@ -147,7 +159,7 @@ namespace daw
 //		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
 	};
-
+#if 0
 	template<class Child>
 	class note_event_propagator
 	{
@@ -208,7 +220,7 @@ namespace daw
 //		global_t& global(geom_t geom) { return make<global_t>(geom); }
 		global_t(geom_t  = geom_t{0}) /*: seg_base(g)*/ {}
 	};
-
+#endif
 }
 
 }

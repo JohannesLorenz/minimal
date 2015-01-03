@@ -91,16 +91,20 @@ public:
 
 
 
-template<class PortType, class VarType>
-struct in_port_with_command : PortType, command<VarType> { // TODO: instrument.h
+template<class PortType, class InstClass>
+struct in_port_with_command : node_t<InstClass>, PortType
+{ // TODO: instrument.h
 	// a bit non-conform to store the command here, but working...
 	//using base = command<oint<Port1>>;
+
+	command_base* cmd;
 public:
-	template<class ...Args>
-	in_port_with_command(effect_t& e, const char* path) :
-		PortType(e),
-		command<VarType>(path, *this)
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command_base* cmd) :
+		node_t<InstClass>(ins, base, ext),
+		PortType(*ins),
+		cmd(cmd)
 	{
+		static_cast<instrument_t*>(ins)->add_in_port(this);
 	}
 
 /*out_port_with_command(oint<Port1> value) // TODO: "ref?"
@@ -112,14 +116,21 @@ public:
 using znode_t = node_t<zynaddsubfx_t>;
 
 template<class PortT>
-struct p_envsustain : znode_t, public in_port_with_command<in_port_templ<int>, oint<PortT>>
+struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubfx_t>
 {
-	using base = in_port_with_command<in_port_templ<int>, oint<PortT>>;
+	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
 	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		znode_t(ins, base, ext),
-		in_port_with_command<in_port_templ<int>, oint<PortT>>(*ins, name().c_str()) {
-		reinterpret_cast<instrument_t*>(ins)->add_in_port(this);
+		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<oint<PortT>>(ext.c_str(), *this)) {
 	}
+};
+
+template<class PortT>
+struct p_note_input : public in_port_with_command<in_port_templ<note_signal_t>, zynaddsubfx_t>
+{
+/*	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
+		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<note_signal_t<PortT>>(ext.c_str(), *this)) {
+	}*/
+
 };
 
 
@@ -182,12 +193,37 @@ public:
 
 }
 
-class zynaddsubfx_t : public instrument_t, zyn::znode_t
+struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
+{
+	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
+
+	class port_work : task_base
+	{
+		in_port_base* ip;
+	public:
+		port_work(in_port_base* ip) : task_base(0.0f), ip(ip) {}
+		void proceed(float time) {
+			(void)time;
+			(void)ip;
+// TODO
+		}
+	};
+
+	zyn_impl(zynaddsubfx_t* ref);
+
+	float proceed(float time) {
+		return work_queue_t::run_tasks(time);
+	}
+};
+
+class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_impl>
 {
 	// TODO: read from options file
 /*	const char* binary
 		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
 	const char* default_args = "--no-gui -O alsa";*/
+
+	using has_impl_t = has_impl_t<zyn_impl>;
 public:
 
 	/*template<template<class> C1, template<class> C2>
@@ -196,7 +232,7 @@ public:
 		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
 	};*/
 
-
+	float proceed(float time) { return impl->proceed(time); }
 
 
 	std::string make_start_command() const;
@@ -229,6 +265,12 @@ public:
 
 	zyn::adpars add0() const {
 		return spawn<zyn::adpars>("part0/kit0/adpars/");
+	}
+
+//	in_port_templ<note_signal_t> note_input;
+	template<class Port>
+	zyn::p_envsustain<Port> note_input() const {
+		return spawn<zyn::p_envsustain<Port>>("PEnvsustain");
 	}
 };
 

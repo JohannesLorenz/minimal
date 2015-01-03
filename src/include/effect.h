@@ -132,11 +132,11 @@ public:
 		return result;
 	}
 
-	template<class ...Args1, class ...Args2>
+	/*template<class ...Args1, class ...Args2>
 	effect_t(const std::tuple<Args1&...>& in_ports, const std::tuple<Args2&...>& out_ports) // TODO: fwd?
 		: in_ports(in_ports), out_ports(out_ports)
 	{
-	}
+	}*/
 
 	template<class ...Args2>
 	effect_t(const std::tuple<Args2&...>& out_ports)
@@ -146,6 +146,42 @@ public:
 
 	effect_t() {}
 };
+
+template<class Impl>
+class has_impl_t
+{
+protected:
+	Impl* impl;
+public:
+	//has_impl_t() : impl(new Impl) {}
+	template<class T>
+	has_impl_t(T* ref) : impl(new Impl(ref)) {}
+};
+
+template<class Ref>
+class is_impl_of_t
+{
+protected:
+	Ref* ref;
+public:
+	template<class T>
+	is_impl_of_t(T* ref) : ref(ref) {}
+};
+
+
+/*template<class Self, class Impl>
+class effect_with_impl_t : has_impl_t<Impl>, effect_t
+{
+	template<class ...Args2>
+	effect_with_impl_t(const std::tuple<Args2&...>& out_ports) :
+		effect_t(out_ports),
+		has_impl_t()
+	{
+	}
+
+	effect_with_impl_t() {}
+	//using effect_t::effect_t;
+};*/
 
 class ef_con_base
 {
@@ -200,6 +236,7 @@ template<class T>
 class out_port_templ : public out_port_base
 {
 protected:
+public:
 	T data;
 
 	//operator const T&() { return data; }
@@ -251,6 +288,7 @@ class in_port_templ : public in_port_base
 protected:
 	T data;
 
+public:
 	in_port_templ(effect_t& ef) :
 		in_port_base(ef)
 	//	: data(e)
@@ -265,7 +303,7 @@ protected:
 	{
 		ef.in_ports.push_back(this);
 	}
-
+protected:
 	bool set(const T& new_value) {
 		if(!unread_changes)
 		 throw "omitted a vlue";
@@ -290,7 +328,7 @@ public:
 };
 
 template<class T>
-void operator<<(in_port_templ<T>& ipt, out_port_templ<T>& opt)
+void operator<<(in_port_templ<T>& ipt, const out_port_templ<T>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
@@ -304,12 +342,20 @@ struct freq_lfo_out : out_port_templ<T>
 	using out_port_templ<T>::out_port_templ;
 };
 
+constexpr std::size_t NOTES_MAX = 12 * 10;
+
 struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
-	std::multimap<int, bool> lines;
+	bool lines[NOTES_MAX];
 	//! the recently switched lines
-	std::vector<int> changed_hint;
+	std::size_t changed_hint[NOTES_MAX];
+
+	std::size_t* last_changed_hint = changed_hint;
+
+	note_signal_t() {
+		std::fill_n(changed_hint, NOTES_MAX, false);
+	}
 };
 
 struct notes_out : out_port_templ<note_signal_t>
@@ -384,48 +430,29 @@ constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
 using namespace daw; // TODO
 
-class note_line_t : public notes_out, effect_t, work_queue_t
+class note_line_t;
+
+class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
 {
-	std::multimap<note_geom_t, notes_t> note_events;
-
-
-	//int _notes_pressed[MAX_NOTES_PRESSED];
-	out_port_templ<note_signal_t> notes_pressed; // TODO: pointer?
-public:
-	note_line_t(/*std::multimap<note_geom_t, note_t>&& note_events*/) :
-		/*note_events(note_events),*/
-//		port_chain<notes_out>((effect_t&)*this),
-		notes_out(*this),
-		effect_t(*this),
-		notes_pressed((effect_t&)*this)
-	{
-		//notes_pressed.set(_notes_pressed);
-	}
-
-	void add_notes(const notes_t& n, const note_geom_t& ng) {
-		note_events.emplace(ng, n);
-	}
+	std::map<int, std::map<float, note_t>> note_lines;
+	float last_time = -1.0f;
 
 	struct note_task_t : public task_base
 	{
 		//const loaded_instrument_t* ins;
 		//const command_base* cmd;
-		note_line_t* nl_ref;
+		note_line_impl* nl_ref;
 		//int* last_key;
 		const int note_height;
-		std::set<float>::const_iterator itr;
+		bool is_on = false;
+		std::map<float, note_t>::const_iterator itr;
 
-		void proceed(float /* time*/) {
 
-			//ins->con.send_osc_str(cmd->buffer());
+		void proceed(float time);
 
-			//*(last_key++) = note_height;
-
-			update_next_time(*++itr);
-		}
-		note_task_t(note_line_t& nl_ref,
+		note_task_t(note_line_impl& nl_ref,
 			const int& note_height,
-			const std::set<float>& values,
+			const std::map<float, note_t>& values,
 			float first_event = 0.0f) :
 			task_base(first_event),
 			nl_ref(&nl_ref),
@@ -433,13 +460,51 @@ public:
 			note_height(note_height),
 			itr(values.begin())
 		{
+			if(note_height < 0 || note_height >= (int)NOTES_MAX)
+			 throw "invalid note height";
 		}
 	};
 
 
+public:
+	note_line_impl(note_line_t *nl);
 
 	float _proceed(float time) {
 		return run_tasks(time);
+	}
+};
+
+class note_line_t : public notes_out, effect_t, has_impl_t<note_line_impl> // TODO: which header?
+{
+	friend class note_line_impl;
+
+
+	//std::multimap<note_geom_t, notes_t> note_events;
+	 //! @note: one might need to store the notes_t blocks seperated for muting etc
+	notes_t notes;
+
+	//int _notes_pressed[MAX_NOTES_PRESSED];
+//	out_port_templ<note_signal_t> notes_pressed; // TODO: pointer?
+public:
+	note_line_t(/*std::multimap<note_geom_t, note_t>&& note_events*/) :
+		/*note_events(note_events),*/
+//		port_chain<notes_out>((effect_t&)*this),
+		notes_out(*this),
+		effect_t(*this),
+		has_impl_t(this)
+//		notes_pressed((effect_t&)*this)
+	{
+		//notes_pressed.set(_notes_pressed);
+	}
+
+	void add_notes(const notes_t& n, const note_geom_t& ng) {
+		//note_events.emplace(ng, n);
+		notes.add_notes(n, ng);
+	}
+
+
+	float _proceed(float time) {
+		return impl->_proceed(time);
 	}
 };
 

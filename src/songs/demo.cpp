@@ -97,14 +97,16 @@ void init(project_t& p)
 //	ip.connect(m_lfo->out);
 	auto envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
 
+	// effect connections
 	envsustain << *m_lfo;
+	sine_bass.note_input() << (const out_port_templ<note_signal_t>&)nl;
 
 //	t1.add_command(cmd);
 
 
 
-	global_t& global = p.global();
-	global.add_track(t1);
+//	global_t& global = p.global();
+//	global.add_track(t1);
 
 
 	// PEnable

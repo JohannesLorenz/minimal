@@ -94,9 +94,25 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 }
 
 zynaddsubfx_t::zynaddsubfx_t(const char *name) :
+	zyn::znode_t(this, "/", ""),
 	instrument_t(name, { new command<>("/quit") }), // TODO! close-ui?
-	zyn::znode_t(this, "/", "")
-{}
+	has_impl_t(this)/*,
+	note_input(*this)*/
+{
+	using prt_t = in_port_templ<int>;
+	for(int i = 0; i < 13*10 + 1; ++i) {
+		commands.push_back(new command<oint<>, oint<prt_t>>("/notOn", i, oint<prt_t>(new prt_t(*this))));
+	}
+
+}
+
+zyn_impl::zyn_impl(zynaddsubfx_t *ref) : is_impl_of_t<zynaddsubfx_t>::is_impl_of_t(ref)
+{
+/*	for(const out_port_base* op : ref->out_ports)
+	{
+
+	}*/ // TODO
+}
 
 }
 

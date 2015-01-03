@@ -106,12 +106,12 @@ namespace daw_visit {
 
 	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t& ns);
 
-	cmd_vectors visit(const track_t& t);
+//	cmd_vectors visit(const track_t& t);
 
 	// rtosc port (via instrument), commands, times
-	using global_map = std::map<const loaded_instrument_t, cmd_vectors>;
+//	using global_map = std::map<const loaded_instrument_t, cmd_vectors>;
 
-	global_map visit(global_t& g);
+//	global_map visit(global_t& g);
 
 }
 

@@ -40,7 +40,8 @@ SOURCES += src/core/main.cpp \
 	src/include/zynaddsubfx.cpp \
         src/include/osc_string.cpp \
     src/include/lo_port.cpp \
-    src/include/daw_visit.cpp
+    src/include/daw_visit.cpp \
+    src/include/effect.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

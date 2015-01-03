@@ -49,6 +49,7 @@ public:
 	constexpr static bool is_const() { return false; }
 	using type = typename InputPort::type;
 	variable(InputPort& input) : _input(&input) {}
+	variable(InputPort* input) : _input(input) {}
 	const type& value() const { return _input->get(); }
 	bool update() { return _input->update(); }
 	float get_next_time() const { return _input->get_outs_next_time(); }
@@ -154,7 +155,7 @@ bool update(Variable<no_port<T>>& ) {
 
 template<class Variable>
 float get_next_time(const Variable& v) {
-	v.get_next_time();
+	return v.get_next_time();
 }
 
 template<template<class > class Variable, class T>
