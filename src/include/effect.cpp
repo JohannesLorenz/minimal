@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <stack>
 #include "effect.h"
 
 namespace mini
@@ -24,7 +25,7 @@ namespace mini
 
 note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 {
-	for(const auto& pr : ref->notes.get<note_t>())
+/*	for(const auto& pr : ref->notes.get<note_t>())
 	{
 		int note_height = ref->notes.geom.offs + pr.first.offs;
 		int start = ref->notes.geom.start + pr.first.start;
@@ -34,7 +35,30 @@ note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 	for(const auto& pr : note_lines)
 	{
 		add_task(new note_task_t(*this, pr.first, pr.second, pr.second.begin()->first));
-	}
+	}*/
+
+
+	std::stack<std::pair<note_t*, note_impl_t>> notes_to_do;
+	notes_to_do.push(std::make_pair(ref->notes, root));
+	do
+	{
+		std::pair<note_t*, notes_impl_t> top = notes_to_do.top();
+		notes_to_do.pop();
+
+		notes_t* cur_notes = top->first;
+		notes_impl_t* cur_impl = top->second;
+
+		cur_impl->itr = cur_notes->get<note_t>();
+
+		for(const notes_t n : cur_notes->get<notes_t>())
+		{
+			notes_impl_t* next_impl = new notes_impl_t;
+			notes_to_do.push(std::make_pair(n, next_impl));
+			cur_impl->pq.push(next_impl);
+		}
+
+	} while(!notes_to_do.empty());
+
 }
 
 void note_line_impl::note_task_t::proceed(float time)
@@ -50,7 +74,7 @@ void note_line_impl::note_task_t::proceed(float time)
 
 	//*(last_key++) = note_height;
 
-	//const float& cur_start = itr->first;
+	//const		float& cur_start = itr->first;
 	const note_t& cur_note = itr->second;
 
 	*(notes_out.last_changed_hint++) = note_height;

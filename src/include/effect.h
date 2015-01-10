@@ -343,18 +343,22 @@ struct freq_lfo_out : out_port_templ<T>
 };
 
 constexpr std::size_t NOTES_MAX = 12 * 10;
+constexpr std::size_t POLY_MAX = 16;
 
 struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
-	bool lines[NOTES_MAX];
+	int lines[POLY_MAX][NOTES_MAX];
 	//! the recently switched lines
-	std::size_t changed_hint[NOTES_MAX];
+//	std::size_t changed_hint[NOTES_MAX];
 
-	std::size_t* last_changed_hint = changed_hint;
+//	std::size_t* last_changed_hint = changed_hint;
+
+	int changed_stamp = 0;
+	std::pair<int, int> recently_changed[POLY_MAX];
 
 	note_signal_t() {
-		std::fill_n(changed_hint, NOTES_MAX, false);
+		recently_changed[0].first = -1;
 	}
 };
 
@@ -434,8 +438,24 @@ class note_line_t;
 
 class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
 {
-	std::map<int, std::map<float, note_t>> note_lines;
+	//std::map<int, std::map<float, note_t>> note_lines;
 	float last_time = -1.0f;
+	struct notes_impl_t
+	{
+		std::map<note_geom_t, note_t>::const_iterator itr;
+		//std::vector<note_t_impl> children;
+		typedef boost::heap::fibonacci_heap<notes_impl_t> pq_type;
+		std::pair<note_geom_t, note_t> next_elem; // todo: ptr?
+
+
+		pq_type pq;
+
+
+		std::pair<note_geom_t, note_t> next_note() {
+			next_elem =
+			return std::min(*itr, pq.top());
+		}
+	};
 
 	struct note_task_t : public task_base
 	{
@@ -465,7 +485,7 @@ class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
 		}
 	};
 
-
+	notes_impl_t root;
 public:
 	note_line_impl(note_line_t *nl);
 
