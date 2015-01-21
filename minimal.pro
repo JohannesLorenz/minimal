@@ -27,7 +27,9 @@ HEADERS += src/core/plugin.h \
       src/include/command.h \
     src/include/effect.h \
 src/include/work_queue.h \
-src/include/daw_visit.h
+src/include/daw_visit.h \
+src/include/note_line.h \
+    src/include/ports.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -41,7 +43,7 @@ SOURCES += src/core/main.cpp \
         src/include/osc_string.cpp \
     src/include/lo_port.cpp \
     src/include/daw_visit.cpp \
-    src/include/effect.cpp
+    src/include/note_line.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

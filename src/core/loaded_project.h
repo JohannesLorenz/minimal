@@ -117,7 +117,7 @@ class player_t : public work_queue_t // TODO: own header
 
 	};*/
 
-	class task_events : public task_base
+/*	class task_events : public task_base
 	{
 	//	const loaded_project_t& project;
 		const loaded_instrument_t* ins;
@@ -139,6 +139,13 @@ class player_t : public work_queue_t // TODO: own header
 			itr(itr)
 		{
 		}
+	};*/
+
+	class sentinel : public task_base
+	{
+	public:
+		sentinel() : task_base(std::numeric_limits<float>::max()) {}
+		void proceed(float ) { throw "reached sentinel"; }
 	};
 
 	class task_effect : public task_base
@@ -146,14 +153,16 @@ class player_t : public work_queue_t // TODO: own header
 	//	const instrument_t* ins;
 		effect_t* effect;
 		//const command_base* cmd;
-		task_effect() :
+	public:
+		task_effect(effect_t* effect) :
 			// TODO: 0 is wrong if we don't start playback at 0
-			task_base(0.0f)
+			task_base(effect->get_next_time()),
+			effect(effect)
 		{
-
 		}
 
 		void proceed(float time) {
+			std::cerr << "PROCEEDING with effect..." << std::endl;
 			float next_time = effect->proceed(time);
 			update_next_time(next_time);
 		}
@@ -181,13 +190,17 @@ class command_table
 
 };
 
-class effect_root_t : public effect_t {
+class effect_root_t : public effect_t
+{
+	void instantiate() {}
 	float _proceed(float ) { return 0.0f; }
 };
 
 //! this class takes a project and then does some things to handle it
 class loaded_project_t : non_copyable_t
 {
+	friend class player_t;
+
 	// project
 	project_t project;
 
@@ -217,8 +230,8 @@ public:
 	loaded_project_t(project_t&& project);
 	~loaded_project_t();
 private:
-	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t &n) const;
-	std::multimap<note_geom_t, note_t> visit(note_geom_t offset, const notes_t &ns) const;
+	std::pair<daw::note_geom_t, daw::note_t> visit(daw::note_geom_t offset, const daw::note_t &n) const;
+	std::multimap<daw::note_geom_t, daw::note_t> visit(daw::note_geom_t offset, const daw::notes_t &ns) const;
 //	cmd_vectors visit(const track_t &t) const;
 //	global_map visit(global_t &g) const;
 };

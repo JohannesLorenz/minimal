@@ -18,7 +18,28 @@
 /*************************************************************************/
 
 #include <cstring>
+#include <climits>
+
 #include "osc_string.h"
+
+template <typename T>
+T swap_endian(T u)
+{
+	static_assert (CHAR_BIT == 8, "CHAR_BIT != 8");
+
+	union
+	{
+		T u;
+		unsigned char u8[sizeof(T)];
+	} source, dest;
+
+	source.u = u;
+
+	for(std::size_t k = 0; k < sizeof(T); k++)
+	 dest.u8[k] = source.u8[sizeof(T) - k - 1];
+
+	return dest.u;
+}
 
 namespace mini {
 
@@ -27,11 +48,11 @@ std::ostream& operator<<(std::ostream& stream,
 {
 	const std::vector<char>& str = r_str._data;
 
-/*	for(const char& x : str)
+	for(const char& x : str)
 	{
 		stream << +x << std::endl;
 	}
-	stream << std::endl;*/
+	stream << std::endl;
 
 	if(str[0] != '/')
 	 throw "rtosc string invalid: does not start with `/'";
@@ -51,15 +72,16 @@ std::ostream& operator<<(std::ostream& stream,
 	{
 		const std::size_t pos = std::distance(str.begin(), itr);
 		stream << " * ";
+
 		const char* c = &*itr;
 		switch(*args)
 		{
 			case 'i':
-				stream << (int)(*(int32_t*)c);
+				stream << "int: " << swap_endian(*(int32_t*)c);
 				itr += 4;
 				break;
 			case 'f':
-				stream << *(float*)c;
+				stream << "float: " << swap_endian(*(float*)c);
 				itr += 4;
 				break;
 			default:

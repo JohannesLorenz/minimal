@@ -18,13 +18,15 @@
 /*************************************************************************/
 
 #include <stack>
-#include "effect.h"
+#include "note_line.h"
 
 namespace mini
 {
 
 note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 {
+	visit(ref->notes, note_geom_t(0, 0));
+#if 0
 /*	for(const auto& pr : ref->notes.get<note_t>())
 	{
 		int note_height = ref->notes.geom.offs + pr.first.offs;
@@ -58,11 +60,57 @@ note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 		}
 
 	} while(!notes_to_do.empty());
-
+#endif
 }
 
 void note_line_impl::note_task_t::proceed(float time)
 {
+	note_signal_t& notes_out = nl_ref->ref->notes_out::data;
+	std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
+
+	/*if(time != nl_ref->last_time)
+	{
+		notes_out.last_changed_hint = notes_out.changed_hint;
+	}*/
+
+	do
+	{
+		const note_geom_t& geom = itr->first;
+		const m_note_event& event = itr->second;
+		std::pair<int, int>* notes_at = notes_out.lines[geom.offs];
+		std::size_t id = 0;
+
+		if(event.on)
+		{
+			// skip used slots
+			for(; notes_at->first > 0 && id < POLY_MAX; ++notes_at, ++id) ;
+			if(id >= POLY_MAX)
+			 throw "end of polyphony reached!";
+
+			notes_at->first = event.id;
+			notes_at->second = event.volume;
+		}
+		else
+		{
+			for(; notes_at->first != event.id && id < POLY_MAX; ++notes_at, ++id) ;
+			if(id >= POLY_MAX)
+			 throw "end of polyphony reached!";
+
+			notes_at->first = -1;
+		}
+
+		recently_changed_ptr->first = geom.offs;
+		(recently_changed_ptr++)->second = id;
+
+	} while((++itr)->first.start == time) ;
+
+	recently_changed_ptr->first = -1;
+	++notes_out.changed_stamp;
+
+	update_next_time(itr->first.start);
+	nl_ref->last_time = time;
+
+#if 0
 	note_signal_t& notes_out = nl_ref->ref->notes_out::data;
 
 	if(time != nl_ref->last_time)
@@ -92,7 +140,7 @@ void note_line_impl::note_task_t::proceed(float time)
 	notes_out.lines[note_height] = is_on;
 
 	nl_ref->last_time = time;
-
+#endif
 }
 
 }

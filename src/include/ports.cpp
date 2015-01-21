@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* test.cpp - test files for minimal                                     */
+/* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2014                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -17,38 +17,9 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "project.h"
-#include "lfo.h"
-#include "osc_string.h"
+#include "ports.h"
 
-using namespace mini;
-
-int main()
+namespace mini
 {
-/*	zynaddsubfx_t::note_on<> note_on(1, 2, 3);
-	inspect_rtosc_string(note_on.buffer);
-	note_on.complete_buffer();
-	inspect_rtosc_string(note_on.buffer);*/
 
-	try {
-
-		command<osc_float, osc_int> fl("/float", 42.0, 1);
-		//inspect_rtosc_string(fl.buffer);
-
-		fl.buffer().inspect();
-
-		fl.complete_buffer().inspect();
-#if 0 // TODO
-		lfo_t<> lfo(-42.0, +42.0, 0.0f, 4.0f);
-		command<oint<>, ofloat<in_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
-		c2._buffer.inspect();
-		c2.complete_buffer().inspect();
-#endif
-	} catch (const char* s)
-	{
-		std::cerr << s << std::endl;
-	}
-
-	return 0;
 }
-

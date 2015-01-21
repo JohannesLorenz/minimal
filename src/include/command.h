@@ -44,7 +44,7 @@ public:
 	virtual std::string type_str() const = 0;
 	virtual bool update() = 0;
 	virtual const osc_string& complete_buffer() const = 0;
-	virtual float get_next_time() = 0;
+	virtual float get_next_time() const = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
@@ -63,7 +63,7 @@ namespace detail
 	template<class T>
 	constexpr std::size_t length_of() {
 //		return util::dont_instantiate_me_func<std::size_t>();
-		return T::size();
+		return pad_size<T>::value();
 	}
 //	template<>
 //	constexpr std::size_t length_of<int>() { return 4; }
@@ -110,8 +110,8 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
 		{
-			std::cerr << "app single" << std::endl;
-			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
+		//	std::cerr << "app single" << std::endl;
+			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
 			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?
 		}
 	};
@@ -132,9 +132,8 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s)
 		{
-			std::cerr << "fill single" << std::endl;
-			s.resize(s.size() + T::size());
-			std::fill(s.end() - T::size(), s.end(), 0); // debug only
+			s.resize(s.size() + pad_size<T>::value());
+			std::fill(s.end() - pad_size<T>::value(), s.end(), 0); // debug only
 		}
 	};
 
@@ -145,13 +144,16 @@ namespace command_detail
 		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+			constexpr bool _is_const = is_const<tp_at>::value();
+			constexpr bool _size_fix = size_fix<tp_at>::value();
+
 			// case 1: it's const -> fill it in
-			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
+			_append_single<_is_const>::exec(s, std::get<I>(tp));
 			// case 2: not const, but fixed size -> buffer it
-			constexpr bool case_2 = (!tp_at::is_const()) && tp_at::size_fix();
+			constexpr bool case_2 = (!_is_const) && _size_fix;
 			_fill_single<case_2>::template exec<tp_at>(s);
 			// continue if const or fix
-			_append<tp_at::size_fix() || tp_at::is_const(), N, I+1, Args2...>::exec(s, tp);
+			_append<_size_fix || _is_const, N, I+1, Args2...>::exec(s, tp);
 		}
 	};
 
@@ -202,7 +204,7 @@ namespace command_detail
 		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
 		{
 			std::cerr << "app single" << std::endl;
-			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
+			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
 			// note the difference: no inserter here
 			std::cerr << "test before: " << osc_string(v) << std::endl;
 			std::copy(osc_str.begin(), osc_str.end(), *itr); // TODO: move?
@@ -231,10 +233,10 @@ namespace command_detail
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
 
 			// TODO: non fix size
-			constexpr bool cond1 = !tp_at::is_const() || All;
+			constexpr bool cond1 = !is_const<tp_at>::value() || All;
 			_complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
 
-			constexpr bool next_all = All || !tp_at::size_fix(); // first non fix marks
+			constexpr bool next_all = All || !size_fix<tp_at>::value(); // first non fix marks
 			_complete<next_all, N, I+1, Args2...>::exec(v, itr, tp);
 
 		/*	// case 1: it's const -> fill it in
@@ -271,7 +273,7 @@ namespace command_detail
 	struct _update<N, N>
 	{
 		template<class ...Args2>
-		static bool exec(std::tuple<Args2...>& )
+		static bool exec(const std::tuple<Args2...>& )
 		{
 			return false; // no value updated at start
 			// end reached
@@ -282,7 +284,7 @@ namespace command_detail
 	struct _next_time
 	{
 		template<class ...Args2>
-		static float exec(std::tuple<Args2...>& tpl)
+		static float exec(const std::tuple<Args2...>& tpl)
 		{
 			return std::min(
 					variable_detail::get_next_time(std::get<I>(tpl)),
@@ -295,7 +297,7 @@ namespace command_detail
 	struct _next_time<N, N>
 	{
 		template<class ...Args2>
-		static float exec(std::tuple<Args2...>& )
+		static float exec(const std::tuple<Args2...>& )
 		{
 			return std::numeric_limits<float>::max();
 			// end reached
@@ -304,22 +306,94 @@ namespace command_detail
 
 }
 
+// TODO: unused class
 template<class ...Args>
-class command : public command_base
+class _command : public command_base
 {
-	using self = command<Args...>;
+	using self = _command<Args...>;
+protected:
 	std::tuple<Args...> args;
-
-
-public:
-	mutable osc_string _buffer;
-private:
 
 	constexpr std::size_t est_length() const {
 		return pad<4>(path().length() + 1) // path + \0
 			+ pad<4>(sizeof...(Args) + 2)// ,<types>\0
 			+ detail::est_length_args<Args...>();
 	}
+public:
+	_command(const char* _path, Args... args) :
+		command_base(_path),
+		args(args...) {
+
+		// std::cerr << "est. length: " << est_length() << std::endl;
+	}
+
+	virtual ~_command();
+
+	std::string type_str() const {
+		std::string res { ',' , sign<Args>()... };
+		return res; // TODO: in one line! constexpr?
+	}
+};
+
+template<class ...Args>
+_command<Args...>::~_command() {}
+
+template<class T>
+struct _vari
+{
+	using type = T;
+};
+/*
+namespace pick_vari
+{
+
+	namespace detail
+	{
+		template<class ...Args> struct nothing {};
+		template<class, class> struct lr {};
+
+		template<class First1, class ...Args1, class ...Args2> struct lr<nothing<First1, Args1...>, nothing<Args2...>> {
+			using tuple_t = typename lr<nothing<Args1...>, nothing<Args2...>>::tuple_t;
+		};
+
+		template<class T, class ...Args1, class ...Args2> struct lr<nothing<_vari<T>, Args1...>, nothing<Args2...>> {
+			using tuple_t = typename lr<nothing<Args1...>, nothing<Args2..., T>>::tuple_t;
+		};
+
+		template<class ...Args2> struct lr<nothing<>, nothing<Args2...>> {
+			using tuple_t = std::tuple<Args2...>;
+		};
+	}
+
+	template<class ...Args> struct seq {
+		using tuple_t = typename detail::lr<detail::nothing<Args...>, detail::nothing<>>::tuple_t;
+	};
+
+}*/
+
+template<class T>
+struct arg_if_vari
+{
+	using type = T;
+};
+
+template<class T>
+struct arg_if_vari<_vari<T>>
+{
+	using type = T;
+};
+
+
+template<class ...Args>
+class testcommand : public _command<typename arg_if_vari<Args>::type...>
+{
+	using base_t = _command<typename arg_if_vari<Args>::type...>;
+public:
+	mutable osc_string _buffer;
+
+private:
+
+
 
 /*	template<class ...Args2>
 	void _append(std::string& , Args2... )
@@ -348,55 +422,47 @@ private:
 
 	osc_string prefill_buffer() const
 	{
-		std::vector<char> res(_path.begin(), _path.end());
+		std::vector<char> res(base_t::_path.begin(), base_t::_path.end());
 		do {
-		 res.push_back('\0');
+			res.push_back('\0');
 		} while(res.size() % 4);
-		std::string t_s = type_str();
+		std::string t_s = base_t::type_str();
 		std::copy(t_s.begin(), t_s.end(), std::back_inserter(res));
 		do {
-		 res.push_back('\0');
+			res.push_back('\0');
 		} while(res.size() % 4);
-		command_detail::_append<true, sizeof...(Args), 0, Args...>::exec(res, args);
+		command_detail::_append<true, sizeof...(Args), 0, Args...>::exec(res, base_t::args);
 		return res;
 	}
 
 
 public:
-	command(const char* _path, Args... args) :
-		command_base(_path),
-		args(args...),
-		_buffer(prefill_buffer()) {
-
-		std::cerr << "est. length: " << est_length() << std::endl;
-	}
+	testcommand(const char* _path, Args... args) :
+		base_t(_path, args...),
+		_buffer(prefill_buffer())
+		{
+		}
 
 	bool update()
 	{
-		bool changes = command_detail::_update<sizeof...(Args), 0>::template exec<Args...>(args);
+		bool changes = command_detail::_update<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
 		if(changes)
 		 complete_buffer();
 		return changes;
 	}
 
-	float get_next_time() {
+	float get_next_time() const {
 		//float result = std::numeric_limits<float>::max();
-		return command_detail::_next_time<sizeof...(Args), 0>::template exec<Args...>(args);
+		return command_detail::_next_time<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
 	}
 
 	const osc_string& complete_buffer() const
 	{
 		auto itr = _buffer.get_itr_first_arg();
-		command_detail::_complete<false, sizeof...(Args), 0, Args...>::exec(_buffer.data(), &itr, args);
+		command_detail::_complete<false, sizeof...(Args), 0, Args...>::exec(_buffer.data(), &itr, base_t::args);
 		return buffer();
 	}
 	const osc_string& buffer() const { return _buffer; }
-
-
-	std::string type_str() const {
-		std::string res { ',' , Args::sign()... };
-		return res; // TODO: in one line!
-	}
 
 	/*std::string prepare_buffer() {
 
@@ -451,10 +517,77 @@ public:
 		return res;
 	}*/
 //	virtual command* clone() const { return new command(*this); }
-	virtual ~command(); // TODO: = 0 ?
+	virtual ~testcommand(); // TODO: = 0 ?
 };
 
 // TODO: cpp file?
+template<class ...Args>
+testcommand<Args...>::~testcommand() {}
+
+template<typename T>
+class is_port
+{
+	typedef char false_type[1];
+	typedef char true_type[2];
+
+	template<typename U>
+	static true_type& tester(typename U::data_type*);
+
+	template<typename>
+	static false_type& tester(...);
+
+public:
+	static const bool value = sizeof(tester<T>(0)) == sizeof(true_type);
+};
+
+template<class T, bool Is>
+struct _data_type_if_port
+{
+	using type = T;
+};
+
+template<class T>
+struct _data_type_if_port<T, true>
+{
+	using type = typename T::data_type;
+};
+
+template<class T>
+using data_type_if_port = _data_type_if_port<T, is_port<T>::value>;
+
+
+struct empty_port {};
+
+template<class P, bool>
+struct _make_port {
+	using type = empty_port;
+};
+
+template<class P>
+struct _make_port<P, true> {
+	using type = P;
+};
+
+template<class P>
+using make_port = _make_port<P, is_port<P>::value>;
+
+template<class ...Args>
+class command : public testcommand<typename data_type_if_port<Args>::type...>
+{
+	using base = testcommand<typename data_type_if_port<Args>::type...>;
+	using base::base;
+public:
+	std::tuple<make_port<Args>...> in_ports;
+
+	bool update()
+	{
+		//fetch_ports(); // TODO!!
+		return base::update();
+	}
+
+	~command();
+};
+
 template<class ...Args>
 command<Args...>::~command() {}
 

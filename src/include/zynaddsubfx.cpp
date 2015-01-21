@@ -20,6 +20,7 @@
 #include <unistd.h> // TODO
 #include <fstream>
 
+#include "lo_port.h"
 #include "config.h"
 #include "zynaddsubfx.h"
 
@@ -48,7 +49,7 @@ cmd_vectors zynaddsubfx_t::make_note_commands(const std::multimap<daw::note_geom
 		if(itr1 == cmd_of.end())
 		{
 			// TODO: valgrind
-			command_base* cmd = new command<oint<>, oint<>, oint<>>("/noteOn", 0, pr.first.offs, pr.second.velocity());
+			command_base* cmd = new command<osc_int, osc_int, osc_int>("/noteOn", 0, pr.first.offs, pr.second.velocity());
 			cmd_of.emplace_hint(itr1, pr.first.offs, cmd);
 
 			// TODO: note_off
@@ -56,7 +57,7 @@ cmd_vectors zynaddsubfx_t::make_note_commands(const std::multimap<daw::note_geom
 			res.emplace(cmd, std::set<float>{pr.first.start});
 			std::cerr << "New note command: " << cmd << std::endl;
 
-			cmd = new command<oint<>, oint<>>("/noteOff", 0, pr.first.offs);
+			cmd = new command<osc_int, osc_int>("/noteOff", 0, pr.first.offs);
 			res.emplace(cmd, std::set<float>{pr.first.start + pr.second.length()});
 
 			std::cerr << "Map content now: " << std::endl;
@@ -96,13 +97,14 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 zynaddsubfx_t::zynaddsubfx_t(const char *name) :
 	zyn::znode_t(this, "/", ""),
 	instrument_t(name, { new command<>("/quit") }), // TODO! close-ui?
-	has_impl_t(this)/*,
+	m_impl(this),/*,
 	note_input(*this)*/
+	notes_t_port(this, "/", "/noteOn")
 {
-	using prt_t = in_port_templ<int>;
-	for(int i = 0; i < 13*10 + 1; ++i) {
+	/*using prt_t = in_port_templ<int>;
+	for(int i = 0; i < NOTES_MAX; ++i) {
 		commands.push_back(new command<oint<>, oint<prt_t>>("/notOn", i, oint<prt_t>(new prt_t(*this))));
-	}
+	}*/
 
 }
 
@@ -113,6 +115,13 @@ zyn_impl::zyn_impl(zynaddsubfx_t *ref) : is_impl_of_t<zynaddsubfx_t>::is_impl_of
 
 	}*/ // TODO
 }
+
+void zyn::send_single_command(lo_port_t &lp, const osc_string &str)
+{
+	lp.send_raw(str.raw(), str.size());
+}
+
+
 
 }
 

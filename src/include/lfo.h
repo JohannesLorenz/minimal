@@ -23,6 +23,7 @@
 #include <cmath>
 #include <limits>
 #include "effect.h"
+#include "ports.h"
 
 namespace mini
 {
@@ -42,13 +43,15 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	const float min, max, mm2, middle;
 	const float start, end, times, outside, step;
 	const float repeat;
-	float next_time; // TODO?
 	//float time =
 
 	//using lfo_out = lfo_out<OutType>;
 
+	void instantiate() {}
+
 	float _proceed(float time)
 	{
+		std::cerr << "proceeding with lfo... " << std::endl;
 		if(time < start) {
 			freq_lfo_out<OutType>::set(outside);
 			return start;
@@ -80,7 +83,9 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		times(times),
 		outside(outside),
 		step(step),
-		repeat((end - start)/times){}
+		repeat((end - start)/times) {
+		set_next_time(start);
+	}
 };
 
 }

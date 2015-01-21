@@ -60,6 +60,7 @@ loaded_project_t::loaded_project_t(project_t&& project) :
 {
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
+		e->instantiate();
 		if(e->writers.empty())
 		{
 			_effect_root.readers.push_back(e);
@@ -136,6 +137,13 @@ player_t::player_t(loaded_project_t &project)  : project(project)
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
+	pq.push(new sentinel);
+	for(effect_t*& e : project.project.effects())
+	{
+		std::cerr << "pushing effect, next time: " << e->get_next_time() << std::endl;
+		pq.push(new task_effect(e));
+	}
+
 }
 
 void player_t::play_until(float dest)
@@ -217,7 +225,7 @@ auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 	}
 }
 
-
+#if 0
 void player_t::task_events::proceed(float)
 {
 
@@ -239,5 +247,6 @@ auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 	update_next_time(*++itr);
 
 }
+#endif
 
 }

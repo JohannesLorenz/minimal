@@ -20,6 +20,7 @@
 #include "zynaddsubfx.h"
 #include "project.h"
 #include "lfo.h"
+#include "note_line.h"
 
 using namespace mini;
 
@@ -70,11 +71,11 @@ void init(project_t& p)
 	maj.add_note(note_t(), note_geom_t(0.33, 1));
 	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
-	note_line_t nl;
-	nl.add_notes(maj, note_geom_t(0, 62));
-	nl.add_notes(maj, note_geom_t(1, 63));
-	nl.add_notes(maj, note_geom_t(2, 64));
-	nl.add_notes(maj, note_geom_t(3, 65));
+	note_line_t* nl = new note_line_t();
+	nl->add_notes(maj, note_geom_t(0, 62));
+	nl->add_notes(maj, note_geom_t(1, 63));
+	nl->add_notes(maj, note_geom_t(2, 64));
+	nl->add_notes(maj, note_geom_t(3, 65));
 
 #if 0
 	track_t t1/*(sine_bass)*/;
@@ -93,13 +94,14 @@ void init(project_t& p)
 */
 	lfo_t<int>* m_lfo = new lfo_t<int>(0.0, 127.0, 0.0, 4.0);
 	p.effects().push_back(m_lfo);
+	p.effects().push_back(nl);
 //	in_port<int> ip(sine_bass);
 //	ip.connect(m_lfo->out);
 	auto envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
 
 	// effect connections
-	envsustain << *m_lfo;
-	sine_bass.note_input() << (const out_port_templ<note_signal_t>&)nl;
+	*envsustain << *m_lfo;
+	sine_bass.note_input() << (const out_port_templ<note_signal_t>&)*nl;
 
 //	t1.add_command(cmd);
 
