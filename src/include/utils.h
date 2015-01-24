@@ -32,10 +32,8 @@ public:
 	non_copyable_t & operator=(const non_copyable_t&) = delete;
 
 	non_copyable_t(const non_copyable_t&&) noexcept {}
-	const non_copyable_t & operator=(const non_copyable_t&&)
-		const noexcept {
-		return *this;
-	}
+
+
 };
 
 //! counts elements of template parameter list. not thread safe.

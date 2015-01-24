@@ -30,7 +30,7 @@ using namespace daw; // TODO
 
 class note_line_t;
 
-class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
+class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 {
 	friend class note_line_t;
 
@@ -62,8 +62,9 @@ class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
 	};
 
 	std::map<note_geom_t, m_note_event> note_events;
+	std::map<note_geom_t, m_note_event>::const_iterator itr;
 
-	struct note_task_t : public task_base
+	/*struct note_task_t : public task_base
 	{
 		//const loaded_instrument_t* ins;
 		//const command_base* cmd;
@@ -90,7 +91,8 @@ class note_line_impl : public is_impl_of_t<note_line_t>, public work_queue_t
 			if(note_height < 0 || note_height >= (int)NOTES_MAX)
 			 throw "invalid note height";
 		}
-	};
+	};*/
+
 
 //	notes_impl_t root;
 
@@ -117,12 +119,12 @@ public:
 
 	note_line_impl(note_line_t *nl);
 
-	float _proceed(float time) {
+	float _proceed(float time); /* {
 		return run_tasks(time);
-	}
+	}*/
 };
 
-class note_line_t : public effect_t, notes_out, has_impl_t<note_line_impl, note_line_t> // TODO: which header?
+class note_line_t : public effect_t, public notes_out, has_impl_t<note_line_impl, note_line_t> // TODO: which header?
 {
 	friend class note_line_impl;
 	using impl_t = has_impl_t<note_line_impl, note_line_t>;
@@ -160,7 +162,9 @@ public:
 
 	float _proceed(float time) {
 		std::cerr << "proceeding with note line... " << std::endl;
-		return impl->_proceed(time);
+		float next = impl->_proceed(time);
+		std::cerr << "next note: " << next << std::endl;
+		return next;
 	}
 };
 

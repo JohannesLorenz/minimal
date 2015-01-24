@@ -25,7 +25,13 @@ namespace mini
 
 note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 {
+	// insert notes
 	visit(ref->notes, note_geom_t(0, 0));
+	// insert sentinel
+	note_events.emplace(note_geom_t(std::numeric_limits<float>::max(), 1),
+		m_note_event{true, 0, std::numeric_limits<int>::max()});
+
+	itr = note_events.begin();
 #if 0
 /*	for(const auto& pr : ref->notes.get<note_t>())
 	{
@@ -63,9 +69,9 @@ note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 #endif
 }
 
-void note_line_impl::note_task_t::proceed(float time)
+float note_line_impl::_proceed(float time)
 {
-	note_signal_t& notes_out = nl_ref->ref->notes_out::data;
+	note_signal_t& notes_out = ref->notes_out::data;
 	std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
 
 	/*if(time != nl_ref->last_time)
@@ -73,42 +79,54 @@ void note_line_impl::note_task_t::proceed(float time)
 		notes_out.last_changed_hint = notes_out.changed_hint;
 	}*/
 
-	do
+	while(itr->first.start <= time)
 	{
 		const note_geom_t& geom = itr->first;
 		const m_note_event& event = itr->second;
 		std::pair<int, int>* notes_at = notes_out.lines[geom.offs];
 		std::size_t id = 0;
-
+		std::cerr << "SEARCHING NOTE: " << event.id << "at offset: " << geom.offs << std::endl;
 		if(event.on)
 		{
 			// skip used slots
-			for(; notes_at->first > 0 && id < POLY_MAX; ++notes_at, ++id) ;
+			for(; id < POLY_MAX && notes_at->first > 0; ++notes_at, ++id) {
+				std::cerr << "SEARCHING NOTE: skipped: " << notes_at->first << std::endl;
+			}
 			if(id >= POLY_MAX)
 			 throw "end of polyphony reached!";
 
 			notes_at->first = event.id;
 			notes_at->second = event.volume;
+			std::cerr << "note on: " << event.id <<  std::endl;
 		}
 		else
 		{
-			for(; notes_at->first != event.id && id < POLY_MAX; ++notes_at, ++id) ;
+			for(; id < POLY_MAX && notes_at->first != event.id; ++notes_at, ++id) {
+				std::cerr << "SEARCHING NOTE: skipped (off): " << notes_at->first << std::endl;
+			}
+			;
 			if(id >= POLY_MAX)
 			 throw "end of polyphony reached!";
 
 			notes_at->first = -1;
+
+			std::cerr << "note off: " << event.id <<  std::endl;
 		}
 
 		recently_changed_ptr->first = geom.offs;
 		(recently_changed_ptr++)->second = id;
 
-	} while((++itr)->first.start == time) ;
+		std::cerr << "played one note: " << itr->first.start << std::endl;
+
+		++itr;
+	}
 
 	recently_changed_ptr->first = -1;
 	++notes_out.changed_stamp;
+	ref->notes_out::change_stamp = time;
 
-	update_next_time(itr->first.start);
-	nl_ref->last_time = time;
+	last_time = time;
+	return itr->first.start;
 
 #if 0
 	note_signal_t& notes_out = nl_ref->ref->notes_out::data;

@@ -31,25 +31,28 @@ protected:
 	{
 //		const command_base* cmd;
 		float _next_time;
-	protected:
+	public:
 		void update_next_time(float new_value) {
 			_next_time = new_value;
 		}
-	public:
 		virtual void proceed(float time) = 0;
 		float next_time() const { return _next_time; }
 		task_base(float next_time) : _next_time(next_time) {}
+		virtual bool cmp(const task_base& other) const { return this < &other; }
+
 //		virtual float next() = 0;
 	};
 
-
+private:
 	using pq_entry = task_base*; // TODO: redundancy
 
 	struct cmp_func
 	{
 		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
 		{
-			return lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
+			return (lhs->next_time() == rhs->next_time())
+				? lhs->cmp(*rhs)
+				: lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
 
 		/*	bool left_end = lhs.itr != lhs.vals.end();
 			bool right_end = rhs.itr != rhs.vals.end();
@@ -60,7 +63,7 @@ protected:
 
 	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
 	pq_type pq;
-
+protected:
 	float run_tasks(float pos)
 	{
 		while(pq.top()->next_time() <= pos)
@@ -80,9 +83,27 @@ protected:
 		return pq.top()->next_time();
 	}
 
-	void add_task(task_base* new_task) {
-		pq.push(new_task);
+	using handle_type = pq_type::handle_type;
+	handle_type add_task(task_base* new_task) {
+		return pq.push(new_task);
 	}
+
+	task_base* peek_next_task() {
+		return pq.top();
+	}
+
+	task_base* pop_next_task() {
+		task_base* ret_val = peek_next_task();
+		pq.pop();
+		return ret_val;
+	}
+
+	bool has_active_tasks(float at_time) {
+		std::cerr << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << std::endl;
+		return pq.top()->next_time() <= at_time;
+	}
+
+	void update(handle_type h) { pq.update(h); }
 };
 
 }

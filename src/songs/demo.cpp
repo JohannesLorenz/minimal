@@ -101,7 +101,9 @@ void init(project_t& p)
 
 	// effect connections
 	*envsustain << *m_lfo;
-	sine_bass.note_input() << (const out_port_templ<note_signal_t>&)*nl;
+	sine_bass.note_input() << *nl;
+
+	p.effects().push_back(&sine_bass);
 
 //	t1.add_command(cmd);
 

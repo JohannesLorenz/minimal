@@ -24,6 +24,8 @@
 #include <vector>
 #include <string>
 
+#include "utils.h"
+
 namespace mini
 {
 
@@ -37,17 +39,11 @@ public:
 	static constexpr char sign() { return _sign; }
 };
 
-class input_fixed {};
-template<class T> struct no_port { using type = T; };
-
-
-
 template</*class Input, */class InputPort, char _sign>
 class variable : public par_base<typename InputPort::type, _sign>
 {
 public:
 	InputPort* _input;
-	constexpr static bool is_const() { return false; }
 	using type = typename InputPort::type;
 	variable(InputPort& input) : _input(&input) {}
 	variable(InputPort* input) : _input(input) {}
@@ -56,19 +52,21 @@ public:
 	float get_next_time() const { return _input->get_outs_next_time(); }
 };
 
+/*
 template<class T, char _sign> // TODO: should be constexpr
-class variable<no_port<T>, _sign> : public par_base<T, _sign>
+class variable<no_port<T>, _sign> : public par_base<T, _sign>, util::dont_instantiate_me<T>
 {
 	const T _value;
 public:
 //	constexpr static bool is_const() { return true; }
 //	using type = T;
 //	const T& value() const { return _value; }
-	variable(const T& value) : _value(value) {}
-};
+	variable(const T& value) : _value(value) {
+	}
+};*/
 
 template<class T>
-struct pad_size
+struct pad_size : util::dont_instantiate_me<T>
 {
 	 // TODO: don't instantiate me!
 	 constexpr static std::size_t value() { return 0; }
@@ -80,13 +78,13 @@ struct pad_size<int>
 	constexpr static std::size_t value() { return 4; }
 };
 
-//! OOP can be really interesting sometimes...
 template<>
 struct pad_size<float> : public pad_size<int> {};
 
 //! inherits from base type of variable
-template<class T, char sgn>
-struct pad_size<variable<T, sgn>> : public pad_size<T>
+//! OOP can be really interesting sometimes...
+template<template<class, bool> class Port, char sgn, class T, bool b>
+struct pad_size<variable<Port<T, b>, sgn>> : public pad_size<T>
 {
 };
 
@@ -175,6 +173,11 @@ std::vector<char> to_osc_string(const T& elem) {
 	return store_int32_t((int32_t*)(&elem));
 }
 
+template<template<class, bool> class InputPort, char c, class T, bool b>
+std::vector<char> to_osc_string(const variable<InputPort<T, b>, c>& v) {
+	return to_osc_string(*reinterpret_cast<const T*>(v._input->get_value()));
+}
+
 /*
 template<class Input, class InputId, char _sign>
 class variable : public par_base<decltype(Input().get(InputId())), _sign>
@@ -259,8 +262,8 @@ bool update(T& ) {
 	return false;
 }
 
-template<template<class > class Variable, class T>
-bool update(Variable<no_port<T>>& v) {
+template<template<class, bool> class InputPort, char c, class T, bool b>
+bool update(variable<InputPort<T, b>, c>& v) {
 	return v.update();
 }
 
@@ -269,8 +272,8 @@ float get_next_time(const T& ) {
 	return std::numeric_limits<float>::max();
 }
 
-template<template<class > class Variable, class T>
-float get_next_time(const Variable<no_port<T>>& v) {
+template<template<class, bool> class InputPort, char c, class T, bool b>
+float get_next_time(const variable<InputPort<T, b>, c>& v) {
 	return v.get_next_time();
 }
 

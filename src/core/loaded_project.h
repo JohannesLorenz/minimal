@@ -90,6 +90,10 @@ class loaded_project_t;
 
 class player_t : public work_queue_t // TODO: own header
 {
+	// TODO: class handle_work_queue_t?
+	std::map<const effect_t*, handle_type> handles;
+
+
 	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
@@ -151,6 +155,7 @@ class player_t : public work_queue_t // TODO: own header
 	class task_effect : public task_base
 	{
 	//	const instrument_t* ins;
+	public:
 		effect_t* effect;
 		//const command_base* cmd;
 	public:
@@ -162,9 +167,7 @@ class player_t : public work_queue_t // TODO: own header
 		}
 
 		void proceed(float time) {
-			std::cerr << "PROCEEDING with effect..." << std::endl;
-			float next_time = effect->proceed(time);
-			update_next_time(next_time);
+			update_next_time(effect->proceed(time));
 		}
 	};
 
@@ -179,7 +182,7 @@ class player_t : public work_queue_t // TODO: own header
 	void send_commands();
 
 public:
-	player_t(loaded_project_t& project);
+	player_t(loaded_project_t& _project);
 
 	void play_until(float dest);
 };
@@ -207,9 +210,10 @@ class loaded_project_t : non_copyable_t
 	// connections
 //	const std::vector<rtosc_con> _cons;
 //	std::vector<rtosc_con> make_cons() const;
+#if 0
 	/*const*/ std::vector<loaded_instrument_t> _ins;
 	std::vector<loaded_instrument_t> make_ins() const;
-
+#endif
 	effect_root_t _effect_root, _new_effect_root;
 
 //	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
@@ -222,12 +226,12 @@ class loaded_project_t : non_copyable_t
 
 //	daw_visit::global_map _global;
 public:
-	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
+//	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 
 //	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }
 	effect_root_t& new_effect_root() { return _new_effect_root; }
-	loaded_project_t(project_t&& project);
+	loaded_project_t(project_t&& _project);
 	~loaded_project_t();
 private:
 	std::pair<daw::note_geom_t, daw::note_t> visit(daw::note_geom_t offset, const daw::note_t &n) const;

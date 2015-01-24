@@ -21,6 +21,7 @@
 #define PORTS_H
 
 #include <lo/lo_types.h>
+#include <cstddef>
 
 namespace mini {
 
@@ -29,6 +30,7 @@ class lo_port_t
 	lo_address dest;
 public:
 	lo_port_t(const char* udp_port);
+	lo_port_t(std::size_t udp_port); // TODO: udp port is which type?
 	~lo_port_t();
 	// TODO: does const make sense
 	bool send_rtosc_msg(const char *path, const char *msg_args, ...) const;

@@ -53,19 +53,20 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	{
 		std::cerr << "proceeding with lfo... " << std::endl;
 		if(time < start) {
-			freq_lfo_out<OutType>::set(outside);
+			freq_lfo_out<OutType>::set(outside, time);
 			return start;
 		}
 		else if(time < end)
 		{
-			freq_lfo_out<OutType>::set(middle + sinf(time-start) * mm2);
+			freq_lfo_out<OutType>::set(middle + sinf(time-start) * mm2, time);
 			// TODO: repeat etc.
+			std::cerr << "lfo value: " << middle + sinf(time-start) * mm2 << std::endl;
 
 			return time + step;
 		}
 		else
 		{
-			freq_lfo_out<OutType>::set(outside);
+			freq_lfo_out<OutType>::set(outside, time);
 			return std::numeric_limits<float>::max();
 		}
 	//	return 0.0f; // TODO

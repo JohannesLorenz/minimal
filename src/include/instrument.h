@@ -225,7 +225,9 @@ public:
 		named_t(name),
 		_id(next_id++),
 		_quit_commands(_quit_commands)
-		{ std::cout << "instrument: constructed" << std::endl; }
+		{ std::cout << "instrument: constructed" << std::endl;
+		set_next_time(std::numeric_limits<float>::max());
+		}
 	virtual ~instrument_t();
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
 
@@ -260,7 +262,6 @@ public:
 	//instrument_t(instrument_t&& other) = default;
 
 	virtual cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& ) const = 0;
-
 };
 
 template <char ...Letters> class fixed_str {

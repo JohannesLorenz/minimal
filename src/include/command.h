@@ -132,6 +132,7 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s)
 		{
+			//std::cerr << "resizing: "<< s.size() << " -> "<< s.size() + pad_size<T>::value() <<std::endl;
 			s.resize(s.size() + pad_size<T>::value());
 			std::fill(s.end() - pad_size<T>::value(), s.end(), 0); // debug only
 		}
@@ -192,7 +193,6 @@ namespace command_detail
 			_append_single<true>::exec(v, elem);
 			*itr = v.end(); // obviously...
 
-
 		//	v.resize();
 		}
 	};
@@ -201,14 +201,14 @@ namespace command_detail
 	struct _complete_single<true, false> // DoComplete = true, EndReached = false
 	{
 		template<class T>
-		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
+		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& elem)
 		{
-			std::cerr << "app single" << std::endl;
+		//	std::cerr << " app single" << std::endl;
 			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
 			// note the difference: no inserter here
-			std::cerr << "test before: " << osc_string(v) << std::endl;
+		//	std::cerr << "test before: " << osc_string(v) << std::endl;
 			std::copy(osc_str.begin(), osc_str.end(), *itr); // TODO: move?
-			std::cerr << "test now: " << osc_string(v) << std::endl;
+		//	std::cerr << "test now: " << osc_string(v) << std::endl;
 
 			*itr += osc_str.size();
 		}
@@ -218,8 +218,9 @@ namespace command_detail
 	struct _complete_single<false, EndReached>
 	{
 		template<class T>
-		static void exec(std::vector<char>& , std::vector<char>::iterator* , const T& )
+		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& )
 		{
+			*itr += pad_size<T>::value();
 			// do not complete
 		}
 	};
@@ -231,7 +232,6 @@ namespace command_detail
 		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const std::tuple<Args2...>& tp)
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
-
 			// TODO: non fix size
 			constexpr bool cond1 = !is_const<tp_at>::value() || All;
 			_complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
@@ -312,8 +312,9 @@ class _command : public command_base
 {
 	using self = _command<Args...>;
 protected:
+public:// TODO?!
 	std::tuple<Args...> args;
-
+protected:
 	constexpr std::size_t est_length() const {
 		return pad<4>(path().length() + 1) // path + \0
 			+ pad<4>(sizeof...(Args) + 2)// ,<types>\0
@@ -549,11 +550,11 @@ struct _data_type_if_port
 template<class T>
 struct _data_type_if_port<T, true>
 {
-	using type = typename T::data_type;
+	using type = vint<T>;
 };
 
 template<class T>
-using data_type_if_port = _data_type_if_port<T, is_port<T>::value>;
+using data_type_if_port = typename _data_type_if_port<T, is_port<T>::value>::type;
 
 
 struct empty_port {};
@@ -569,20 +570,74 @@ struct _make_port<P, true> {
 };
 
 template<class P>
-using make_port = _make_port<P, is_port<P>::value>;
+using make_port = typename _make_port<P, is_port<P>::value>::type;
+
+namespace fetch_detail
+{
+
+
+template<class T1, class T2>
+struct fetch_single
+{
+	// I owe you a cookie if you can make this without a struct
+	// (and without overcomplication...)
+	static void exec(T1& port, T2& storage) {
+		storage = port.get();
+		std::cerr << "FETCHED: " << storage << " <- " << port.get() << std::endl;
+	}
+};
+
+template<class T2>
+struct fetch_single<empty_port, T2>
+{
+	// I owe you a cookie if you can make this without a struct
+	// (and without overcomplication...)
+	static void exec(const empty_port& , T2& )
+	{
+	}
+};
+
+template<int I, class ...Args>
+struct fetch_ports
+{
+	static void exec(std::tuple<make_port<Args>...>& ports, std::tuple<data_type_if_port<Args>...>& args)
+	{
+		using T1 = typename std::tuple_element<I, std::tuple<make_port<Args>...>>::type;
+		using T2 = typename std::tuple_element<I, std::tuple<data_type_if_port<Args>...>>::type;
+		fetch_single<T1, T2>::exec(std::get<I>(ports), std::get<I>(args));
+		fetch_ports<I+1, Args...>::exec(ports, args);
+	}
+};
+
 
 template<class ...Args>
-class command : public testcommand<typename data_type_if_port<Args>::type...>
+struct fetch_ports<sizeof...(Args), Args...>
 {
-	using base = testcommand<typename data_type_if_port<Args>::type...>;
+	static void exec(const std::tuple<make_port<Args>...>& ,
+		const std::tuple<data_type_if_port<Args>...>& )
+	{
+	}
+};
+
+}
+
+template<class ...Args>
+class command : public testcommand<data_type_if_port<Args>...>
+{
+	using base = testcommand<data_type_if_port<Args>...>;
 	using base::base;
+
+	void fetch_ports() {
+		fetch_detail::fetch_ports<0, Args...>::exec(in_ports, base::args);
+	}
+
 public:
 	std::tuple<make_port<Args>...> in_ports;
 
 	bool update()
 	{
-		//fetch_ports(); // TODO!!
-		return base::update();
+		fetch_ports();
+		return true;
 	}
 
 	~command();

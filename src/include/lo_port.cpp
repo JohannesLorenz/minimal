@@ -77,6 +77,11 @@ lo_port_t::lo_port_t(const char *udp_port) :
 		throw "Could not connect to lo dest port.";
 }
 
+lo_port_t::lo_port_t(std::size_t udp_port)
+	: lo_port_t(std::to_string(udp_port).c_str())
+{
+}
+
 lo_port_t::~lo_port_t()
 {
 	lo_address_free(dest);

@@ -28,10 +28,11 @@ namespace mini
 
 class out_port_base
 {
-protected:
+public: // TODO!! protected
 	effect_t* e;
 public:
-	bool changed = true;
+//	bool changed = true; // TODO: stamp?
+	float change_stamp = -1.0f;
 	out_port_base(effect_t& ef) :
 		e(&ef)
 	{
@@ -43,12 +44,16 @@ public:
 	//virtual void connect(const in_port_base& ) ;
 };
 
+template<class T, bool IsDep>
+class in_port_templ;
+
 template<class T>
 class out_port_templ : public out_port_base
 {
 protected:
 public:
 	T data;
+	bool start = true;
 
 	//operator const T&() { return data; }
 public:
@@ -64,101 +69,171 @@ public:
 	}
 
 	const T& get() const { return data; }
-	void set(const T& new_val) { /*return base::ref*/ data = new_val; }
+	void set(const T& new_val, float now)
+	{ /*return base::ref*/
+		if(start || data != new_val)
+		{
+			data = new_val;
+			change_stamp = now;
+			start = false;
+		}
+	//	changed = true;
+	}
 
 	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
 
+//	friend
+//	void operator<<(in_port_templ<T>& ipt, const out_port_templ<T>& opt);
 };
+
+class lo_port_t;
 
 // TODO: abstract port base
 class in_port_base
 {
-protected:
+public: // TODO!! protected
 	effect_t* e;
+private:
+	bool _is_trigger = false;
+protected:
+	float change_stamp = -1.0f;
 public:
-	bool unread_changes = true; // initally send values
+	bool unread_changes = false; // initally send values - TODO??
 	const out_port_base* source = nullptr;
 	in_port_base(effect_t& ef) :
 		e(&ef)
 	{
+		e->in_ports.push_back(this);
 	}
 
 	in_port_base(effect_t& ef, const out_port_base& source) :
 		e(&ef),
 		source(&source)
 	{
+		e->in_ports.push_back(this);
 	}
 
 	float get_outs_next_time() const {
 		return source->next_time;
 	}
+
+	virtual bool update() = 0;
+
+	// TODO: const? probably not...
+	virtual void send_all(lo_port_t* ) {} // TODO: not sure if this fits here always
+
+	bool is_trigger() const { return _is_trigger; }
+	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?
+
+	virtual const void* get_value() const = 0;
 };
 
-template<class T>
-class in_port_templ : public in_port_base
+template<class T, bool IsDep = true>
+class in_port_templ_base : public in_port_base
 {
-protected:
-	using base = in_port_templ<T>;
-
+public: // TODO! (protected)
 	T data;
-
-public:
 	using data_type = T;
+	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
 
-	in_port_templ(effect_t& ef) :
-		in_port_base(ef)
-	//	: data(e)
-	{
-		ef.in_ports.push_back(this);
-	}
+	using in_port_base::in_port_base;
 
-	//operator const T&() { return data; }
-	in_port_templ(effect_t& ef, const out_port_base& source) :
-		in_port_base(ef, source)
-	//	: data(e)
-	{
-		ef.in_ports.push_back(this);
-	}
-protected:
-	bool set(const T& new_value) {
-		if(!unread_changes)
-		 throw "omitted a vlue";
-		unread_changes = (data == new_value);
-		if(unread_changes)
-		{
-			data = new_value;
-		}
-		return unread_changes;
-	}
-
-public:
+	bool is_dependency() const { return IsDep; }
 
 	const T& get() const { return data; }
 
-	bool update() {
-		bool out_port_changed = source->changed;
-		return (out_port_changed) && set(*(static_cast<const T*>(source->get_value())));
+	using type = T;
+protected:
+	void update_stamp() {
+		if(unread_changes)
+		 throw "omitting a value now!";
+		unread_changes = true;
+		change_stamp = source->change_stamp;
 	}
 
-	using type = T;
 };
 
+template<class T, bool IsDep = true>
+class in_port_templ : public in_port_templ_base<T, IsDep>
+{
+protected:
+	//! identifies us as a base for children
+	using base = in_port_templ<T, IsDep>;
+	using templ_base = in_port_templ_base<T, IsDep>;
+
+public:
+	using in_port_templ_base<T, IsDep>::in_port_templ_base;
+
+protected:
+	bool set(const T& new_value)
+	{
+		templ_base::update_stamp();
+		templ_base::data = new_value;
+		return true;
+	}
+public:
+
+	bool update() {
+		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
+		std::cerr << "OUT PORT CHANGED? " << out_port_changed << std::endl;
+		return (out_port_changed) && set(*(static_cast<const T*>(templ_base::source->get_value())));
+	}
+
+};
+
+template<class T, bool IsDep>
+class in_port_templ<T*, IsDep> : public in_port_templ_base<T*, IsDep>
+{
+protected:
+	//! identifies us as a base for children
+	using base = in_port_templ<T*, IsDep>;
+	using templ_base = in_port_templ_base<T*, IsDep>;
+public:
+	using in_port_templ_base<T*, IsDep>::in_port_templ_base;
+protected:
+	bool set(const T* )
+	{
+		templ_base::update_stamp();
+		return true;
+	}
+
+public:
+	bool update() {
+		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
+		return (out_port_changed) && set((static_cast<const T*>(templ_base::source->get_value())));
+	}
+};
+
+
+
+
 //! copy-value based connection
-template<class T>
-void operator<<(in_port_templ<T>& ipt, const out_port_templ<T>& opt)
+template<class T, bool IsDep>
+void operator<<(in_port_templ<T, IsDep>& ipt, const out_port_templ<T>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
 	ipt.source = &opt;
+	if(ipt.is_dependency()) // TODO: via template matching
+	 opt.e->deps.push_back(ipt.e);
+	else
+	 opt.e->readers.push_back(ipt.e);
+	ipt.e->writers.push_back(opt.e);
 }
 
 //! pointer based connection
-template<class T>
-void operator<<(in_port_templ<T*>& ipt, const out_port_templ<T>& opt)
+template<class T, bool IsDep>
+void operator<<(in_port_templ<const T*, IsDep>& ipt, const out_port_templ<T>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
 	ipt.source = &opt;
+	ipt.data = &opt.data;
+	if(ipt.is_dependency()) // TODO: via template matching
+	 opt.e->deps.push_back(ipt.e);
+	else
+	 opt.e->readers.push_back(ipt.e);
+	ipt.e->writers.push_back(opt.e);
 }
 
 class self_port_base
@@ -169,9 +244,10 @@ public:
 		// who knows :-)) (bad validation of protocol...)
 		return std::numeric_limits<float>::max();
 	}
+	virtual const void* get_value() const = 0;
 };
 
-template<class T>
+template<class T, bool = false>
 class self_port_templ : public self_port_base
 {
 protected:
@@ -179,7 +255,7 @@ protected:
 	float next_time;
 
 protected:
-	bool set(const T& new_value) {
+/*	bool set(const T& new_value) {
 		if(!unread_changes)
 		 throw "omitted a vlue";
 		unread_changes = (data == new_value);
@@ -188,15 +264,22 @@ protected:
 			data = new_value;
 		}
 		return unread_changes;
-	}
+	}*/
 
 public:
 	using data_type = T;
 
 	const T& get() const { return data; }
 
+	void set(const T& _data) { data = _data; }
+
 	//! this is actually a validation of the protocol...
 	constexpr bool update() const { return true; }
+
+	const void* get_value() const {
+		std::cerr << "GET: " << *reinterpret_cast<const T*>(&data) << std::endl;
+		return reinterpret_cast<const void*>(&data); }
+
 
 	using type = T;
 };
@@ -217,7 +300,7 @@ constexpr std::size_t POLY_MAX = 16;
 struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
-	std::pair<int, int> lines[POLY_MAX][NOTES_MAX];
+	std::pair<int, int> lines[NOTES_MAX][POLY_MAX];
 	//! the recently switched lines
 //	std::size_t changed_hint[NOTES_MAX];
 
@@ -236,7 +319,7 @@ struct notes_out : out_port_templ<note_signal_t>
 	using out_port_templ<note_signal_t>::out_port_templ;
 };
 
-struct notes_in : in_port_templ<note_signal_t*>
+struct notes_in : in_port_templ<const note_signal_t*>
 {
 	using base::in_port_templ;
 };

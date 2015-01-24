@@ -101,7 +101,17 @@ struct arg_ptrs
 
 };*/
 
-class effect_t : non_copyable_t //: public port_chain
+class has_id
+{
+	std::size_t _id;
+public:
+	has_id(std::size_t id = no_id()) : _id(id) {}
+	std::size_t id() const { return _id; }
+	void set_id(std::size_t id) { _id = id; }
+	static constexpr std::size_t no_id() { return -1; }
+};
+
+class effect_t : non_copyable_t, public has_id //: public port_chain
 {
 public:
 	std::vector<in_port_base*> in_ports;
@@ -121,7 +131,7 @@ protected:
 public:
 	virtual void instantiate() = 0;
 
-	std::vector<effect_t*> readers, writers;
+	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
 	float proceed(float time) {
 		return next_time = _proceed(time);
@@ -143,6 +153,8 @@ public:
 	{
 	}*/
 
+	bool cmp(const effect_t& other) const { return id() < other.id(); }
+
 	template<class ...Args2>
 	effect_t(const std::tuple<Args2&...>& out_ports)
 		: out_ports(make_vector<out_port_base*>(out_ports))
@@ -150,6 +162,7 @@ public:
 	}
 
 	effect_t() {}
+	virtual ~effect_t() {}
 };
 
 template<class Impl, class T>
@@ -161,10 +174,11 @@ protected:
 public:
 	//has_impl_t() : impl(new Impl) {}
 	//template<class T>
-	has_impl_t(T* ref) : ref(ref) {} //impl(new Impl(ref)) {}
+	has_impl_t(T* ref) : impl(nullptr), ref(ref) {} //impl(new Impl(ref)) {}
 	void instantiate() {
 		impl = new Impl(ref);
 	}
+	~has_impl_t() { delete impl; }
 };
 
 template<class Ref>

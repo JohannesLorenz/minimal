@@ -48,10 +48,20 @@ std::ostream& operator<<(std::ostream& stream,
 {
 	const std::vector<char>& str = r_str._data;
 
+#ifdef DUMP_RAW
+	{
+	bool first_word = true;
+	stream << "RAW OSC string:" << std::endl;
 	for(const char& x : str)
 	{
-		stream << +x << std::endl;
+		stream << +x;
+		first_word = first_word && (bool)x;
+		if(first_word && isprint(x))
+		 stream << " ('" << x << "')";
+		stream << std::endl;
 	}
+	}
+#endif
 	stream << std::endl;
 
 	if(str[0] != '/')

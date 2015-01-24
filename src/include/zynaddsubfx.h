@@ -21,6 +21,7 @@
 #define ZYNADDSUBFX_H
 
 #include <vector>
+#include "lo_port.h"
 #include "instrument.h"
 #include "ports.h"
 
@@ -92,9 +93,9 @@ class p_envsustain : public command<oint<Port1>>
 {
 	using base = command<oint<Port1>>;
 public:
-	static const char* path() { return "PEnvsustain"; } // TODO: noteOn string is code duplicate
+	static const char* path() { return "Penvsustain"; } // TODO: noteOn string is code duplicate
 	p_envsustain(oint<Port1> value) // TODO: "ref?"
-		: base("/PEnvsustain", value)
+		: base("/Penvsustain", value)
 	{
 	}
 };*/
@@ -107,7 +108,7 @@ struct osc_string_sender
 void send_single_command(lo_port_t& lp, const osc_string& str);
 
 template<class PortType, class InstClass>
-struct in_port_with_command : node_t<InstClass>, PortType, osc_string_sender
+struct in_port_with_command : node_t<InstClass>, PortType//, osc_string_sender
 { // TODO: instrument.h
 	// a bit non-conform to store the command here, but working...
 	//using base = command<oint<Port1>>;
@@ -119,16 +120,18 @@ public:
 		PortType(*ins),
 		cmd(cmd)
 	{
+		PortType::set_trigger(); // TODO: here?
 		static_cast<instrument_t*>(ins)->add_in_port(this);
 	}
 
 /*out_port_with_command(oint<Port1> value) // TODO: "ref?"
-		: base("/PEnvsustain", value)
+		: base("/Penvsustain", value)
 	{
 	}*/
 
 	void send_all(lo_port_t* lo_port)
 	{
+		cmd->update(); // TODO: check ret val?
 		send_single_command(*lo_port, cmd->complete_buffer());
 	}
 };
@@ -142,7 +145,7 @@ struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubf
 {
 	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
 	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<vint<PortT>>(ext.c_str(), *this)) {
+		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<vint<PortT>>((base + ext).c_str(), *this)) {
 	}
 };
 
@@ -181,7 +184,7 @@ public:
 	}*/
 	template<class Port>
 	zyn::p_envsustain<Port>* envsustain() const {
-		return spawn_new<zyn::p_envsustain<Port>>("PEnvsustain");
+		return spawn_new<zyn::p_envsustain<Port>>("Penvsustain");
 	}
 
 	/*template<class Port1>
@@ -210,6 +213,7 @@ class adpars : znode_t
 {
 public:
 	using znode_t::znode_t;
+	//! shortcut, since voice0 is popular
 	zyn::voice0 voice0() const {
 		return spawn<zyn::voice0>("voice0/");
 	}
@@ -220,11 +224,13 @@ public:
 
 }
 
-struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
+struct zyn_impl : is_impl_of_t<zynaddsubfx_t>//, protected work_queue_t
 {
 	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
+	const pid_t pid;
+	lo_port_t lo_port;
 
-	class port_work : task_base
+/*	class port_work : task_base
 	{
 		in_port_base* ip;
 	public:
@@ -234,29 +240,30 @@ struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
 			(void)ip;
 // TODO
 		}
-	};
+	};*/
+
+	pid_t make_fork();
 
 	zyn_impl(zynaddsubfx_t* ref);
+	~zyn_impl();
 
-	float proceed(float time) {
-		return work_queue_t::run_tasks(time);
-	}
+	float proceed(float);
 };
 
-template<class = void>
+template<class = void, bool = false>
 class use_no_port {};
 
-template<template<class > class P, class T>
-struct _port_type_of { using type = P<T>; };
+template<template<class, bool> class P, class T>
+struct _port_type_of { using type = P<T, true>; };
 
 template<class T>
 struct _port_type_of<use_no_port, T> { using type = T; };
 
-template<template<class > class P, class T>
+template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-template<template<class > class P, class T>
-using port_arg = typename data_type_if_port<port_type_of<P, T>>::type;
+template<template<class , bool> class P, class T>
+using port_arg = data_type_if_port<port_type_of<P, T>>;
 
 class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_impl, zynaddsubfx_t>
 {
@@ -266,11 +273,11 @@ class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_i
 	const char* default_args = "--no-gui -O alsa";*/
 
 	using m_impl = has_impl_t<zyn_impl, zynaddsubfx_t>;
-
+public:
 	//class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };
-	template<template<class > class Port1 = use_no_port,
-		template<class > class Port2 = use_no_port,
-		template<class > class Port3 = use_no_port>
+	template<template<class , bool> class Port1 = use_no_port,
+		template<class , bool> class Port2 = use_no_port,
+		template<class , bool> class Port3 = use_no_port>
 	class note_on : public command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
@@ -283,9 +290,9 @@ class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_i
 	};
 
 	//class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };
-	template<template<class > class Port1 = use_no_port,
-		template<class > class Port2 = use_no_port,
-		template<class > class Port3 = use_no_port>
+	template<template<class , bool> class Port1 = use_no_port,
+		template<class , bool> class Port2 = use_no_port,
+		template<class , bool> class Port3 = use_no_port>
 	class note_off : public command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
@@ -296,7 +303,7 @@ class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_i
 		{
 		}
 	};
-
+private:
 	template<class InstClass>
 	struct notes_t_port_t : node_t<InstClass>, notes_in
 	{
@@ -318,31 +325,43 @@ class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_i
 			std::size_t idx = 0;
 			for(; idx < NOTES_MAX; ++idx)
 			{
-				note_ons.emplace_back(0 /*chan*/, idx++/*offs*/, 0);
+				note_ons.emplace_back(0 /*chan*/, idx/*offs*/, 0);
 			}
 			idx = 0;
 			for(; idx < NOTES_MAX; ++idx)
 			{
-				note_offs.emplace_back(0 /*chan*/, idx++/*offs*/, 0);
+				note_offs.emplace_back(0 /*chan*/, idx/*offs*/, 0);
 			}
+
+			set_trigger(); // TODO: here?
 		}
 
 		void send_all(lo_port_t* lo_port)
 		{
+			std::cerr << "SENDALL: " << std::endl;
+			std::cerr << "NL2:" << &notes_in::data->changed_stamp << std::endl;
+			std::cerr << "STAMP: " << notes_in::data->changed_stamp << std::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
 			if(p.first < 0)
 			 break;
 			else
 			{
+				std::cerr << "SENDALL 2: " << std::endl;
 				std::pair<int, int> p2 = notes_in::data->lines[p.first][p.second];
 				if(p2.first < 0)
 				{
-					send_single_command(lo_port, note_offs[p.first].buffer());
+					zyn::send_single_command(*lo_port, note_offs[p.first].buffer());
 					//lo_port->send_raw(note_offs[p.first].buffer().raw(), note_offs[p.first].buffer().size());
 				}
 				else
 				{
-					send_single_command(lo_port, note_ons[p.first].complete_buffer());
+					m_note_on_t& note_on_cmd = note_ons[p.first];
+					// self_port_t must be completed manually:
+					std::cerr << "SETTING VOL: " << p2.second << std::endl;
+					std::get<2>(note_on_cmd.in_ports).set(p2.second);
+					std::cerr << "GETTING VOL: " << std::get<2>(note_on_cmd.in_ports).get() << std::endl;
+					note_on_cmd.command::update();
+					zyn::send_single_command(*lo_port, note_on_cmd.complete_buffer());
 				/*	command_base* cmd = note_ons[p.first];
 					cmd->complete_buffer();
 					lo_port->send_raw(cmd->buffer().raw(), cmd->buffer().size());*/
@@ -354,7 +373,7 @@ class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_i
 
 
 
-	notes_t_port_t<zynaddsubfx_t> notes_t_port;
+	notes_t_port_t<zynaddsubfx_t> notes_t_port; // TODO: inherit??
 
 
 public:
@@ -365,7 +384,9 @@ public:
 		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
 	};*/
 
-	float _proceed(float time) { return impl->proceed(time); }
+	float _proceed(float time) {
+		std::cerr << "proceeding with zyn" << std::endl;
+		return impl->proceed(time); }
 	void instantiate() { m_impl::instantiate(); }
 
 

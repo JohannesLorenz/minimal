@@ -116,29 +116,34 @@ public:
 
 //! Consists of all data which is needed to serialize a project.
 //! This class will never be instantiated in an so file
-class project_t : non_copyable_t
+class project_t : public non_copyable_t
 {
 	bool valid = true;
 	float _tempo = 140.0;
 	std::string _title;
-	std::vector<std::unique_ptr<instrument_t>> _instruments;
+//	std::vector<std::unique_ptr<instrument_t>> _instruments;
 	std::vector<effect_t*> _effects;
 //	std::vector<track_t> _tracks;
 //	daw::global_t _global;
 public:
 	project_t();
 	~project_t();
+
+	project_t(project_t&& other) noexcept = default;
+
+#if 0
 	project_t(project_t&& other):
 		_instruments(std::move(other._instruments))/*,
 		_tracks(std::move(other._tracks))*/
 	{
 	}
+#endif
 
 //	daw::global_t& global() { return _global; }
 	std::vector<effect_t*>& effects() { return _effects; }
 
-	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
-		return _instruments; }
+//	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
+//		return _instruments; }
 //	const std::vector<track_t>& tracks() const { return _tracks; }
 
 	void set_tempo(float tempo) { _tempo = tempo; }
@@ -158,8 +163,9 @@ public:
 
 	template<class T, class ...Args>
 	T& emplace(Args ...args) {
-		_instruments.emplace_back(new T(args...));
-		return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
+		//_instruments.emplace_back(new T(args...));
+		//return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
+		return static_cast<T&>(*new T(args...));
 	}
 
 

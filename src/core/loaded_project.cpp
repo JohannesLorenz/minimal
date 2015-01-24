@@ -43,6 +43,7 @@ namespace mini
 }*/
 
 
+#if 0
 std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 {
 	std::vector<loaded_instrument_t> result;
@@ -52,12 +53,15 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 	}*/
 	return result;
 }
+#endif
 
-loaded_project_t::loaded_project_t(project_t&& project) :
-	project(std::move(project)),
-	_ins(std::move(make_ins()))
+loaded_project_t::loaded_project_t(project_t&& _project) :
+	project(std::move(_project))
+	//_ins(std::move(make_ins()))
 //	_global(daw_visit::visit(project.global()))
 {
+	std::cerr << "Loading project: " << this->project.title() << std::endl;
+	// instantiate and connect all fx
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
 		e->instantiate();
@@ -67,6 +71,52 @@ loaded_project_t::loaded_project_t(project_t&& project) :
 			e->writers.push_back(&_effect_root);
 		}
 	}
+
+	// identify all fx
+	std::size_t next_id = 0;
+
+	std::stack<effect_t*> ready_fx;
+	ready_fx.push(&effect_root());
+	do
+	{
+		effect_t* cur_effect = ready_fx.top();
+		ready_fx.pop();
+
+		if(cur_effect->id() != has_id::no_id())
+		 throw "Id given twice";
+		cur_effect->set_id(next_id++);
+
+		std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+
+		const auto cb = [&](const std::vector<effect_t*>& next_vector)
+		{
+			for(effect_t* next: next_vector)
+			{
+				bool parents_done = true;
+				for(const effect_t* par: next->writers)
+				 parents_done = parents_done && (par->id() != has_id::no_id());
+				if(parents_done)
+				 ready_fx.push(next);
+			}
+		};
+
+		cb(cur_effect->readers);
+		cb(cur_effect->deps);
+
+	} while(ready_fx.size());
+
+
+#if 0
+	for(effect_t* e : project.effects()) // TODO: -> initializer list
+	{
+		e->instantiate();
+		/*if(e->writers.empty())
+		{
+			_effect_root.readers.push_back(e);
+			e->writers.push_back(&_effect_root);
+		}*/
+	}
+#endif
 }
 
 
@@ -74,6 +124,11 @@ loaded_project_t::loaded_project_t(project_t&& project) :
 
 loaded_project_t::~loaded_project_t()
 {
+	for(const effect_t* e : project.effects())
+	if(e != &effect_root())
+	 delete e;
+
+#if 0
 	for(std::size_t i = 0; i < _ins.size(); ++i)
 	{
 		const auto& quit_commands = project.instruments()[i]->quit_commands();
@@ -88,6 +143,7 @@ loaded_project_t::~loaded_project_t()
 		//	quit_commands[j]->call(cons[i].send_rtosc_msg); // TODO: without c_str()?
 		}
 	}
+#endif
 }
 
 void player_t::update_effects()
@@ -103,7 +159,7 @@ void player_t::update_effects()
 
 		cur_effect->proceed(pos);
 
-		for(effect_t* next: cur_effect->readers)
+		for(effect_t* next: cur_effect->deps)
 		 ready_fx.push(next);
 
 	} while(ready_fx.size());
@@ -123,7 +179,7 @@ void player_t::send_commands()
 
 }
 
-player_t::player_t(loaded_project_t &project)  : project(project)
+player_t::player_t(loaded_project_t &_project)  : project(_project)
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -137,11 +193,14 @@ player_t::player_t(loaded_project_t &project)  : project(project)
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	pq.push(new sentinel);
-	for(effect_t*& e : project.project.effects())
+	std::cerr << "Player for " << _project.project.title() << std::endl;
+	add_task(new sentinel);
+	std::cerr << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
+	for(effect_t*& e : _project.project.effects())
 	{
 		std::cerr << "pushing effect, next time: " << e->get_next_time() << std::endl;
-		pq.push(new task_effect(e));
+		task_effect* new_task = new task_effect(e);
+		handles[e] = add_task(new_task);
 	}
 
 }
@@ -150,22 +209,31 @@ void player_t::play_until(float dest)
 {
 	for(; pos < dest; pos += step)
 	{
-		update_effects();
-		fill_commands();
+//		update_effects();
+//		fill_commands();
 	//	send_commands();
 		std::cerr << "pos:" << pos << std::endl;
-		while(pq.top()->next_time() <= pos)
+		while(has_active_tasks(pos))
 		{
-
-			pq_entry top = std::move(pq.top());
-			pq.pop();
+			std::cerr << "active task!" << std::endl;
+			// TODO: simple reinsert??
+			task_base* top = pop_next_task();
 
 
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
 			 pq.push(top);*/
+			const float cur_next_time = top->next_time();
 			top->proceed(pos); // will update the next-time event
-			pq.push(top);
+
+			handles.at(reinterpret_cast<task_effect*>(top)->effect) = add_task(top);
+
+			for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
+			{
+				handle_type h = handles.at(dep);
+				(*h)->update_next_time(cur_next_time);
+				update(h);
+			}
 
 
 #if 0
