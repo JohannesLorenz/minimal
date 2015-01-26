@@ -108,7 +108,7 @@ struct osc_string_sender
 void send_single_command(lo_port_t& lp, const osc_string& str);
 
 template<class PortType, class InstClass>
-struct in_port_with_command : node_t<InstClass>//, PortType//, osc_string_sender
+struct in_port_with_command : node_t<InstClass>, PortType //, osc_string_sender
 { // TODO: instrument.h
 	// a bit non-conform to store the command here, but working...
 	//using base = command<oint<Port1>>;
@@ -117,7 +117,7 @@ struct in_port_with_command : node_t<InstClass>//, PortType//, osc_string_sender
 public:
 	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command_base* cmd) :
 		node_t<InstClass>(ins, base, ext),
-		//PortType(*ins),
+		PortType(*ins),
 		cmd(cmd)
 	{
 //		PortType::set_trigger(); // TODO: here?
@@ -132,7 +132,8 @@ public:
 	}*/
 
 	PortType& port() {
-		return (dynamic_cast<command<PortType>*>(cmd))->template port_at<0>();
+		return *this;
+		//return (dynamic_cast<command<PortType>*>(cmd))->template port_at<0>();
 	}
 
 	void send_all(lo_port_t* lo_port)
