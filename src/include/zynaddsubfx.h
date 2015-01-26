@@ -123,7 +123,7 @@ public:
 //		PortType::set_trigger(); // TODO: here?
 //		static_cast<instrument_t*>(ins)->add_in_port(this);
 		port().set_trigger();
-		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
+//		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
 	}
 
 /*out_port_with_command(oint<Port1> value) // TODO: "ref?"
@@ -138,6 +138,7 @@ public:
 	void send_all(lo_port_t* lo_port)
 	{
 	//	cmd->update(); // TODO: check ret val?
+		std::cerr << "SHOULD SEND NOW" << std::endl;
 		send_single_command(*lo_port, cmd->complete_buffer());
 	}
 };

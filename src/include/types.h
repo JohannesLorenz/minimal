@@ -48,8 +48,8 @@ public:
 	/*variable(InputPort& input) : _input(&input) {}
 	variable(InputPort* input) : _input(input) {}*/
 
-	variable(const T& data) : data(data) {}
-	variable() {}
+	variable(const T& data) = default;
+	variable() = default;
 
 
 

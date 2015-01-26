@@ -323,9 +323,10 @@ protected:
 			+ detail::est_length_args<Args...>();
 	}
 public:
-	_command(const char* _path, Args... args) :
+	template<class ...Args2>
+	_command(const char* _path, Args2&&... args) :
 		command_base(_path),
-		args(std::move(args)...) {
+		args(std::forward<Args2>(args)...) {
 
 		// std::cerr << "est. length: " << est_length() << std::endl;
 	}
@@ -422,8 +423,9 @@ private:
 
 
 public:
-	testcommand(const char* _path, Args... args) :
-		base_t(_path, std::move(args)...),
+	template<class ...Args2>
+	testcommand(const char* _path, Args2&&... args) :
+		base_t(_path, std::forward<Args2>(args)...),
 		_buffer(prefill_buffer())
 		{
 		}
@@ -610,9 +612,10 @@ class command : /*public port_tuple<make_port<Args>...>,*/ public testcommand<Ar
 	}*/
 
 public:
-	command(const char* _path, rval_if_port<Args>... args) :
+	template<class ...Args2>
+	command(const char* _path, Args2&&... args) :
 	//	port_tuple_t(std::move(args)...),
-		base(_path, std::move(args)...)
+		base(_path, std::forward<Args2>(args)...)
 		//base(_path, get_from_port<Args, is_port<Args>::value>::exec(args)...) // triple expansion!
 		//base(_path, from_port_or_val<Args, is_port<Args>::value>::exec(args)...)
 	{
