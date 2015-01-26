@@ -23,6 +23,7 @@
 #include <limits>
 #include <vector>
 #include <string>
+#include <type_traits>
 
 #include "utils.h"
 
@@ -31,9 +32,10 @@ namespace mini
 
 //! note: if binary gets too large, we might need to not use templates...
 
+class is_variable {};
 
 template</*class Input, */class T>
-class variable
+class variable : is_variable
 {
 	T data;
 public:
@@ -56,6 +58,68 @@ public:
 //	float get_next_time() const { return _input->get_outs_next_time(); }
 };
 
+#if 0
+// an SFINAE classic:
+/*template<class T>
+class has_is_variable_func
+{
+	typedef char false_type[1];
+	typedef char true_type[2];
+
+	template<typename U>
+	static true_type& tester(typename U::data_type*);
+
+	template<typename>
+	static false_type& tester(...);
+
+public:
+	static const bool value = sizeof(tester<T>(0)) == sizeof(true_type);
+};*/
+
+template<typename T, typename = void>
+struct has_is_variable_func : std::false_type { };
+
+template<typename T>
+struct has_is_variable_func<T, decltype(std::declval<T>().is_variable, void())> : std::true_type { };
+
+template<class T, bool> // true
+struct _is_variable {
+	static constexpr bool exec() {
+		return T::is_variable;
+	}
+};
+
+template<class T>
+struct _is_variable<T, false> {
+	static constexpr bool exec() {
+		return false;
+	}
+};
+
+template<class T>
+static constexpr bool _is_variable() {
+	return _is_variable<T, has_is_variable_func<T>::value>::exec();
+}
+#endif
+
+template<class T>
+static constexpr bool _is_variable() {
+	return std::is_base_of<is_variable, T>::value;
+}
+
+template<class T, bool> // true
+struct _type_of_variable {
+	using type = typename T::type;
+};
+
+template<class T>
+struct _type_of_variable<T, false> {
+	using type = T;
+};
+
+template<class T>
+using type_of_variable = typename _type_of_variable<T, _is_variable<T>()>::type;
+
 /*
 template<class T, char _sign> // TODO: should be constexpr
 class variable<no_port<T>, _sign> : public par_base<T, _sign>, util::dont_instantiate_me<T>
@@ -70,10 +134,16 @@ public:
 };*/
 
 template<class T>
-struct pad_size : util::dont_instantiate_me<T>
+struct pad_size// : util::dont_instantiate_me<T>
 {
-	 // TODO: don't instantiate me!
-	 constexpr static std::size_t value() { return 0; }
+	constexpr static std::size_t value() {
+
+	//	static_assert(has_is_variable_func<T>::value, "...");
+
+		static_assert(_is_variable<T>(),
+			"T must be either an OSC primitive or a variable.");
+		return pad_size<type_of_variable<T>>::value();
+	}
 };
 
 template<>
@@ -87,17 +157,47 @@ struct pad_size<float> : public pad_size<int> {};
 
 //! inherits from base type of variable
 //! OOP can be really interesting sometimes...
-template<class T> // TODO: clean up structs where you can use funcs now
+/*template<class T> // TODO: clean up structs where you can use funcs now
 struct pad_size<variable<T>> : public pad_size<T>
 {
+};*/
+
+template<class T, bool>
+struct _type_and_bool
+{
+	using type = T;
 };
 
 template<class T>
+using type_and_bool = _type_and_bool<T, _is_variable<T>()>;
+
+
+#if 0
+template<class T>
+bool _value(const typename T::type& elem) { return elem.get(); }
+
+template<class T, bool b>
+bool _value(const typename _type_and_bool<T, b>::type& elem) { return elem; }
+
+template<class T>
+bool value(const T& elem) { return _value<type_and_bool<T>>(elem); }
+#endif
+
+
+
+
+/*
+
+template<class T, bool>
 bool value(const variable<T>& v) { return v.get(); }
 
 template<class T>
-bool value(const T& elem) { return elem; }
+bool value(const T& elem) { return elem; }*/
 
+template<class T>
+constexpr bool is_const() { return !_is_variable<T>(); }
+
+/*
 template<class T>
 struct is_const
 {
@@ -108,9 +208,22 @@ template<class T>
 struct is_const<variable<T>>
 {
 	constexpr static bool value() { return false; }
-};
+};*/
 
 
+template<class T>
+constexpr bool size_fix() {
+	return _is_variable<T>() ? size_fix<typename T::type>() : false;
+}
+
+template<>
+constexpr bool size_fix<int>() { return true; }
+
+template<>
+constexpr bool size_fix<float>() { return true; }
+
+
+#if 0
 
 template<class T>
 constexpr bool _size_fix() { return false; } // TODO: don't instantiate me!
@@ -134,8 +247,9 @@ struct size_fix<variable<T>>
 	constexpr static bool value() {
 		return _size_fix<typename variable<T>::type>(); }
 };
+#endif
 
-
+/*
 template<class T>
 struct get_type
 {
@@ -146,10 +260,16 @@ template<class T>
 struct get_type<variable<T>>
 {
 	using type = typename variable<T>::type; // TODO: without struct?
-};
+};*/
+
+//template<class T>
+//constexpr inline char sign() { return sign<typename T::type>(); }
 
 template<class T>
-constexpr inline char sign() { return sign<typename T::type>(); }
+constexpr inline char sign() {
+	static_assert(_is_variable<T>(), "T must be a variable or primitive.");
+	return sign<typename T::type>();
+}
 
 template<>
 constexpr inline char sign<int>() { return 'i'; }
@@ -166,14 +286,29 @@ inline std::vector<char> store_int32_t(const int32_t* i) {
 		static_cast<char>((*i) & ff) };
 }
 
-template<class T>
-std::vector<char> to_osc_string(const T& elem) {
-	return store_int32_t((int32_t*)(&elem));
-}
+template<class T, bool b> // true
+struct _get_value
+{
+	static const typename T::type& exec(const T& elem) {
+		return elem.get();
+	}
+};
 
 template<class T>
-std::vector<char> to_osc_string(const variable<T>& v) {
-	return to_osc_string(v.get());
+struct _get_value<T, false>
+{
+	static const T& exec(const T& elem) {
+		return elem;
+	}
+};
+
+template<class T>
+using get_value = _get_value<T, _is_variable<T>()>;
+
+
+template<class T>
+std::vector<char> to_osc_string(const T& elem) {
+	return store_int32_t((int32_t*)(&get_value<T>::exec(elem)));
 }
 
 /*

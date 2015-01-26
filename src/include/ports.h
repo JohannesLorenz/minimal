@@ -24,6 +24,7 @@
 #include <iostream> // TODO!
 #include <limits>
 
+#include "types.h"
 #include "utils.h"
 
 namespace mini
@@ -45,7 +46,7 @@ public:
 	effect_t* effect() { return e; }
 };*/
 
-class port_base : public non_movable_t
+class port_base : public is_variable
 {
 };
 
@@ -260,7 +261,7 @@ void operator<<(in_port_templ<const T*, IsDep>& ipt, const out_port_templ<T>& op
 	ipt.e->writers.push_back(opt.e);
 }
 
-class self_port_base
+class self_port_base : public port_base
 {
 public:
 	bool unread_changes = true; // initally send values

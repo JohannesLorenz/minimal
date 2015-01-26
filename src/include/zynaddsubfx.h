@@ -269,7 +269,7 @@ template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
 template<template<class , bool> class P, class T>
-using port_arg = data_type_if_port<port_type_of<P, T>>;
+using port_arg = port_type_of<P, T>;
 
 class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_impl, zynaddsubfx_t>
 {

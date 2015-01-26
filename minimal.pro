@@ -43,7 +43,8 @@ SOURCES += src/core/main.cpp \
         src/include/osc_string.cpp \
     src/include/lo_port.cpp \
     src/include/daw_visit.cpp \
-    src/include/note_line.cpp
+    src/include/note_line.cpp \
+    src/include/command.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \
