@@ -20,11 +20,15 @@
 #ifndef DAW_VISIT_H
 #define DAW_VISIT_H
 
+#if 0
+
 #include <string>
 
 #include "utils.h"
 #include "lo_port.h"
 #include "instrument.h"
+
+
 
 namespace mini {
 
@@ -116,5 +120,7 @@ namespace daw_visit {
 }
 
 }
+
+#endif
 
 #endif // DAW_VISIT_H

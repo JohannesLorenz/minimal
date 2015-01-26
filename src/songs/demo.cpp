@@ -97,10 +97,10 @@ void init(project_t& p)
 	p.effects().push_back(nl);
 //	in_port<int> ip(sine_bass);
 //	ip.connect(m_lfo->out);
-	auto envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
+	zyn::p_envsustain<in_port_templ<int>>* envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
 
 	// effect connections
-	*envsustain << *m_lfo;
+	envsustain->port() << *m_lfo;
 	sine_bass.note_input() << *nl;
 
 	p.effects().push_back(&sine_bass);

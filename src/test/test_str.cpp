@@ -32,32 +32,32 @@ int main()
 	inspect_rtosc_string(note_on.buffer);*/
 
 	try {
-		self_port_templ<int>* port = new self_port_templ<int>();
-		port->set(123);
-
-		command<osc_float, vint<self_port_templ<int>>> fl("/float", 42.0, port);
+		command<osc_float, self_port_templ<int>> fl("/float", 42.0, self_port_templ<int>{});
 		//inspect_rtosc_string(fl.buffer);
 
 		fl.buffer().inspect();
 
+		fl.port_at<1>().set(123);
+		fl.command::update();
+
 		fl.complete_buffer().inspect();
 
-		std::cerr << "pad size: " << mini::pad_size<vint<in_port_templ<int>>>::value() << std::endl;
+	//	std::cerr << "pad size: " << mini::pad_size<vint>::value() << std::endl;
 
 
 
 		using m_note_on_t = zynaddsubfx_t::note_on<use_no_port, use_no_port, self_port_templ>;
 
-		m_note_on_t non(0, 1, 0);
+		m_note_on_t non(0, 1, self_port_templ<int, true>{});
 		non.buffer().inspect();
 
 
 
-		std::get<2>(non.in_ports).set(99);
+		non.port_at<2>().set(99);
 
 		non.command::update();
 
-		std::cerr << "ARG NOW:" << std::get<2>(non.args) << std::endl;
+	//	std::cerr << "ARG NOW:" << std::get<2>(non.args) << std::endl;
 
 		non.complete_buffer();
 		non.buffer().inspect();

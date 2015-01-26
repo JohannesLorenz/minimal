@@ -185,13 +185,6 @@ using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // 
 class instrument_t : public named_t, public effect_t//, protected work_queue_t
 {
 public:
-	void add_in_port(in_port_base* ipb) {
-		in_ports.push_back(ipb);
-	}
-	void add_out_port(out_port_base* ipb) {
-		out_ports.push_back(ipb);
-	}
-
 	using id_t = std::size_t;
 protected:
 	static std::size_t next_id;

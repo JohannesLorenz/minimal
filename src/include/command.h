@@ -20,6 +20,7 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+#include <utility>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -42,9 +43,9 @@ public:
 	command_base(const char* _path) :
 		_path(_path) {}
 	virtual std::string type_str() const = 0;
-	virtual bool update() = 0;
+//	virtual bool update() = 0;
 	virtual const osc_string& complete_buffer() const = 0;
-	virtual float get_next_time() const = 0;
+//	virtual float get_next_time() const = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
@@ -257,6 +258,7 @@ namespace command_detail
 		}
 	};
 
+#if 0
 	template<std::size_t N, std::size_t I>
 	struct _update
 	{
@@ -303,7 +305,7 @@ namespace command_detail
 			// end reached
 		}
 	};
-
+#endif
 }
 
 // TODO: unused class
@@ -339,11 +341,6 @@ public:
 template<class ...Args>
 _command<Args...>::~_command() {}
 
-template<class T>
-struct _vari
-{
-	using type = T;
-};
 /*
 namespace pick_vari
 {
@@ -372,23 +369,10 @@ namespace pick_vari
 
 }*/
 
-template<class T>
-struct arg_if_vari
-{
-	using type = T;
-};
-
-template<class T>
-struct arg_if_vari<_vari<T>>
-{
-	using type = T;
-};
-
-
 template<class ...Args>
-class testcommand : public _command<typename arg_if_vari<Args>::type...>
+class testcommand : public _command<Args...>
 {
-	using base_t = _command<typename arg_if_vari<Args>::type...>;
+	using base_t = _command<Args...>;
 public:
 	mutable osc_string _buffer;
 
@@ -444,6 +428,7 @@ public:
 		{
 		}
 
+#if 0
 	bool update()
 	{
 		bool changes = command_detail::_update<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
@@ -456,7 +441,7 @@ public:
 		//float result = std::numeric_limits<float>::max();
 		return command_detail::_next_time<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
 	}
-
+#endif
 	const osc_string& complete_buffer() const
 	{
 		auto itr = _buffer.get_itr_first_arg();
@@ -550,14 +535,16 @@ struct _data_type_if_port
 template<class T>
 struct _data_type_if_port<T, true>
 {
-	using type = vint<T>;
+	using type = variable<typename T::type>;
 };
 
 template<class T>
 using data_type_if_port = typename _data_type_if_port<T, is_port<T>::value>::type;
 
 
-struct empty_port {};
+struct empty_port {
+	template<class T> empty_port(const T& ) {} // ;))
+};
 
 template<class P, bool>
 struct _make_port {
@@ -582,8 +569,8 @@ struct fetch_single
 	// I owe you a cookie if you can make this without a struct
 	// (and without overcomplication...)
 	static void exec(T1& port, T2& storage) {
-		storage = port.get();
-		std::cerr << "FETCHED: " << storage << " <- " << port.get() << std::endl;
+		storage.set(port.get());
+//		std::cerr << "FETCHED: " << storage << " <- " << port.get() << std::endl;
 	}
 };
 
@@ -597,7 +584,7 @@ struct fetch_single<empty_port, T2>
 	}
 };
 
-template<int I, class ...Args>
+template<int N, int I, class ...Args>
 struct fetch_ports
 {
 	static void exec(std::tuple<make_port<Args>...>& ports, std::tuple<data_type_if_port<Args>...>& args)
@@ -605,13 +592,13 @@ struct fetch_ports
 		using T1 = typename std::tuple_element<I, std::tuple<make_port<Args>...>>::type;
 		using T2 = typename std::tuple_element<I, std::tuple<data_type_if_port<Args>...>>::type;
 		fetch_single<T1, T2>::exec(std::get<I>(ports), std::get<I>(args));
-		fetch_ports<I+1, Args...>::exec(ports, args);
+		fetch_ports<N, I+1, Args...>::exec(ports, args);
 	}
 };
 
 
-template<class ...Args>
-struct fetch_ports<sizeof...(Args), Args...>
+template<int N, class ...Args>
+struct fetch_ports<N, N, Args...>
 {
 	static void exec(const std::tuple<make_port<Args>...>& ,
 		const std::tuple<data_type_if_port<Args>...>& )
@@ -621,23 +608,108 @@ struct fetch_ports<sizeof...(Args), Args...>
 
 }
 
+//! this is somehow std::forward...
+template<class T, bool>
+struct _rval_if_port
+{
+	using type = T&&;
+};
+
+template<class T>
+struct _rval_if_port<T, false>
+{
+	using type = const T&;
+};
+
+template<class T>
+using rval_if_port = typename _rval_if_port<T, is_port<T>::value>::type;
+
+/*template<class T>
+struct rval_if_possible<T&>
+{
+	using type = T&;
+};*/
+
+template<class T, bool>
+struct get_from_port
+{
+	using ret_type = typename T::data_type;
+	static const ret_type& exec(const T& port) { return port.get(); }
+};
+
+template<class T>
+struct get_from_port<T, false>
+{
+	static const T& exec(const T& value) { return value; }
+};
+
+
+template<class ...Args> // TODO: Ports as template arg?
+class port_tuple
+{
+protected:
+	std::tuple<make_port<Args>...> in_ports;
+	port_tuple(rval_if_port<Args>... args) :
+		in_ports(std::move(args)...)
+	{
+	}
+};
+
 template<class ...Args>
-class command : public testcommand<data_type_if_port<Args>...>
+struct from_port_or_val_base
+{
+	using ports_t = std::tuple<make_port<Args>...>;
+	using values_t = std::tuple<data_type_if_port<Args>...>;
+};
+
+template<bool IsPort, int I, class ...Args> // IsPort=true
+struct from_port_or_val : from_port_or_val_base<Args...>
+{
+	using rtype = std::tuple_element<I, ports_t>::type;
+	static rtype value(ports_t& ports, const values_t& values)
+	{
+		return std::get<I>(ports);
+	}
+};
+
+template<int I, class ...Args>
+struct from_port_or_val<false, I, Args...> : from_port_or_val_base<Args...>
+{
+	using rtype = std::tuple_element<I, values_t>::type;
+	static rtype value(ports_t& ports, const values_t& values)
+	{
+		return std::get<I>(values);
+	}
+};
+
+template<class ...Args>
+class command : public port_tuple<make_port<Args>...>, public testcommand<data_type_if_port<Args>...>
 {
 	using base = testcommand<data_type_if_port<Args>...>;
-	using base::base;
+	using port_tuple_t = port_tuple<make_port<Args>...>;
+//	using base::base;
 
 	void fetch_ports() {
-		fetch_detail::fetch_ports<0, Args...>::exec(in_ports, base::args);
+		fetch_detail::fetch_ports<sizeof...(Args), 0, Args...>::exec(port_tuple_t::in_ports, base::args);
 	}
 
 public:
-	std::tuple<make_port<Args>...> in_ports;
+	command(const char* _path, rval_if_port<Args>... args) :
+		port_tuple_t(std::move(args)...),
+		//base(_path, get_from_port<Args, is_port<Args>::value>::exec(args)...) // triple expansion!
+		base(_path, from_port_or_val<Args, is_port<Args>::value>::exec(args)...)
+	{
+	}
 
 	bool update()
 	{
 		fetch_ports();
 		return true;
+	}
+
+	template<std::size_t Idx>
+	typename std::tuple_element<Idx, std::tuple<make_port<Args>...>>::type& port_at() {
+		return std::get<Idx>(port_tuple_t::in_ports);
 	}
 
 	~command();

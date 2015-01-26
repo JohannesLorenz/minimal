@@ -108,7 +108,7 @@ struct osc_string_sender
 void send_single_command(lo_port_t& lp, const osc_string& str);
 
 template<class PortType, class InstClass>
-struct in_port_with_command : node_t<InstClass>, PortType//, osc_string_sender
+struct in_port_with_command : node_t<InstClass>//, PortType//, osc_string_sender
 { // TODO: instrument.h
 	// a bit non-conform to store the command here, but working...
 	//using base = command<oint<Port1>>;
@@ -117,11 +117,13 @@ struct in_port_with_command : node_t<InstClass>, PortType//, osc_string_sender
 public:
 	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command_base* cmd) :
 		node_t<InstClass>(ins, base, ext),
-		PortType(*ins),
+		//PortType(*ins),
 		cmd(cmd)
 	{
-		PortType::set_trigger(); // TODO: here?
-		static_cast<instrument_t*>(ins)->add_in_port(this);
+//		PortType::set_trigger(); // TODO: here?
+//		static_cast<instrument_t*>(ins)->add_in_port(this);
+		port().set_trigger();
+		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
 	}
 
 /*out_port_with_command(oint<Port1> value) // TODO: "ref?"
@@ -129,9 +131,13 @@ public:
 	{
 	}*/
 
+	PortType& port() {
+		return (dynamic_cast<command<PortType>*>(cmd))->template port_at<0>();
+	}
+
 	void send_all(lo_port_t* lo_port)
 	{
-		cmd->update(); // TODO: check ret val?
+	//	cmd->update(); // TODO: check ret val?
 		send_single_command(*lo_port, cmd->complete_buffer());
 	}
 };
@@ -145,7 +151,7 @@ struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubf
 {
 	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
 	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<vint<PortT>>((base + ext).c_str(), *this)) {
+		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<in_port_templ<int>>((base + ext).c_str(), (effect_t&)*ins)) {
 	}
 };
 
@@ -283,8 +289,8 @@ public:
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
 		static const char* path() { return "/noteOn"; } // TODO: noteOn string is code duplicate
-		note_on(port_arg<Port1, int> chan, port_arg<Port2, int> note, port_arg<Port3, int> velocity)
-			: base("/noteOn", chan, note, velocity)
+		note_on(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& velocity) // TODO: rvals
+			: base("/noteOn", chan, note, std::move(velocity))
 		{
 		}
 	};
@@ -298,8 +304,8 @@ public:
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
 		static const char* path() { return "/noteOff"; } // TODO: noteOn string is code duplicate
-		note_off(port_arg<Port1, int> chan, port_arg<Port2, int> note, port_arg<Port3, int> id)
-			: base("/noteOff", chan, note, id)
+		note_off(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& id)
+			: base("/noteOff", chan, note, std::move(id))
 		{
 		}
 	};
@@ -318,19 +324,19 @@ private:
 			node_t<InstClass>(ins, base, ext),
 			notes_in(*ins)
 		{
-			static_cast<instrument_t*>(ins)->add_in_port(this);
+			//static_cast<instrument_t*>(ins)->add_in_port(this);
 
 			note_ons.reserve(NOTES_MAX);
 			note_offs.reserve(NOTES_MAX);
 			std::size_t idx = 0;
 			for(; idx < NOTES_MAX; ++idx)
 			{
-				note_ons.emplace_back(0 /*chan*/, idx/*offs*/, 0);
+				note_ons.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
 			}
 			idx = 0;
 			for(; idx < NOTES_MAX; ++idx)
 			{
-				note_offs.emplace_back(0 /*chan*/, idx/*offs*/, 0);
+				note_offs.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
 			}
 
 			set_trigger(); // TODO: here?
@@ -358,8 +364,8 @@ private:
 					m_note_on_t& note_on_cmd = note_ons[p.first];
 					// self_port_t must be completed manually:
 					std::cerr << "SETTING VOL: " << p2.second << std::endl;
-					std::get<2>(note_on_cmd.in_ports).set(p2.second);
-					std::cerr << "GETTING VOL: " << std::get<2>(note_on_cmd.in_ports).get() << std::endl;
+					note_on_cmd.port_at<2>().set(p2.second);
+					std::cerr << "GETTING VOL: " << note_on_cmd.port_at<2>().get() << std::endl;
 					note_on_cmd.command::update();
 					zyn::send_single_command(*lo_port, note_on_cmd.complete_buffer());
 				/*	command_base* cmd = note_ons[p.first];

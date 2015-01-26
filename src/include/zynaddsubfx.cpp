@@ -184,9 +184,16 @@ zyn_impl::~zyn_impl()
 
 float zyn_impl::proceed(float )
 {
-	for(in_port_base* ipb : ref->in_ports)
+	for(in_port_base* ipb : ref->get_in_ports())
 	{
+		if(ipb==nullptr)
+		 throw "OUCH!";
+		//typedef bool (in_port_base::*const ptr2)(void);
+		//std::cerr << (&(ptr2)ipb->update) << std::endl;
 		//ipb->update();
+		std::cerr << "SZ:" << ref->get_in_ports().size() << std::endl;
+		std::cerr << "IPB:" << ipb << std::endl;
+		std::cerr << "STAMP: " << ipb->change_stamp << std::endl;
 		if(ipb->update())
 		{
 			std::cerr << "unread changes at: " << ipb << std::endl;

@@ -32,8 +32,16 @@ public:
 	non_copyable_t & operator=(const non_copyable_t&) = delete;
 
 	non_copyable_t(const non_copyable_t&&) noexcept {}
+};
 
+class non_movable_t
+{
+public:
+	non_movable_t() = default;
 
+	non_movable_t(const non_copyable_t&&) noexcept = delete;
+	non_movable_t(non_copyable_t&&) noexcept = delete;
+	//non_movable_t(non_copyable_t&&) = delete;
 };
 
 //! counts elements of template parameter list. not thread safe.

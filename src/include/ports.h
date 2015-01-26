@@ -20,13 +20,36 @@
 #ifndef IO_PORTS_H
 #define IO_PORTS_H
 
+#include <array>
+#include <iostream> // TODO!
 #include <limits>
-#include "effect.h"
+
+#include "utils.h"
 
 namespace mini
 {
 
-class out_port_base
+class effect_t;
+class in_port_base;
+class out_port_base;
+
+void add_out_port(effect_t& e, out_port_base* opb);
+void add_in_port(effect_t& e, in_port_base* opb);
+/*
+template<class Port>
+class port_ctor
+{
+	effect_t* e;
+public:
+	port_ctor(effect_t& e) : e(e) {}
+	effect_t* effect() { return e; }
+};*/
+
+class port_base : public non_movable_t
+{
+};
+
+class out_port_base : public port_base
 {
 public: // TODO!! protected
 	effect_t* e;
@@ -65,7 +88,7 @@ public:
 	out_port_templ(effect_t& e) : out_port_base(e)
 		//: data(e)
 	{
-		e.out_ports.push_back(this);
+		add_out_port(e, this);
 	}
 
 	const T& get() const { return data; }
@@ -89,13 +112,14 @@ public:
 class lo_port_t;
 
 // TODO: abstract port base
-class in_port_base
+class in_port_base : public non_copyable_t, public port_base
 {
 public: // TODO!! protected
 	effect_t* e;
 private:
 	bool _is_trigger = false;
 protected:
+public: // TODO
 	float change_stamp = -1.0f;
 public:
 	bool unread_changes = false; // initally send values - TODO??
@@ -103,14 +127,14 @@ public:
 	in_port_base(effect_t& ef) :
 		e(&ef)
 	{
-		e->in_ports.push_back(this);
+		add_in_port(ef, this);
 	}
 
 	in_port_base(effect_t& ef, const out_port_base& source) :
 		e(&ef),
 		source(&source)
 	{
-		e->in_ports.push_back(this);
+		add_in_port(ef, this);
 	}
 
 	float get_outs_next_time() const {

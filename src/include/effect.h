@@ -26,66 +26,12 @@
 #include "daw.h"
 #include "types.h"
 #include "work_queue.h"
+#include "ports.h" // TODO!!! not needed!
 
 const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
 namespace mini
 {
-#if 0
-class effect_t;
-
-template<class T, class RefT>
-class base_port
-{
-protected:
-	effect_t* ef_ref;
-	RefT ref;
-	//RefT last_value;
-	bool _changed;
-	void reset_value(const T& new_value) {
-		_changed = (ref != new_value);
-		ref = new_value;
-	}
-
-public:
-	const effect_t* get_ef_ref() const { return ef_ref; }
-	effect_t* get_ef_ref() { return ef_ref; }
-	bool changed() { return changed; }
-	using type = T;
-	const RefT& get() const { return ref; }
-	base_port(effect_t& ef_ref) :
-		ef_ref(&ef_ref) {}
-	base_port() {} // TODO: remove?
-};
-
-
-template<class T>
-class out_port : public base_port<T, T>
-{
-	using base = base_port<T, T>;
-public:
-	const T& set(const T& new_val) { return base::ref = new_val; }
-	using base_port<T, T>::base_port;
-};
-
-
-template<class T>
-class in_port : public base_port<T, T>
-{
-	using base = base_port<T, T>;
-	const out_port<T>* out_p;
-public:
-	void connect(out_port<T>& op) {
-		out_p = &op;
-		op.get_ef_ref()->readers.push_back(base::ef_ref);
-		base::ef_ref->writers.push_back(op.get_ef_ref());
-	}
-
-	void update() { reset_value(out_p->get()); }
-
-	using base_port<T, T>::base_port;
-};
-#endif
 
 class in_port_base;
 class out_port_base;
@@ -113,7 +59,7 @@ public:
 
 class effect_t : non_copyable_t, public has_id //: public port_chain
 {
-public:
+protected:
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports; // TODO: not public
 private:
@@ -129,6 +75,16 @@ private:
 protected:
 	virtual float _proceed(float time) = 0;
 public:
+	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
+
+	void add_in_port(in_port_base* ipb) {
+		std::cerr << "ADDING: " << ipb << ", STAMP: " << ipb->change_stamp << std::endl;
+		in_ports.push_back(ipb);
+	}
+	void add_out_port(out_port_base* opb) {
+		out_ports.push_back(opb);
+	}
+
 	virtual void instantiate() = 0;
 
 	std::vector<effect_t*> readers, deps, writers;

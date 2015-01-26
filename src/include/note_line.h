@@ -20,6 +20,8 @@
 #ifndef NOTE_LINE_H
 #define NOTE_LINE_H
 
+#include "effect.h"
+#include "daw.h"
 #include "ports.h"
 
 namespace mini {

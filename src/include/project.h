@@ -129,7 +129,7 @@ public:
 	project_t();
 	~project_t();
 
-	project_t(project_t&& other) noexcept = default;
+	project_t(project_t&& ) noexcept = default;
 
 #if 0
 	project_t(project_t&& other):

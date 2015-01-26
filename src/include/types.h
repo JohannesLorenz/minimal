@@ -32,24 +32,28 @@ namespace mini
 //! note: if binary gets too large, we might need to not use templates...
 
 
-template<class T, char _sign>
-class par_base
+template</*class Input, */class T>
+class variable
 {
+	T data;
 public:
-	static constexpr char sign() { return _sign; }
-};
+	const T& get() const { return data; }
+	T& get() { return data; }
+	void set(const T& new_data) { data = new_data; } // TODO: && alternative
 
-template</*class Input, */class InputPort, char _sign>
-class variable : public par_base<typename InputPort::type, _sign>
-{
-public:
-	InputPort* _input;
-	using type = typename InputPort::type;
-	variable(InputPort& input) : _input(&input) {}
-	variable(InputPort* input) : _input(input) {}
+	using type = T;
+
+	/*variable(InputPort& input) : _input(&input) {}
+	variable(InputPort* input) : _input(input) {}*/
+
+	variable(const T& data) : data(data) {}
+	variable() {}
+
+
+
 //	const type& value() const { return _input->get(); }
-	bool update() { return _input->update(); }
-	float get_next_time() const { return _input->get_outs_next_time(); }
+//	bool update() { return _input->update(); }
+//	float get_next_time() const { return _input->get_outs_next_time(); }
 };
 
 /*
@@ -83,22 +87,16 @@ struct pad_size<float> : public pad_size<int> {};
 
 //! inherits from base type of variable
 //! OOP can be really interesting sometimes...
-template<template<class, bool> class Port, char sgn, class T, bool b>
-struct pad_size<variable<Port<T, b>, sgn>> : public pad_size<T>
+template<class T> // TODO: clean up structs where you can use funcs now
+struct pad_size<variable<T>> : public pad_size<T>
 {
 };
 
-template<class In, char sgn>
-bool value(const variable<In, sgn>& v) { return v._input; }
+template<class T>
+bool value(const variable<T>& v) { return v.get(); }
 
 template<class T>
 bool value(const T& elem) { return elem; }
-
-template<class In, char sgn>
-bool update(const variable<In, sgn>& v) { return v._input->get(); }
-
-template<class T>
-bool update(const T& elem) { return elem; }
 
 template<class T>
 struct is_const
@@ -106,8 +104,8 @@ struct is_const
 	constexpr static bool value() { return true; }
 };
 
-template<class In, char sgn>
-struct is_const<variable<In, sgn>>
+template<class T>
+struct is_const<variable<T>>
 {
 	constexpr static bool value() { return false; }
 };
@@ -130,11 +128,11 @@ struct size_fix
 	constexpr static bool value() { return _size_fix<T>(); }
 };
 
-template<class In, char sgn>
-struct size_fix<variable<In, sgn>>
+template<class T>
+struct size_fix<variable<T>>
 {
 	constexpr static bool value() {
-		return _size_fix<typename variable<In, sgn>::type>(); }
+		return _size_fix<typename variable<T>::type>(); }
 };
 
 
@@ -144,10 +142,10 @@ struct get_type
 	using type = T; // TODO: without struct?
 };
 
-template<class In, char sgn>
-struct get_type<variable<In, sgn>>
+template<class T>
+struct get_type<variable<T>>
 {
-	using type = typename variable<In, sgn>::type; // TODO: without struct?
+	using type = typename variable<T>::type; // TODO: without struct?
 };
 
 template<class T>
@@ -173,9 +171,9 @@ std::vector<char> to_osc_string(const T& elem) {
 	return store_int32_t((int32_t*)(&elem));
 }
 
-template<template<class, bool> class InputPort, char c, class T, bool b>
-std::vector<char> to_osc_string(const variable<InputPort<T, b>, c>& v) {
-	return to_osc_string(*reinterpret_cast<const T*>(v._input->get_value()));
+template<class T>
+std::vector<char> to_osc_string(const variable<T>& v) {
+	return to_osc_string(v.get());
 }
 
 /*
@@ -211,11 +209,8 @@ class oint<false> : public variable<int, 'i'>
 };*/
 
 
-template<class InputPort>
-using vint = variable<InputPort, 'i'>;
-
-template<class InputPort>
-using vfloat = variable<InputPort, 'f'>;
+using vint = variable<int>;
+using vfloat = variable<float>;
 
 #if 0
 template<class InputPort>
@@ -257,13 +252,14 @@ using osc_float = float;
 namespace variable_detail
 {
 
+#if 0
 template<class T>
 bool update(T& ) {
 	return false;
 }
 
-template<template<class, bool> class InputPort, char c, class T, bool b>
-bool update(variable<InputPort<T, b>, c>& v) {
+template<class T>
+bool update(variable<T>& v) {
 	return v.update();
 }
 
@@ -272,10 +268,11 @@ float get_next_time(const T& ) {
 	return std::numeric_limits<float>::max();
 }
 
-template<template<class, bool> class InputPort, char c, class T, bool b>
-float get_next_time(const variable<InputPort<T, b>, c>& v) {
+template<class T>
+float get_next_time(const variable<T>& v) {
 	return v.get_next_time();
 }
+#endif
 
 }
 

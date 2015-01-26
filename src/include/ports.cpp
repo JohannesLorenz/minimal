@@ -17,9 +17,18 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include "effect.h"
 #include "ports.h"
 
 namespace mini
 {
+
+	void add_out_port(effect_t &e, out_port_base *opb) {
+		e.add_out_port(opb);
+	}
+
+	void add_in_port(effect_t &e, in_port_base *opb) {
+		e.add_in_port(opb);
+	}
 
 }
