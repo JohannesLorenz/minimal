@@ -99,7 +99,7 @@ protected:
 	}
 
 	bool has_active_tasks(float at_time) {
-		std::cerr << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << std::endl;
+		//std::cerr << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << std::endl;
 		return pq.top()->next_time() <= at_time;
 	}
 

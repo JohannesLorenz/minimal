@@ -98,7 +98,7 @@ class player_t : public work_queue_t // TODO: own header
 	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
 
-	float step = 0.1f; //0.001seconds;
+	float step = 0.001f; //0.001seconds;
 	float pos = 0.0f;
 	loaded_project_t& project; // TODO! must be const
 
@@ -145,12 +145,14 @@ class player_t : public work_queue_t // TODO: own header
 		}
 	};*/
 
-	class sentinel : public task_base
+
+
+	/*class sentinel : public task_base
 	{
 	public:
 		sentinel() : task_base(std::numeric_limits<float>::max()) {}
 		void proceed(float ) { throw "reached sentinel"; }
-	};
+	};*/
 
 	class task_effect : public task_base
 	{
@@ -168,6 +170,11 @@ class player_t : public work_queue_t // TODO: own header
 
 		void proceed(float time) {
 			update_next_time(effect->proceed(time));
+		}
+
+		bool cmp(const task_base& other) const {
+			// ugly cast, but probably not avoidable?
+			return effect->id() > dynamic_cast<const task_effect&>(other).effect->id();
 		}
 	};
 

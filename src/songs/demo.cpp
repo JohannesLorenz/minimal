@@ -76,6 +76,10 @@ void init(project_t& p)
 	nl->add_notes(maj, note_geom_t(1, 63));
 	nl->add_notes(maj, note_geom_t(2, 64));
 	nl->add_notes(maj, note_geom_t(3, 65));
+	nl->add_notes(maj, note_geom_t(4, 66));
+	nl->add_notes(maj, note_geom_t(5, 67));
+	nl->add_notes(maj, note_geom_t(6, 68));
+	nl->add_notes(maj, note_geom_t(7, 69));
 
 #if 0
 	track_t t1/*(sine_bass)*/;
@@ -92,15 +96,18 @@ void init(project_t& p)
 	command<oint<out_port<float>>> cmd("/part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
 //	t1.add_command(cmd);
 */
-	lfo_t<int>* m_lfo = new lfo_t<int>(0.0, 127.0, 0.0, 4.0);
+	lfo_t<int>* m_lfo = new lfo_t<int>(0.0, 64.0, 0.0, 8.0);
 	p.effects().push_back(m_lfo);
 	p.effects().push_back(nl);
 //	in_port<int> ip(sine_bass);
 //	ip.connect(m_lfo->out);
-	zyn::p_envsustain<in_port_templ<int>>* envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
+
+	//zyn::p_envsustain<in_port_templ<int>>* envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
+	auto* volume = sine_bass.volume<in_port_templ<int>>();
+	//auto* panning = sine_bass.part0().Ppanning<in_port_templ<int>>();
 
 	// effect connections
-	envsustain->port() << *m_lfo;
+	volume->port() << *m_lfo;
 	sine_bass.note_input() << *nl;
 
 	p.effects().push_back(&sine_bass);

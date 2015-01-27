@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 		loaded_project_t lpro(std::move(pro));
 
 		player_t pl(lpro);
-		pl.play_until(4.0f);
+		pl.play_until(2.0f);
 
 	//	sleep(5);
 	} catch(const char* msg) {

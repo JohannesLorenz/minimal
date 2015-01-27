@@ -194,11 +194,16 @@ player_t::player_t(loaded_project_t &_project)  : project(_project)
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 	std::cerr << "Player for " << _project.project.title() << std::endl;
-	add_task(new sentinel);
+	//add_task(new sentinel);
+	//add_task(new task_effect(new sentinel_effect));
+
+	_project.project.effects().push_back(new sentinel_effect);
+
+
 	std::cerr << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
 	for(effect_t*& e : _project.project.effects())
 	{
-		std::cerr << "pushing effect, next time: " << e->get_next_time() << std::endl;
+		std::cerr << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
 	}
@@ -212,7 +217,7 @@ void player_t::play_until(float dest)
 //		update_effects();
 //		fill_commands();
 	//	send_commands();
-		std::cerr << "pos:" << pos << std::endl;
+	//	std::cerr << "pos:" << pos << std::endl;
 		while(has_active_tasks(pos))
 		{
 			std::cerr << "active task!" << std::endl;
@@ -288,7 +293,7 @@ auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 			 pq.insert
 			pq.pop();*/
 		}
-		std::cerr << "done: " << pos << std::endl;
+//		std::cerr << "done: " << pos << std::endl;
 		usleep(1000000 * step);
 	}
 }

@@ -90,6 +90,7 @@ public:
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
 	float proceed(float time) {
+		std::cerr << "proceeding with effect " << id() << std::endl;
 		return next_time = _proceed(time);
 	}
 
@@ -109,8 +110,6 @@ public:
 	{
 	}*/
 
-	bool cmp(const effect_t& other) const { return id() < other.id(); }
-
 	template<class ...Args2>
 	effect_t(const std::tuple<Args2&...>& out_ports)
 		: out_ports(make_vector<out_port_base*>(out_ports))
@@ -119,6 +118,18 @@ public:
 
 	effect_t() {}
 	virtual ~effect_t() {}
+};
+
+//! this is a dummy which will always be the last effect in the queue.
+class sentinel_effect : public effect_t
+{
+public:
+	sentinel_effect() {
+		set_id(std::numeric_limits<std::size_t>::max());
+		set_next_time(std::numeric_limits<float>::max());
+	}
+	float _proceed(float ) { throw "impossible"; }
+	void instantiate() {}
 };
 
 template<class Impl, class T>

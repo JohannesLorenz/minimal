@@ -150,15 +150,16 @@ struct in_port_with_command : node_t<InstClass>//, rtosc_in_port<PortType>//, os
 
 	command<rtosc_in_port>* cmd;
 public:
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command<rtosc_in_port>* cmd) :
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
 		node_t<InstClass>(ins, base, ext),
 		//rtosc_in_port<PortType>(*ins),
-		cmd(cmd)
+		cmd(new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
 	{
 //		PortType::set_trigger(); // TODO: here?
 //		static_cast<instrument_t*>(ins)->add_in_port(this);
 		cmd->template port_at<0>().set_trigger();
 		cmd->template port_at<0>().ins = ins;
+		cmd->template port_at<0>().cmd = cmd;
 //		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
 	}
 
@@ -185,6 +186,9 @@ public:
 using znode_t = node_t<zynaddsubfx_t>;
 
 template<class PortT>
+using p_envsustain = in_port_with_command<PortT, zynaddsubfx_t>;
+
+/*template<class PortT>
 struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubfx_t>
 {
 	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
@@ -193,7 +197,7 @@ struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubf
 			ins, base, ext, new command<base::rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins)) {
 		port().cmd = cmd;
 	}
-};
+};*/
 
 #if 0
 struct p_note_input : public in_port_with_command<in_port_templ<note_signal_t>, zynaddsubfx_t>
@@ -458,6 +462,9 @@ public:
 	};*/
 
 
+	/*
+	 *  ports
+	 */
 
 	zyn::adpars add0() const {
 		return spawn<zyn::adpars>("part0/kit0/adpars/");
@@ -466,6 +473,26 @@ public:
 //	in_port_templ<note_signal_t> note_input;
 	notes_t_port_t<zynaddsubfx_t>& note_input() {
 		return notes_t_port;
+	}
+
+	class part : zyn::znode_t
+	{
+	public:
+		using zyn::znode_t::znode_t;
+		//zyn::amp_env amp_env() const {
+		//	return spawn<zyn::amp_env>("AmpEnvelope/");
+		//}
+		template<class Port>
+		zyn::p_envsustain<Port>* Ppanning() const { // TODO: panning must be int...
+			return spawn_new<zyn::in_port_with_command<Port, zynaddsubfx_t>>("Ppanning");
+		}
+	};
+
+	part part0() const { return spawn<part>("part0/"); } // TODO: large tuple for these
+
+	template<class Port>
+	zyn::p_envsustain<Port>* volume() const {
+		return spawn_new<zyn::in_port_with_command<Port, zynaddsubfx_t>>("volume");
 	}
 };
 
