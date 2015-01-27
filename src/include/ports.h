@@ -1,6 +1,6 @@
 /*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
-/* Copyright (C) 2014-2014                                               */
+/* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
 /* This program is free software; you can redistribute it and/or modify  */
@@ -145,10 +145,12 @@ public:
 	virtual bool update() = 0;
 
 	// TODO: const? probably not...
-	virtual void send_all(lo_port_t* ) {} // TODO: not sure if this fits here always
+	//virtual void send_all(lo_port_t* ) {} // TODO: not sure if this fits here always
 
 	bool is_trigger() const { return _is_trigger; }
 	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?
+
+	virtual void on_recv() = 0;
 
 	virtual const void* get_value() const = 0;
 };

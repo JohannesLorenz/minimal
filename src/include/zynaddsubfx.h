@@ -1,6 +1,6 @@
 /*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
-/* Copyright (C) 2014-2014                                               */
+/* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
 /* This program is free software; you can redistribute it and/or modify  */
@@ -107,22 +107,58 @@ struct osc_string_sender
 
 void send_single_command(lo_port_t& lp, const osc_string& str);
 
+template<class PortType>
+struct eff_and_command
+{
+	effect_t* ins;
+	command<PortType>* cmd;
+};
+
+template<class PortType, class Ins>
+struct rtosc_in_port : PortType
+{
+	command<rtosc_in_port<PortType, Ins>>* cmd;
+	Ins* ins;
+
+/*	void send_all(lo_port_t* lo_port)
+	{
+	//	cmd->update(); // TODO: check ret val?
+		std::cerr << "SHOULD SEND NOW" << std::endl;
+		send_single_command(*lo_port, cmd->complete_buffer());
+	}*/
+
+	/*rtosc_in_port(eff_and_command<PortType> eac) :
+		PortType(*eac.ins),
+		cmd(eac.cmd)
+	{
+	}*/
+
+	void on_recv() {
+		send_single_command(ins->get_impl()->lo_port, cmd->complete_buffer());
+	}
+
+	using PortType::PortType;
+};
+
+// TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 template<class PortType, class InstClass>
-struct in_port_with_command : node_t<InstClass>, PortType //, osc_string_sender
+struct in_port_with_command : node_t<InstClass>//, rtosc_in_port<PortType>//, osc_string_sender
 { // TODO: instrument.h
 	// a bit non-conform to store the command here, but working...
 	//using base = command<oint<Port1>>;
+	using rtosc_in_port = rtosc_in_port<PortType, InstClass>;
 
-	command_base* cmd;
+	command<rtosc_in_port>* cmd;
 public:
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command_base* cmd) :
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, command<rtosc_in_port>* cmd) :
 		node_t<InstClass>(ins, base, ext),
-		PortType(*ins),
+		//rtosc_in_port<PortType>(*ins),
 		cmd(cmd)
 	{
 //		PortType::set_trigger(); // TODO: here?
 //		static_cast<instrument_t*>(ins)->add_in_port(this);
-		port().set_trigger();
+		cmd->template port_at<0>().set_trigger();
+		cmd->template port_at<0>().ins = ins;
 //		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
 	}
 
@@ -131,17 +167,17 @@ public:
 	{
 	}*/
 
-	PortType& port() {
-		return *this;
-		//return (dynamic_cast<command<PortType>*>(cmd))->template port_at<0>();
+	rtosc_in_port& port() {
+		//return *this;
+		return cmd->template port_at<0>();
 	}
 
-	void send_all(lo_port_t* lo_port)
+	/*void send_all(lo_port_t* lo_port)
 	{
 	//	cmd->update(); // TODO: check ret val?
 		std::cerr << "SHOULD SEND NOW" << std::endl;
 		send_single_command(*lo_port, cmd->complete_buffer());
-	}
+	}*/
 };
 
 
@@ -153,7 +189,9 @@ struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubf
 {
 	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
 	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<in_port_templ<int>>((base + ext).c_str(), (effect_t&)*ins)) {
+		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(
+			ins, base, ext, new command<base::rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins)) {
+		port().cmd = cmd;
 	}
 };
 
@@ -273,7 +311,7 @@ using port_type_of = typename _port_type_of<P, T>::type;
 template<template<class , bool> class P, class T>
 using port_arg = port_type_of<P, T>;
 
-class zynaddsubfx_t : public zyn::znode_t, public instrument_t, has_impl_t<zyn_impl, zynaddsubfx_t>
+class zynaddsubfx_t : public zyn::znode_t, public instrument_t, public has_impl_t<zyn_impl, zynaddsubfx_t>
 {
 	// TODO: read from options file
 /*	const char* binary
@@ -316,6 +354,7 @@ private:
 	struct notes_t_port_t : node_t<InstClass>, notes_in
 	{
 		command_base* cmd;
+		InstClass* ins;
 		using m_note_on_t = note_on<use_no_port, use_no_port, self_port_templ>;
 		using m_note_off_t = note_off<use_no_port, use_no_port, self_port_templ>;
 
@@ -324,7 +363,8 @@ private:
 	public:
 		notes_t_port_t(InstClass* ins, const std::string& base, const std::string& ext) : // todo: base, ext does not make sense here?
 			node_t<InstClass>(ins, base, ext),
-			notes_in(*ins)
+			notes_in(*ins),
+			ins(ins)
 		{
 			//static_cast<instrument_t*>(ins)->add_in_port(this);
 
@@ -342,6 +382,10 @@ private:
 			}
 
 			set_trigger(); // TODO: here?
+		}
+
+		void on_recv() {
+			send_all(&ins->impl->lo_port);
 		}
 
 		void send_all(lo_port_t* lo_port)

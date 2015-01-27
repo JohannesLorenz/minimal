@@ -1,6 +1,6 @@
 /*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
-/* Copyright (C) 2014-2014                                               */
+/* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
 /* This program is free software; you can redistribute it and/or modify  */
@@ -135,6 +135,8 @@ public:
 		impl = new Impl(ref);
 	}
 	~has_impl_t() { delete impl; }
+	Impl* get_impl() { return impl; }
+	const Impl* get_impl() const { return impl; }
 };
 
 template<class Ref>

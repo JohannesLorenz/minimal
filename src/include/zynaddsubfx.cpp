@@ -1,6 +1,6 @@
 /*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
-/* Copyright (C) 2014-2014                                               */
+/* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
 /* This program is free software; you can redistribute it and/or modify  */
@@ -197,7 +197,7 @@ float zyn_impl::proceed(float )
 		if(ipb->update())
 		{
 			std::cerr << "unread changes at: " << ipb << std::endl;
-			ipb->send_all(&lo_port);
+			ipb->on_recv();
 			ipb->unread_changes = false;
 		}
 	}
