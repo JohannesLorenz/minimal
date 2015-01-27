@@ -194,8 +194,6 @@ player_t::player_t(loaded_project_t &_project)  : project(_project)
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 	std::cerr << "Player for " << _project.project.title() << std::endl;
-	//add_task(new sentinel);
-	//add_task(new task_effect(new sentinel_effect));
 
 	_project.project.effects().push_back(new sentinel_effect);
 

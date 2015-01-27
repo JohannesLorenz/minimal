@@ -145,15 +145,6 @@ class player_t : public work_queue_t // TODO: own header
 		}
 	};*/
 
-
-
-	/*class sentinel : public task_base
-	{
-	public:
-		sentinel() : task_base(std::numeric_limits<float>::max()) {}
-		void proceed(float ) { throw "reached sentinel"; }
-	};*/
-
 	class task_effect : public task_base
 	{
 	//	const instrument_t* ins;

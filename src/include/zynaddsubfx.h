@@ -67,118 +67,65 @@ public:
 	//	: node(base, ext + std::to_string(id)) {}
 };
 
-template<class T>
-class node_port_t : node_t<T>
-{
-	// todo: disallow spawn here
-	template<class NodeT>
-	NodeT spawn(const std::string& ext, std::size_t id) const {
-		return spawn<NodeT>(ext + std::to_string(id));
-	}
-
-	using node_t<T>::node_t;
-};
-
-
-/*class p_envsustain : node_port_t
-{
-public:
-	using node_port_t::node_port_t;
-};*/
-
-
-
-/*template<class Port1 = no_port<int>>
-class p_envsustain : public command<oint<Port1>>
-{
-	using base = command<oint<Port1>>;
-public:
-	static const char* path() { return "Penvsustain"; } // TODO: noteOn string is code duplicate
-	p_envsustain(oint<Port1> value) // TODO: "ref?"
-		: base("/Penvsustain", value)
-	{
-	}
-};*/
-
-struct osc_string_sender
-{
-	virtual void send_all(lo_port_t* lo_port) = 0;
-};
-
 void send_single_command(lo_port_t& lp, const osc_string& str);
 
-template<class PortType>
-struct eff_and_command
+struct prioritized_command_base //: public work_queue_t::task_base
 {
-	effect_t* ins;
-	command<PortType>* cmd;
+	std::size_t priority;
+	float next_time;
+	prioritized_command_base(std::size_t priority, float next_time) :
+		priority(priority),
+		next_time(next_time)
+	{
+
+	}
 };
 
-template<class PortType, class Ins>
+template<class PortType>
+struct prioritized_command : public prioritized_command_base
+{
+	command<PortType>* cmd; // TODO: does command_base suffice?
+	prioritized_command(std::size_t priority, float next_time,
+		command<PortType>* cmd) :
+		prioritized_command_base(priority, next_time), cmd(cmd)
+	{
+
+	}
+};
+
+template<class Ins, class PortType>
 struct rtosc_in_port : PortType
 {
-	command<rtosc_in_port<PortType, Ins>>* cmd;
+	prioritized_command<rtosc_in_port<Ins, PortType>>* cmd;
 	Ins* ins;
 
-/*	void send_all(lo_port_t* lo_port)
-	{
-	//	cmd->update(); // TODO: check ret val?
-		std::cerr << "SHOULD SEND NOW" << std::endl;
-		send_single_command(*lo_port, cmd->complete_buffer());
-	}*/
-
-	/*rtosc_in_port(eff_and_command<PortType> eac) :
-		PortType(*eac.ins),
-		cmd(eac.cmd)
-	{
-	}*/
-
 	void on_recv() {
-		send_single_command(ins->get_impl()->lo_port, cmd->complete_buffer());
+		send_single_command(ins->get_impl()->lo_port, cmd->cmd->complete_buffer());
 	}
 
 	using PortType::PortType;
 };
 
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
-template<class PortType, class InstClass>
-struct in_port_with_command : node_t<InstClass>//, rtosc_in_port<PortType>//, osc_string_sender
-{ // TODO: instrument.h
-	// a bit non-conform to store the command here, but working...
-	//using base = command<oint<Port1>>;
-	using rtosc_in_port = rtosc_in_port<PortType, InstClass>;
+template<class InstClass, class PortType>
+struct in_port_with_command : node_t<InstClass>
+{ // TODO: instrument.h -> ?
+	using rtosc_in_port = rtosc_in_port<InstClass, PortType>;
 
-	command<rtosc_in_port>* cmd;
+	prioritized_command<rtosc_in_port> cmd;
 public:
 	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
 		node_t<InstClass>(ins, base, ext),
-		//rtosc_in_port<PortType>(*ins),
-		cmd(new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
+		cmd(1, 0.0f, new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
 	{
-//		PortType::set_trigger(); // TODO: here?
-//		static_cast<instrument_t*>(ins)->add_in_port(this);
-		cmd->template port_at<0>().set_trigger();
-		cmd->template port_at<0>().ins = ins;
-		cmd->template port_at<0>().cmd = cmd;
-//		static_cast<instrument_t*>(ins)->add_in_port(&port()); // TODO: is this needed?
+		cmd.cmd->template port_at<0>().set_trigger();
+		cmd.cmd->template port_at<0>().ins = ins;
+		cmd.cmd->template port_at<0>().cmd = &cmd;
 	}
-
-/*out_port_with_command(oint<Port1> value) // TODO: "ref?"
-		: base("/Penvsustain", value)
-	{
-	}*/
 
 	rtosc_in_port& port() {
-		//return *this;
-		return cmd->template port_at<0>();
+		return cmd.cmd->template port_at<0>();
 	}
-
-	/*void send_all(lo_port_t* lo_port)
-	{
-	//	cmd->update(); // TODO: check ret val?
-		std::cerr << "SHOULD SEND NOW" << std::endl;
-		send_single_command(*lo_port, cmd->complete_buffer());
-	}*/
 };
 
 
@@ -186,42 +133,7 @@ public:
 using znode_t = node_t<zynaddsubfx_t>;
 
 template<class PortT>
-using p_envsustain = in_port_with_command<PortT, zynaddsubfx_t>;
-
-/*template<class PortT>
-struct p_envsustain : public in_port_with_command<in_port_templ<int>, zynaddsubfx_t>
-{
-	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
-	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(
-			ins, base, ext, new command<base::rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins)) {
-		port().cmd = cmd;
-	}
-};*/
-
-#if 0
-struct p_note_input : public in_port_with_command<in_port_templ<note_signal_t>, zynaddsubfx_t>
-{
-	using base = in_port_with_command<in_port_templ<int>, zynaddsubfx_t>;
-	p_note_input(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<note_signal_t>, zynaddsubfx_t>(ins, base, ext, new command<vint<PortT>>(ext.c_str(), *this)) {
-	}
-/*	p_envsustain(zynaddsubfx_t* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command<in_port_templ<int>, zynaddsubfx_t>(ins, base, ext, new command<note_signal_t<PortT>>(ext.c_str(), *this)) {
-	}*/
-
-};
-#endif
-
-
-#if 0
-ss znode_t : node_t
-{
-	/*zynaddsubfx_t& zyn;
-	znode_t(const zynaddsubfx_t& zyn, const std::string& base, const std::string& ext)
-		: node_t(base, ext), zyn(zyn) {}*/
-}
-#endif
+using p_envsustain = in_port_with_command<zynaddsubfx_t, PortT>;
 
 class amp_env : znode_t
 {
@@ -274,7 +186,7 @@ public:
 
 }
 
-struct zyn_impl : is_impl_of_t<zynaddsubfx_t>//, protected work_queue_t
+struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
 {
 	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
 	const pid_t pid;
@@ -291,6 +203,8 @@ struct zyn_impl : is_impl_of_t<zynaddsubfx_t>//, protected work_queue_t
 // TODO
 		}
 	};*/
+
+
 
 	pid_t make_fork();
 
@@ -312,19 +226,10 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-template<template<class , bool> class P, class T>
-using port_arg = port_type_of<P, T>;
-
 class zynaddsubfx_t : public zyn::znode_t, public instrument_t, public has_impl_t<zyn_impl, zynaddsubfx_t>
 {
-	// TODO: read from options file
-/*	const char* binary
-		= "/tmp/cprogs/fl_abs/gcc/src/zynaddsubfx";
-	const char* default_args = "--no-gui -O alsa";*/
-
 	using m_impl = has_impl_t<zyn_impl, zynaddsubfx_t>;
 public:
-	//class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
@@ -332,14 +237,12 @@ public:
 	{
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
-		static const char* path() { return "/noteOn"; } // TODO: noteOn string is code duplicate
 		note_on(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& velocity) // TODO: rvals
 			: base("/noteOn", chan, note, std::move(velocity))
 		{
 		}
 	};
 
-	//class note_off : public command<p_char, p_char> { static const char* path() { return "/noteOff"; } };
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
@@ -347,7 +250,6 @@ public:
 	{
 		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
-		static const char* path() { return "/noteOff"; } // TODO: noteOn string is code duplicate
 		note_off(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& id)
 			: base("/noteOff", chan, note, std::move(id))
 		{
@@ -370,8 +272,6 @@ private:
 			notes_in(*ins),
 			ins(ins)
 		{
-			//static_cast<instrument_t*>(ins)->add_in_port(this);
-
 			note_ons.reserve(NOTES_MAX);
 			note_offs.reserve(NOTES_MAX);
 			std::size_t idx = 0;
@@ -394,33 +294,23 @@ private:
 
 		void send_all(lo_port_t* lo_port)
 		{
-			std::cerr << "SENDALL: " << std::endl;
-			std::cerr << "NL2:" << &notes_in::data->changed_stamp << std::endl;
-			std::cerr << "STAMP: " << notes_in::data->changed_stamp << std::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
 			if(p.first < 0)
 			 break;
 			else
 			{
-				std::cerr << "SENDALL 2: " << std::endl;
 				std::pair<int, int> p2 = notes_in::data->lines[p.first][p.second];
 				if(p2.first < 0)
 				{
 					zyn::send_single_command(*lo_port, note_offs[p.first].buffer());
-					//lo_port->send_raw(note_offs[p.first].buffer().raw(), note_offs[p.first].buffer().size());
 				}
 				else
 				{
 					m_note_on_t& note_on_cmd = note_ons[p.first];
 					// self_port_t must be completed manually:
-					std::cerr << "SETTING VOL: " << p2.second << std::endl;
 					note_on_cmd.port_at<2>().set(p2.second);
-					std::cerr << "GETTING VOL: " << note_on_cmd.port_at<2>().get() << std::endl;
 					note_on_cmd.command::update();
 					zyn::send_single_command(*lo_port, note_on_cmd.complete_buffer());
-				/*	command_base* cmd = note_ons[p.first];
-					cmd->complete_buffer();
-					lo_port->send_raw(cmd->buffer().raw(), cmd->buffer().size());*/
 				}
 			}
 		}
@@ -433,12 +323,6 @@ private:
 
 
 public:
-
-	/*template<template<class> C1, template<class> C2>
-	class note_on : public command<int_f, int_f, int_f> { //using command::command;
-	public:
-		note_on(con<p_char> x, con<p_char> y, con<p_char> z) : command("/noteOn", x, y, z) {} // TODO: a bit much work?
-	};*/
 
 	float _proceed(float time) {
 		std::cerr << "proceeding with zyn" << std::endl;
@@ -453,15 +337,6 @@ public:
 	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 
-	// TODO: string as template param?
-/*	class note_on : public command<p_char, p_char, p_char>
-	{
-		static const char* path() { return "/noteOn"; }
-		template<class ...Args>
-		note_on(const char* _path, Args ...args) : command(_path, ...args) {}
-	};*/
-
-
 	/*
 	 *  ports
 	 */
@@ -470,7 +345,6 @@ public:
 		return spawn<zyn::adpars>("part0/kit0/adpars/");
 	}
 
-//	in_port_templ<note_signal_t> note_input;
 	notes_t_port_t<zynaddsubfx_t>& note_input() {
 		return notes_t_port;
 	}
@@ -484,7 +358,7 @@ public:
 		//}
 		template<class Port>
 		zyn::p_envsustain<Port>* Ppanning() const { // TODO: panning must be int...
-			return spawn_new<zyn::in_port_with_command<Port, zynaddsubfx_t>>("Ppanning");
+			return spawn_new<zyn::in_port_with_command<zynaddsubfx_t, Port>>("Ppanning");
 		}
 	};
 
@@ -492,7 +366,7 @@ public:
 
 	template<class Port>
 	zyn::p_envsustain<Port>* volume() const {
-		return spawn_new<zyn::in_port_with_command<Port, zynaddsubfx_t>>("volume");
+		return spawn_new<zyn::in_port_with_command<zynaddsubfx_t, Port>>("volume");
 	}
 };
 
