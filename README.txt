@@ -29,8 +29,7 @@ mathematical graphics etc.
 2 Why using minimal?
 ::::::::::::::::::::
 
-The author liked lmms, but still found many things unpractical. minimal fixes
-some of those:
+A few benefits from using minimal:
 
  * Fast support times for developping issues.
  * You can easily add a license to your projects, since they are in plain
