@@ -24,28 +24,18 @@ CONTENTS
 The author liked lmms, but still found many things unpractical. minimal fixes
 some of those:
 
- * The use of windows VSTs in lmms makes many shared files useless for linux
-   users. Thus, minimal forbids VSTs.
- * The lmms main developpers often do not respond per mail. The minimal main
-   developper always responds fast.
- * You can easily add a license to your songs. In LMMS, you had to edit the
-   XML file to be sure.
- * The effects in LMMS were hard to overview. In minimal, you don't only have
-   an overview in your code, but also can dump an effect graph.
- * In LMMS, you could not use the same instrument in multiple tracks. In
-   minimal, this will be possible. Thus, you will save loading times.
- * LMMS takes long to compile and to start. minimal is minimal and thus is way
-   faster in compiling and instant in startup.
- * LMMS project files are huge compared to those of minimal.
- * LMMS is not real time compatible, minimal is (hopefully).
- * LMMS can not be used (completely) without a GUI.
- * LMMS does not have macros for its UI. With minimal, you can write a script
-   or a C++ program that does what you like.
- * LMMS is not generally RTOSC compatible. minimal lets you simply write
-   plugins.
- * The LMMS developpers care about compatibility with old compilers. This
-   restricts the code to old versions of C++. In minimal, coders can use new
-   versions of C++.
+ * Fast support times for developping issues.
+ * You can easily add a license to your projects, since they are in plain
+   text.
+ * In minimal, you have a clear overview on your effects. You can even dump an
+   effect graph.
+ * minimal is designed for instant compiling and startup.
+ * the project files in minimal have minimal size.
+ * minimal is (hopefully) RT compatible.
+ * minimal can be used without any x server.
+ * minimal lets you easily write plugins for any OSC plugin.
+ * In minimal, coders can use new versions of C++.
+ * minimal forbids code that runs only on Windows. It supports open souce.
 
 3 License
 :::::::::
