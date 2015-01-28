@@ -27,6 +27,7 @@
 #include "types.h"
 #include "work_queue.h"
 #include "ports.h" // TODO!!! not needed!
+#include "simple.h"
 
 const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
@@ -57,7 +58,7 @@ public:
 	static constexpr std::size_t no_id() { return -1; }
 };
 
-class effect_t : non_copyable_t, public has_id //: public port_chain
+class effect_t : non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
 	std::vector<in_port_base*> in_ports;
@@ -65,9 +66,11 @@ protected:
 private:
 	float next_time;
 	template<class T, class Tpl, int ...Is>
+	//! helper
 	static std::vector<T> make_vector(const Tpl& tpl, util::seq<Is...> ) {
 		return std::vector<T>{ &std::get<Is>(tpl)... };
 	}
+	//! converts tuple to vector
 	template<class T, class ...Args>
 	static std::vector<T> make_vector(const std::tuple<Args...>& tpl) {
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
@@ -111,12 +114,13 @@ public:
 	}*/
 
 	template<class ...Args2>
-	effect_t(const std::tuple<Args2&...>& out_ports)
-		: out_ports(make_vector<out_port_base*>(out_ports))
+	effect_t(const std::tuple<Args2&...>& out_ports, const char* name = "unnamed")
+		: named_t(name),
+		out_ports(make_vector<out_port_base*>(out_ports))
 	{
 	}
 
-	effect_t() {}
+	effect_t(const char* name = "unnamed") : named_t(name) {}
 	virtual ~effect_t() {}
 };
 

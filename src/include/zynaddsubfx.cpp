@@ -34,9 +34,9 @@ std::string zynaddsubfx_t::make_start_command() const
 	return cmd;
 }
 
-instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
+instrument_t::udp_port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 {
-	port_t port;
+	udp_port_t port;
 	std::string tmp_filename = "/tmp/zynaddsubfx_"
 			+ std::to_string(pid);
 	std::cout << "Reading " << tmp_filename << std::endl;
@@ -51,10 +51,11 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 
 zynaddsubfx_t::zynaddsubfx_t(const char *name) :
 	zyn::znode_t(this, "/", ""),
-	instrument_t(name, { new command<>("/quit") }), // TODO! close-ui?
+	effect_t(name),
 	m_impl(this),
 	notes_t_port(this, "/", "/noteOn")
 {
+	set_next_time(std::numeric_limits<float>::max());
 }
 
 bool _get_input(const char* shell_command, pid_t* _childs_pid)

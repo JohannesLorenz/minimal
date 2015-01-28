@@ -213,7 +213,7 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-class zynaddsubfx_t : public zyn::znode_t, public instrument_t, public has_impl_t<zyn_impl, zynaddsubfx_t>
+class zynaddsubfx_t : public zyn::znode_t, public effect_t, public instrument_t, public has_impl_t<zyn_impl, zynaddsubfx_t>
 {
 	using m_impl = has_impl_t<zyn_impl, zynaddsubfx_t>;
 public:
@@ -303,9 +303,6 @@ private:
 		}
 	};
 
-
-
-
 	notes_t_port_t<zynaddsubfx_t> notes_t_port; // TODO: inherit??
 
 
@@ -318,7 +315,7 @@ public:
 
 	std::string make_start_command() const;
 
-	port_t get_port(pid_t pid, int ) const;
+	udp_port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 

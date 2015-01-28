@@ -17,35 +17,23 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
-#include "lo_port.h"
-#include "instrument.h"
+#ifndef SIMPLE_H
+#define SIMPLE_H
 
-namespace mini {
+#include <string>
 
-void send_single_command(lo_port_t& lo_port, const osc_string &str)
+namespace mini
 {
-	lo_port.send_raw(str.raw(), str.size());
-}
 
-instrument_t::~instrument_t()
+class named_t
 {
-	//std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
-	{
-	//	std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
-	}
-}
-
-/*instrument_t *instrument_t::clone() const
-{
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
+	const std::string _name;
+public:
+	const std::string& name() const { return _name; }
+	named_t(const char* _name) : _name(_name) {}
+	named_t(const std::string& _name) : _name(_name) {}
+};
 
 }
 
+#endif // SIMPLE_H

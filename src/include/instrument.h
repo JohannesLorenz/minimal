@@ -96,16 +96,6 @@ public:
 };
 #endif
 
-class named_t
-{
-	const std::string _name;
-public:
-	const std::string& name() const { return _name; }
-	named_t(const char* _name) : _name(_name) {}
-	named_t(const std::string& _name) : _name(_name) {}
-};
-
-
 struct map_cmp
 {
 	bool operator()(const command_base* c1, const command_base* c2)
@@ -116,45 +106,24 @@ struct map_cmp
 
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t : public named_t, public effect_t//, protected work_queue_t
+class instrument_t //, protected work_queue_t
 {
-public:
-	using id_t = std::size_t;
 protected:
-	static std::size_t next_id;
-	const std::size_t _id;
 	std::vector<command_base*> commands; // TODO: unique?
-	const std::vector<command_base*> _quit_commands;
 public:
-
-	const std::vector<command_base*>& quit_commands() const {
-		return _quit_commands;
+	using udp_port_t = int;
+	instrument_t()
+	{
+		//set_next_time(std::numeric_limits<float>::max());
 	}
-	using port_t = int;
-	instrument_t(const char* name,
-		const std::vector<command_base*>&& _quit_commands) :
-		named_t(name),
-		_id(next_id++),
-		_quit_commands(_quit_commands)
-		{ std::cout << "instrument: constructed" << std::endl;
-		set_next_time(std::numeric_limits<float>::max());
-		}
 	virtual ~instrument_t();
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
 
 	//instrument_t(const instrument_t& other);
 
-
-	const id_t& id() const { return _id; }
-	enum class type
-	{
-		zyn
-	};
-
-	void set_param_fixed(const char* param, ...);
 	virtual std::string make_start_command() const = 0;
 	//! shall return the lo port (UDP) after the program was started
-	virtual port_t get_port(pid_t pid, int fd) const = 0;
+	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
 	//instrument_t(instrument_t&& other) = default;
 
 };
