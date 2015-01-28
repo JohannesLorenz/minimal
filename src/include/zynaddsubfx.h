@@ -24,6 +24,7 @@
 #include "lo_port.h"
 #include "instrument.h"
 #include "ports.h"
+#include "impl.h"
 
 namespace mini
 {
@@ -66,8 +67,6 @@ public:
 	//node(std::string base, std::string ext, std::size_t id)
 	//	: node(base, ext + std::to_string(id)) {}
 };
-
-void send_single_command(lo_port_t& lp, const osc_string& str);
 
 struct prioritized_command_base //: public work_queue_t::task_base
 {
@@ -192,24 +191,12 @@ struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
 	const pid_t pid;
 	lo_port_t lo_port;
 
-/*	class port_work : task_base
-	{
-		in_port_base* ip;
-	public:
-		port_work(in_port_base* ip) : task_base(0.0f), ip(ip) {}
-		void proceed(float time) {
-			(void)time;
-			(void)ip;
-// TODO
-		}
-	};*/
-
-
-
 	pid_t make_fork();
 
 	zyn_impl(zynaddsubfx_t* ref);
 	~zyn_impl();
+
+	virtual command_base* make_close_command() const;
 
 	float proceed(float);
 };
@@ -302,7 +289,7 @@ private:
 				std::pair<int, int> p2 = notes_in::data->lines[p.first][p.second];
 				if(p2.first < 0)
 				{
-					zyn::send_single_command(*lo_port, note_offs[p.first].buffer());
+					send_single_command(*lo_port, note_offs[p.first].buffer());
 				}
 				else
 				{
@@ -310,7 +297,7 @@ private:
 					// self_port_t must be completed manually:
 					note_on_cmd.port_at<2>().set(p2.second);
 					note_on_cmd.command::update();
-					zyn::send_single_command(*lo_port, note_on_cmd.complete_buffer());
+					send_single_command(*lo_port, note_on_cmd.complete_buffer());
 				}
 			}
 		}
@@ -329,9 +316,7 @@ public:
 		return impl->proceed(time); }
 	void instantiate() { m_impl::instantiate(); }
 
-
 	std::string make_start_command() const;
-	cmd_vectors make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t>& mm) const;
 
 	port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);

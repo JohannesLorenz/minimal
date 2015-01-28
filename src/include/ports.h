@@ -328,12 +328,10 @@ struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
 	std::pair<int, int> lines[NOTES_MAX][POLY_MAX];
-	//! the recently switched lines
-//	std::size_t changed_hint[NOTES_MAX];
-
-//	std::size_t* last_changed_hint = changed_hint;
 
 	int changed_stamp = 0;
+
+	//! the recently switched lines
 	std::array<std::pair<int, int>, POLY_MAX> recently_changed;
 
 	note_signal_t() {

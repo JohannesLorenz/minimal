@@ -34,52 +34,6 @@ std::string zynaddsubfx_t::make_start_command() const
 	return cmd;
 }
 
-cmd_vectors zynaddsubfx_t::make_note_commands(const std::multimap<daw::note_geom_t, daw::note_t> &mm) const
-{
-	// channel, note, velocity
-
-	// note offset <-> command
-	std::map<int, command_base*> cmd_of;
-
-	cmd_vectors res;
-	for(const std::pair<daw::note_geom_t, daw::note_t>& pr : mm)
-	{
-		//	res.emplace_back(new command<int_f, int_f, int_v>("/noteOn", 0, pr.first.offs, pr.second.velocity()), pr.first.start); // TODO: valgrind!
-
-		auto itr1 = cmd_of.find(pr.first.offs);
-		if(itr1 == cmd_of.end())
-		{
-			// TODO: valgrind
-			command_base* cmd = new command<osc_int, osc_int, osc_int>("/noteOn", 0, pr.first.offs, pr.second.velocity());
-			cmd_of.emplace_hint(itr1, pr.first.offs, cmd);
-
-			// TODO: note_off
-
-			res.emplace(cmd, std::set<float>{pr.first.start});
-			std::cerr << "New note command: " << cmd << std::endl;
-
-			cmd = new command<osc_int, osc_int>("/noteOff", 0, pr.first.offs);
-			res.emplace(cmd, std::set<float>{pr.first.start + pr.second.length()});
-
-			std::cerr << "Map content now: " << std::endl;
-			for(const auto& p : res)
-			{
-				std::cerr << p.first->buffer() << std::endl;
-			}
-		}
-		else
-		{
-			res.find(itr1->second)->second.insert(pr.first.start);
-			std::cerr << "Found note command." << std::endl;
-		}
-
-
-
-	}
-	std::cerr << "Added " << res.size() << " note commands to track." << std::endl;
-	return res;
-}
-
 instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 {
 	port_t port;
@@ -98,15 +52,9 @@ instrument_t::port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 zynaddsubfx_t::zynaddsubfx_t(const char *name) :
 	zyn::znode_t(this, "/", ""),
 	instrument_t(name, { new command<>("/quit") }), // TODO! close-ui?
-	m_impl(this),/*,
-	note_input(*this)*/
+	m_impl(this),
 	notes_t_port(this, "/", "/noteOn")
 {
-	/*using prt_t = in_port_templ<int>;
-	for(int i = 0; i < NOTES_MAX; ++i) {
-		commands.push_back(new command<oint<>, oint<prt_t>>("/notOn", i, oint<prt_t>(new prt_t(*this))));
-	}*/
-
 }
 
 bool _get_input(const char* shell_command, pid_t* _childs_pid)
@@ -159,15 +107,14 @@ zyn_impl::zyn_impl(zynaddsubfx_t *ref) :
 	pid(make_fork()),
 	lo_port(ref->get_port(pid, 0 /*TODO*/))
 {
-/*	for(const out_port_base* op : ref->out_ports)
-	{
-
-	}*/ // TODO
 }
 
 zyn_impl::~zyn_impl()
 {
-	lo_port.send_rtosc_msg("/close-ui", "");
+	command_base* close_command = make_close_command(); // TODO: auto ptr
+	send_single_command(lo_port, close_command->buffer());
+	delete close_command;
+
 	std::cerr << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
 
@@ -179,7 +126,12 @@ zyn_impl::~zyn_impl()
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
 		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
-	}
+		}
+}
+
+command_base *zyn_impl::make_close_command() const
+{
+	return new command<>("/close-ui");
 }
 
 float zyn_impl::proceed(float )
@@ -188,12 +140,6 @@ float zyn_impl::proceed(float )
 	{
 		if(ipb==nullptr)
 		 throw "OUCH!";
-		//typedef bool (in_port_base::*const ptr2)(void);
-		//std::cerr << (&(ptr2)ipb->update) << std::endl;
-		//ipb->update();
-		std::cerr << "SZ:" << ref->get_in_ports().size() << std::endl;
-		std::cerr << "IPB:" << ipb << std::endl;
-		std::cerr << "STAMP: " << ipb->change_stamp << std::endl;
 		if(ipb->update())
 		{
 			std::cerr << "unread changes at: " << ipb << std::endl;
@@ -204,16 +150,6 @@ float zyn_impl::proceed(float )
 	return std::numeric_limits<float>::max();
 	//return work_queue_t::run_tasks(time);
 }
-
-namespace zyn {
-
-void send_single_command(lo_port_t& lo_port, const osc_string &str)
-{
-	lo_port.send_raw(str.raw(), str.size());
-}
-
-}
-
 
 }
 

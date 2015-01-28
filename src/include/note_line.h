@@ -23,10 +23,11 @@
 #include "effect.h"
 #include "daw.h"
 #include "ports.h"
+#include "impl.h"
 
 namespace mini {
 
-constexpr unsigned char MAX_NOTES_PRESSED = 32;
+//constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
 using namespace daw; // TODO
 
@@ -131,29 +132,20 @@ class note_line_t : public effect_t, public notes_out, has_impl_t<note_line_impl
 	friend class note_line_impl;
 	using impl_t = has_impl_t<note_line_impl, note_line_t>;
 
-
-	//std::multimap<note_geom_t, notes_t> note_events;
-	 //! @note: one might need to store the notes_t blocks seperated for muting etc
+	//! @note: one might need to store the notes_t blocks seperated for muting etc
 	notes_t notes;
 
-	//int _notes_pressed[MAX_NOTES_PRESSED];
-//	out_port_templ<note_signal_t> notes_pressed; // TODO: pointer?
 public:
-	note_line_t(/*std::multimap<note_geom_t, note_t>&& note_events*/) :
-		/*note_events(note_events),*/
+	note_line_t() :
 //		port_chain<notes_out>((effect_t&)*this),
-	//	effect_t(*this),
 		notes_out((effect_t&)*this),
 		impl_t(this)
-//		notes_pressed((effect_t&)*this)
 	{
-		//notes_pressed.set(_notes_pressed);
 	}
 
 	void instantiate() {
 		impl_t::instantiate();
 		set_next_time(impl->note_events.begin()->first.start);
-		std::cerr << "FIRST note: " << get_next_time() << std::endl;
 	}
 
 	void add_notes(const notes_t& n, const note_geom_t& ng) {
@@ -162,10 +154,10 @@ public:
 	}
 
 
-	float _proceed(float time) {
+	float _proceed(float time)
+	{
 		std::cerr << "proceeding with note line... " << std::endl;
 		float next = impl->_proceed(time);
-		std::cerr << "next note: " << next << std::endl;
 		return next;
 	}
 };

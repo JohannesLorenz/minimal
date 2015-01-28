@@ -17,37 +17,44 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream> // TODO
-#include "lo_port.h"
-#include "instrument.h"
+#ifndef IMPL_H
+#define IMPL_H
 
-namespace mini {
-
-std::size_t instrument_t::next_id;
-
-void send_single_command(lo_port_t& lo_port, const osc_string &str)
+namespace mini
 {
-	lo_port.send_raw(str.raw(), str.size());
-}
 
-instrument_t::~instrument_t()
+template<class Impl, class T>
+class has_impl_t
 {
-	std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
-	{
-		std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
+protected:
+	Impl* impl;
+	T* ref;
+public:
+	//has_impl_t() : impl(new Impl) {}
+	//template<class T>
+	has_impl_t(T* ref) : impl(nullptr), ref(ref) {} //impl(new Impl(ref)) {}
+	void instantiate() {
+		impl = new Impl(ref);
 	}
-}
+	~has_impl_t() { delete impl; }
+	Impl* get_impl() { return impl; }
+	const Impl* get_impl() const { return impl; }
+};
 
-/*instrument_t *instrument_t::clone() const
+template<class Ref>
+class is_impl_of_t
 {
-	instrument_t* result = new instrument_t();
-	result->next_id = next_id;
-	for(const command_base* cmd : commands)
-	 result->commands.push_back(cmd->clone());
-	return result;
-}*/
+protected:
+	Ref* ref;
+public:
+	template<class T>
+	is_impl_of_t(T* ref) : ref(ref) {}
+	virtual ~is_impl_of_t() = 0;
+};
+
+template<class Ref>
+is_impl_of_t<Ref>::~is_impl_of_t() {}
 
 }
 
+#endif // IMPL_H

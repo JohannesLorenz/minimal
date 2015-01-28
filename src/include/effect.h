@@ -132,54 +132,6 @@ public:
 	void instantiate() {}
 };
 
-template<class Impl, class T>
-class has_impl_t
-{
-protected:
-	Impl* impl;
-	T* ref;
-public:
-	//has_impl_t() : impl(new Impl) {}
-	//template<class T>
-	has_impl_t(T* ref) : impl(nullptr), ref(ref) {} //impl(new Impl(ref)) {}
-	void instantiate() {
-		impl = new Impl(ref);
-	}
-	~has_impl_t() { delete impl; }
-	Impl* get_impl() { return impl; }
-	const Impl* get_impl() const { return impl; }
-};
-
-template<class Ref>
-class is_impl_of_t
-{
-protected:
-	Ref* ref;
-public:
-	template<class T>
-	is_impl_of_t(T* ref) : ref(ref) {}
-};
-
-
-/*template<class Self, class Impl>
-class effect_with_impl_t : has_impl_t<Impl>, effect_t
-{
-	template<class ...Args2>
-	effect_with_impl_t(const std::tuple<Args2&...>& out_ports) :
-		effect_t(out_ports),
-		has_impl_t()
-	{
-	}
-
-	effect_with_impl_t() {}
-	//using effect_t::effect_t;
-};*/
-
-class ef_con_base
-{
-	virtual effect_t* instantiate() = 0;
-};
-
 template<class T>
 class ef_con_t
 {
@@ -195,49 +147,9 @@ struct freq_lfo_out
 	freq_lfo_out(const effect_t& ef_ref) : ef_ref(ef_ref) {}
 };
 #endif
-/*
-template<class T>
-class has_lfo_out
-{
-	out_port<T> lfo_out;
-};*/
-
-class abstract_effect_t
-{
-
-};
-
-
-
-
-
-
-/*
-template<class OutType>
-struct lfo_out
-{
-	out_port<OutType> port;
-};
-
-template<class OutType>
-struct lfo_in
-{
-	in_port<OutType> port;
-};
-
-struct notes_out
-{
-	out_port<int*> port;
-};
-
-struct notes_in
-{
-	in_port<int*> port;
-};*/
-
-
 
 #if 0
+// this may be needed when the Qt creator bug is being fixed
 template<std::size_t I, class Tp, class First, class ...Args>
 class _port_chain : public First, public _port_chain<I+1, Tp, Args...>
 {
