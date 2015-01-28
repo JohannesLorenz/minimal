@@ -18,6 +18,14 @@ CONTENTS
 1 What is minimal?
 ::::::::::::::::::
 
+It is basically an RT compatible, text based sequencer. It supports OSC.
+
+The project files are C++ code, which is very easy to generate with a suited
+C++ editor.
+
+In the future, you will be able to create music, videos, computer games,
+mathematical graphics etc.
+
 2 Why using minimal?
 ::::::::::::::::::::
 
@@ -60,12 +68,13 @@ Please see the INSTALL.txt file.
 
 In alphabetical order, I thank:
 
-  * Mark McCurry (fundamental) from zynaddsubfx
+  * Mark McCurry (fundamental) [1] from zynaddsubfx [2]
 
 8 Links
 :::::::
 
-[1] ...
+[1] http://fundamental-code.com/
+[2] http://zynaddsubfx.sourceforge.net/
 
 9 Contact
 :::::::::
@@ -73,7 +82,6 @@ In alphabetical order, I thank:
 Feel free to give feedback. My e-mail address is shown if you execute this in
 a shell:
 
-  printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f\
-  \x72\x65\x6e\x7a\x2d\x70\x72\x69\x76\x61\x74\x2e\x6e\x65\x74\x0a"
-
+  printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f
+  \x72\x65\x6e\x7a\x2d\x68\x6f\x2e\x6d\x65\x0a"
 
