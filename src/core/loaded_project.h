@@ -194,6 +194,7 @@ class command_table
 class effect_root_t : public effect_t
 {
 	void instantiate() {}
+	void clean_up() {}
 	float _proceed(float ) { return 0.0f; }
 };
 

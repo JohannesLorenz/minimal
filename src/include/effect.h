@@ -89,6 +89,7 @@ public:
 	}
 
 	virtual void instantiate() = 0;
+	virtual void clean_up() = 0;
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
@@ -134,6 +135,7 @@ public:
 	}
 	float _proceed(float ) { throw "impossible"; }
 	void instantiate() {}
+	void clean_up() {}
 };
 
 template<class T>

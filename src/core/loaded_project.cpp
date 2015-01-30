@@ -124,8 +124,11 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 
 loaded_project_t::~loaded_project_t()
 {
+	for(effect_t* e : project.effects())
+	 e->clean_up();
+
 	for(const effect_t* e : project.effects())
-	if(e != &effect_root())
+	if(e != &effect_root()) // TODO: is this necessary?
 	 delete e;
 
 #if 0

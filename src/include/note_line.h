@@ -148,6 +148,8 @@ public:
 		set_next_time(impl->note_events.begin()->first.start);
 	}
 
+	void clean_up() {}
+
 	void add_notes(const notes_t& n, const note_geom_t& ng) {
 		//note_events.emplace(ng, n);
 		notes.add_notes(n, ng);

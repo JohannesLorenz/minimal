@@ -35,6 +35,8 @@
 #include "command.h"
 #include "effect.h"
 #include "work_queue.h"
+#include "lo_port.h"
+
 
 namespace mini
 {
@@ -106,26 +108,44 @@ struct map_cmp
 
 using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
 
-class instrument_t //, protected work_queue_t
+class instrument_t : public effect_t //, protected work_queue_t
 {
+public:
+	lo_port_t lo_port; // TODO: private?
 protected:
+	pid_t pid; // TODO: private?
+
 	std::vector<command_base*> commands; // TODO: unique?
+private:
+	pid_t make_fork();
 public:
 	using udp_port_t = int;
-	instrument_t()
+	using effect_t::effect_t;
+
+	void instantiate();
+
+	/*instrument_t(const char* name)
 	{
 		//set_next_time(std::numeric_limits<float>::max());
-	}
+	}*/
 	virtual ~instrument_t();
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
 
 	//instrument_t(const instrument_t& other);
+
+	virtual command_base *make_close_command() const = 0;
 
 	virtual std::string make_start_command() const = 0;
 	//! shall return the lo port (UDP) after the program was started
 	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
 	//instrument_t(instrument_t&& other) = default;
 
+
+
+
+	void clean_up();
+
+	float _proceed(float);
 };
 
 template <char ...Letters> class fixed_str {

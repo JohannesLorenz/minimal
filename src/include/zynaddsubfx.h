@@ -21,7 +21,6 @@
 #define ZYNADDSUBFX_H
 
 #include <vector>
-#include "lo_port.h"
 #include "instrument.h"
 #include "ports.h"
 #include "impl.h"
@@ -99,7 +98,7 @@ struct rtosc_in_port : PortType
 	Ins* ins;
 
 	void on_recv() {
-		send_single_command(ins->get_impl()->lo_port, cmd->cmd->complete_buffer());
+		send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
 	}
 
 	using PortType::PortType;
@@ -185,22 +184,6 @@ public:
 
 }
 
-struct zyn_impl : is_impl_of_t<zynaddsubfx_t>, protected work_queue_t
-{
-	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
-	const pid_t pid;
-	lo_port_t lo_port;
-
-	pid_t make_fork();
-
-	zyn_impl(zynaddsubfx_t* ref);
-	~zyn_impl();
-
-	virtual command_base* make_close_command() const;
-
-	float proceed(float);
-};
-
 template<class = void, bool = false>
 class use_no_port {};
 
@@ -213,9 +196,8 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-class zynaddsubfx_t : public zyn::znode_t, public effect_t, public instrument_t, public has_impl_t<zyn_impl, zynaddsubfx_t>
+class zynaddsubfx_t : public zyn::znode_t, public instrument_t
 {
-	using m_impl = has_impl_t<zyn_impl, zynaddsubfx_t>;
 public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
@@ -276,7 +258,7 @@ private:
 		}
 
 		void on_recv() {
-			send_all(&ins->impl->lo_port);
+			send_all(&ins->lo_port);
 		}
 
 		void send_all(lo_port_t* lo_port)
@@ -308,14 +290,14 @@ private:
 
 public:
 
-	float _proceed(float time) {
+	/*float _proceed(float time) {
 		std::cerr << "proceeding with zyn" << std::endl;
 		return impl->proceed(time); }
-	void instantiate() { m_impl::instantiate(); }
+	void instantiate() { m_impl::instantiate(); }*/
 
-	std::string make_start_command() const;
+	//std::string make_start_command() const;
 
-	udp_port_t get_port(pid_t pid, int ) const;
+	//udp_port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 
@@ -350,6 +332,17 @@ public:
 	zyn::p_envsustain<Port>* volume() const {
 		return spawn_new<zyn::in_port_with_command<zynaddsubfx_t, Port>>("volume");
 	}
+};
+
+class zyn_impl : public zynaddsubfx_t, protected work_queue_t
+{
+//	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
+	std::string make_start_command() const;
+	instrument_t::udp_port_t get_port(pid_t pid, int) const;
+	command_base* make_close_command() const;
+public:
+	zyn_impl(const char* name);
+	~zyn_impl();
 };
 
 }

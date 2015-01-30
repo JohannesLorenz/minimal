@@ -48,6 +48,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	//using lfo_out = lfo_out<OutType>;
 
 	void instantiate() {}
+	void clean_up() {}
 
 	float _proceed(float time)
 	{

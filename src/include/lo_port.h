@@ -22,23 +22,31 @@
 
 #include <lo/lo_types.h>
 #include <cstddef>
+#include <iostream>
+#include "utils.h"
 
 namespace mini {
 
-class lo_port_t
+class lo_port_t : non_copyable_t, non_movable_t
 {
 	lo_address dest;
+	void assert_dest_exists();
 public:
 	lo_port_t(const char* udp_port);
 	lo_port_t(std::size_t udp_port); // TODO: udp port is which type?
+	lo_port_t() {}
 	~lo_port_t();
+
+	void init(const char* udp_port);
+	void init(std::size_t udp_port);
+
 	// TODO: does const make sense
 	bool send_rtosc_msg(const char *path, const char *msg_args, ...) const;
 	bool send_raw(const char *buffer, std::size_t len) const;
 	//bool send_rtosc_msg(const char *path) const;
 };
 
-class lo_server_t
+class lo_server_t : non_copyable_t
 {
 	lo_server srv;
 	void handle_events();

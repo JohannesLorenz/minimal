@@ -70,11 +70,15 @@ void lo_server_t::handle_events()
 	lo_server_recv_noblock(srv, 0);
 }
 
+void lo_port_t::assert_dest_exists() {
+	if(!dest)
+		throw "Could not connect to lo dest port.";
+}
+
 lo_port_t::lo_port_t(const char *udp_port) :
 	dest(lo_address_new(nullptr, udp_port))
 {
-	if(!dest)
-		throw "Could not connect to lo dest port.";
+	assert_dest_exists();
 }
 
 lo_port_t::lo_port_t(std::size_t udp_port)
@@ -85,6 +89,17 @@ lo_port_t::lo_port_t(std::size_t udp_port)
 lo_port_t::~lo_port_t()
 {
 	lo_address_free(dest);
+}
+
+void lo_port_t::init(const char* udp_port)
+{
+	dest = lo_address_new(nullptr, udp_port);
+	assert_dest_exists();
+}
+
+void lo_port_t::init(std::size_t udp_port)
+{
+	init(std::to_string(udp_port).c_str());
 }
 
 bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
