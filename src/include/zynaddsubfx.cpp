@@ -26,14 +26,21 @@
 
 namespace mini {
 
-std::string zyn_impl::make_start_command() const
+zyn_tree_t::zyn_tree_t(const char *name) :
+	zyn::znode_t(this, "/", ""),
+	instrument_t(name),
+	notes_t_port(this, "/", "/noteOn")
+{
+}
+
+std::string zynaddsubfx_t::make_start_command() const
 {
 	const std::string cmd = ZYN_BINARY
 		" --no-gui -O alsa"; // TODO: read from options file
 	return cmd;
 }
 
-instrument_t::udp_port_t zyn_impl::get_port(pid_t pid, int) const
+instrument_t::udp_port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 {
 	udp_port_t port;
 	std::string tmp_filename = "/tmp/zynaddsubfx_"
@@ -42,38 +49,13 @@ instrument_t::udp_port_t zyn_impl::get_port(pid_t pid, int) const
 	sleep(1); // wait for zyn to be started... (TODO)
 	std::ifstream stream(tmp_filename);
 	if(!stream.good()) {
-			throw "Error: Communication to zynaddsubfx failed.";
-		}
+		throw "Error: Communication to zynaddsubfx failed.";
+	}
 	stream >> port;
 	return port;
 }
 
-zynaddsubfx_t::zynaddsubfx_t(const char *name) :
-	zyn::znode_t(this, "/", ""),
-	instrument_t(name),
-	notes_t_port(this, "/", "/noteOn")
-{
-}
-
-zyn_impl::zyn_impl(const char *name)
-	: zynaddsubfx_t(name)
-{
-}
-
-#if 0
-zyn_impl::zyn_impl(zynaddsubfx_t *ref) :
-	is_impl_of_t<zynaddsubfx_t>::is_impl_of_t(ref),
-	pid(make_fork()),
-	lo_port(ref->get_port(pid, 0 /*TODO*/))
-{
-}
-#endif
-
-zyn_impl::~zyn_impl()
-{
-}
-
-command_base *zyn_impl::make_close_command() const
+command_base *zynaddsubfx_t::make_close_command() const
 {
 	return new command<>("/close-ui");
 }

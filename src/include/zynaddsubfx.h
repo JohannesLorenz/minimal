@@ -31,107 +31,14 @@ namespace mini
 class lo_port_t;
 
 
-class zynaddsubfx_t;
+class zyn_tree_t;
 
 namespace zyn {
 
-template<class InstClass>
-class node_t : public named_t
-{
-public: // TODO
-	InstClass* ins;
-// the inheriting class must define the sub-nodes
-protected:
-
-	template<class NodeT>
-	NodeT* spawn_new(const std::string& ext) const {
-		return new NodeT(ins, name(), ext);
-	}
-
-	template<class NodeT>
-	NodeT spawn(const std::string& ext) const {
-		return NodeT(ins, name(), ext);
-	}
-
-	template<class NodeT>
-	NodeT spawn(const std::string& ext, std::size_t id) const {
-		return spawn<NodeT>(ext + std::to_string(id));
-	}
-public:
-	node_t(InstClass* ins, const std::string& base, const std::string& ext)
-		: named_t(base + ext), ins(ins) {}
-
-
-
-	//node(std::string base, std::string ext, std::size_t id)
-	//	: node(base, ext + std::to_string(id)) {}
-};
-
-struct prioritized_command_base //: public work_queue_t::task_base
-{
-	std::size_t priority;
-	float next_time;
-	prioritized_command_base(std::size_t priority, float next_time) :
-		priority(priority),
-		next_time(next_time)
-	{
-
-	}
-};
-
-template<class PortType>
-struct prioritized_command : public prioritized_command_base
-{
-	command<PortType>* cmd; // TODO: does command_base suffice?
-	prioritized_command(std::size_t priority, float next_time,
-		command<PortType>* cmd) :
-		prioritized_command_base(priority, next_time), cmd(cmd)
-	{
-
-	}
-};
-
-template<class Ins, class PortType>
-struct rtosc_in_port : PortType
-{
-	prioritized_command<rtosc_in_port<Ins, PortType>>* cmd;
-	Ins* ins;
-
-	void on_recv() {
-		send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
-	}
-
-	using PortType::PortType;
-};
-
-// TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
-template<class InstClass, class PortType>
-struct in_port_with_command : node_t<InstClass>
-{ // TODO: instrument.h -> ?
-	using rtosc_in_port = rtosc_in_port<InstClass, PortType>;
-
-	prioritized_command<rtosc_in_port> cmd;
-public:
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
-		node_t<InstClass>(ins, base, ext),
-		cmd(1, 0.0f, new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
-	{
-		cmd.cmd->template port_at<0>().set_trigger();
-		cmd.cmd->template port_at<0>().ins = ins;
-		cmd.cmd->template port_at<0>().cmd = &cmd;
-	}
-
-	rtosc_in_port& port() {
-		return cmd.cmd->template port_at<0>();
-	}
-};
-
-
-
-using znode_t = node_t<zynaddsubfx_t>;
+using znode_t = node_t<zyn_tree_t>;
 
 template<class PortT>
-using p_envsustain = in_port_with_command<zynaddsubfx_t, PortT>;
+using p_envsustain = in_port_with_command<zyn_tree_t, PortT>;
 
 class amp_env : znode_t
 {
@@ -196,7 +103,7 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-class zynaddsubfx_t : public zyn::znode_t, public instrument_t
+class zyn_tree_t : public zyn::znode_t, public instrument_t
 {
 public:
 	template<template<class , bool> class Port1 = use_no_port,
@@ -285,18 +192,13 @@ private:
 		}
 	};
 
-	notes_t_port_t<zynaddsubfx_t> notes_t_port; // TODO: inherit??
+	notes_t_port_t<zyn_tree_t> notes_t_port; // TODO: inherit??
 
 
 public:
 
-	/*float _proceed(float time) {
-		std::cerr << "proceeding with zyn" << std::endl;
-		return impl->proceed(time); }
-	void instantiate() { m_impl::instantiate(); }*/
-
-	zynaddsubfx_t(const char* name);
-	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
+	zyn_tree_t(const char* name);
+	virtual ~zyn_tree_t() {}
 
 	/*
 	 *  ports
@@ -306,7 +208,7 @@ public:
 		return spawn<zyn::adpars>("part0/kit0/adpars/");
 	}
 
-	notes_t_port_t<zynaddsubfx_t>& note_input() {
+	notes_t_port_t<zyn_tree_t>& note_input() {
 		return notes_t_port;
 	}
 
@@ -319,7 +221,7 @@ public:
 		//}
 		template<class Port>
 		zyn::p_envsustain<Port>* Ppanning() const { // TODO: panning must be int...
-			return spawn_new<zyn::in_port_with_command<zynaddsubfx_t, Port>>("Ppanning");
+			return spawn_new<in_port_with_command<zyn_tree_t, Port>>("Ppanning");
 		}
 	};
 
@@ -327,18 +229,18 @@ public:
 
 	template<class Port>
 	zyn::p_envsustain<Port>* volume() const {
-		return spawn_new<zyn::in_port_with_command<zynaddsubfx_t, Port>>("volume");
+		return spawn_new<in_port_with_command<zyn_tree_t, Port>>("volume");
 	}
 };
 
-class zyn_impl : public zynaddsubfx_t, protected work_queue_t
+class zynaddsubfx_t : public zyn_tree_t, protected work_queue_t
 {
 	std::string make_start_command() const;
 	instrument_t::udp_port_t get_port(pid_t pid, int) const;
 	command_base* make_close_command() const;
 public:
-	zyn_impl(const char* name);
-	~zyn_impl();
+	using zyn_tree_t::zyn_tree_t;
+	~zynaddsubfx_t() = default;
 };
 
 }

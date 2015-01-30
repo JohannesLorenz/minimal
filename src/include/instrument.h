@@ -98,15 +98,96 @@ public:
 };
 #endif
 
-struct map_cmp
+template<class InstClass>
+class node_t : public named_t
 {
-	bool operator()(const command_base* c1, const command_base* c2)
+public: // TODO
+	InstClass* ins;
+// the inheriting class must define the sub-nodes
+protected:
+
+	template<class NodeT>
+	NodeT* spawn_new(const std::string& ext) const {
+		return new NodeT(ins, name(), ext);
+	}
+
+	template<class NodeT>
+	NodeT spawn(const std::string& ext) const {
+		return NodeT(ins, name(), ext);
+	}
+
+	template<class NodeT>
+	NodeT spawn(const std::string& ext, std::size_t id) const {
+		return spawn<NodeT>(ext + std::to_string(id));
+	}
+public:
+	node_t(InstClass* ins, const std::string& base, const std::string& ext)
+		: named_t(base + ext), ins(ins) {}
+
+
+
+	//node(std::string base, std::string ext, std::size_t id)
+	//	: node(base, ext + std::to_string(id)) {}
+};
+
+struct prioritized_command_base //: public work_queue_t::task_base
+{
+	std::size_t priority;
+	float next_time;
+	prioritized_command_base(std::size_t priority, float next_time) :
+		priority(priority),
+		next_time(next_time)
 	{
-		return *c1 < *c2;
+
 	}
 };
 
-using cmd_vectors = std::map<const command_base*, std::set<float>, map_cmp>; // TODO: prefer vector?
+template<class PortType>
+struct prioritized_command : public prioritized_command_base
+{
+	command<PortType>* cmd; // TODO: does command_base suffice?
+	prioritized_command(std::size_t priority, float next_time,
+		command<PortType>* cmd) :
+		prioritized_command_base(priority, next_time), cmd(cmd)
+	{
+
+	}
+};
+
+template<class Ins, class PortType>
+struct rtosc_in_port : PortType
+{
+	prioritized_command<rtosc_in_port<Ins, PortType>>* cmd;
+	Ins* ins;
+
+	void on_recv() {
+		send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
+	}
+
+	using PortType::PortType;
+};
+
+// TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
+template<class InstClass, class PortType>
+struct in_port_with_command : node_t<InstClass>
+{ // TODO: instrument.h -> ?
+	using rtosc_in_port = rtosc_in_port<InstClass, PortType>;
+
+	prioritized_command<rtosc_in_port> cmd;
+public:
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
+		node_t<InstClass>(ins, base, ext),
+		cmd(1, 0.0f, new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
+	{
+		cmd.cmd->template port_at<0>().set_trigger();
+		cmd.cmd->template port_at<0>().ins = ins;
+		cmd.cmd->template port_at<0>().cmd = &cmd;
+	}
+
+	rtosc_in_port& port() {
+		return cmd.cmd->template port_at<0>();
+	}
+};
 
 class instrument_t : public effect_t //, protected work_queue_t
 {
