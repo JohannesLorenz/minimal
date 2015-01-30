@@ -124,24 +124,14 @@ public:
 
 	void instantiate();
 
-	/*instrument_t(const char* name)
-	{
-		//set_next_time(std::numeric_limits<float>::max());
-	}*/
 	virtual ~instrument_t();
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
-
-	//instrument_t(const instrument_t& other);
 
 	virtual command_base *make_close_command() const = 0;
 
 	virtual std::string make_start_command() const = 0;
 	//! shall return the lo port (UDP) after the program was started
 	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
-	//instrument_t(instrument_t&& other) = default;
-
-
-
 
 	void clean_up();
 

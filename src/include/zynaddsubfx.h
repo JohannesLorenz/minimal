@@ -295,9 +295,6 @@ public:
 		return impl->proceed(time); }
 	void instantiate() { m_impl::instantiate(); }*/
 
-	//std::string make_start_command() const;
-
-	//udp_port_t get_port(pid_t pid, int ) const;
 	zynaddsubfx_t(const char* name);
 	virtual ~zynaddsubfx_t() {} //!< in case someone derives this class
 
@@ -336,7 +333,6 @@ public:
 
 class zyn_impl : public zynaddsubfx_t, protected work_queue_t
 {
-//	using is_impl_of_t<zynaddsubfx_t>::is_impl_of_t;
 	std::string make_start_command() const;
 	instrument_t::udp_port_t get_port(pid_t pid, int) const;
 	command_base* make_close_command() const;
