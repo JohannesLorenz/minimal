@@ -333,7 +333,7 @@ public:
 
 	virtual ~_command();
 
-	std::string type_str() const {
+	std::string type_str() const { // TODO: static variant?
 		std::string res { ',' , sign<Args>()... };
 		return res; // TODO: in one line! constexpr?
 	}
@@ -600,6 +600,42 @@ struct rval_if_possible<T&>
 	using type = T&;
 };*/
 
+template<bool IsVar> // true
+struct _for_all_variables_single
+{
+	template<class Var, class Ftor>
+	static void exec(Var& v, Ftor& f) { f(v); }
+};
+
+template<>
+struct _for_all_variables_single<false>
+{
+	template<class Var, class Ftor>
+	static void exec(Var& , Ftor& ) {}
+};
+
+// TODO: count *down* ??
+template<std::size_t N, std::size_t I = 0>
+class _for_all_variables {
+	template<class Tpl>
+	using type_at = typename std::tuple_element<I, Tpl>::type;
+public:
+	template<class Ftor, class Tpl>
+	static void exec(Ftor& f, Tpl& tpl)
+	{
+		_for_all_variables_single<_is_variable<type_at<Tpl>>()>::exec(std::get<I>(tpl), f);
+		_for_all_variables<N, I+1>::exec(f, tpl);
+	}
+};
+
+template<std::size_t N>
+class _for_all_variables<N, N> {
+public:
+	template<class Ftor, class Tpl>
+	static void exec(const Ftor& , const Tpl& ) {}
+};
+
+
 template<class ...Args>
 class command : /*public port_tuple<make_port<Args>...>,*/ public testcommand<Args...>
 {
@@ -610,6 +646,9 @@ class command : /*public port_tuple<make_port<Args>...>,*/ public testcommand<Ar
 	/*void fetch_ports() {
 		fetch_detail::fetch_ports<sizeof...(Args), 0, Args...>::exec(port_tuple_t::in_ports, base::args);
 	}*/
+
+	template<std::size_t Idx>
+	using type_at = typename std::tuple_element<Idx, std::tuple<Args...>>::type;
 
 public:
 	template<class ...Args2>
@@ -628,11 +667,16 @@ public:
 	}
 
 	template<std::size_t Idx>
-	typename std::tuple_element<Idx, std::tuple<Args...>>::type& port_at() {
+	type_at<Idx>& port_at() {
 		return std::get<Idx>(base::args);
 	}
 
 	~command();
+
+	template<class Ftor>
+	void for_all_variables(Ftor& f) {
+		_for_all_variables<sizeof...(Args)>::exec(f, base::args);
+	}
 };
 
 template<class ...Args>

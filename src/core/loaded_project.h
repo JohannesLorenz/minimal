@@ -87,12 +87,28 @@ constexpr bars_t _1(1, 1),
 
 class loaded_project_t;
 
+//! rt-safe stack, once reserved
+template<class T>
+class array_stack
+{
+	std::vector<T> data;
+public:
+	void reserve(const std::size_t& size) { data.reserve(size); }
+	void push(const T& new_value) { data.push_back(new_value); }
+	T&& pop() {
+		T&& top = std::move(*data.rbegin());
+		data.pop_back();
+		return std::move(top);
+	}
+	std::size_t size() const { return data.size(); }
+};
 
 class player_t : public work_queue_t // TODO: own header
 {
 	// TODO: class handle_work_queue_t?
 	std::map<const effect_t*, handle_type> handles;
 
+	array_stack<effect_t*> ready_fx;
 
 	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
@@ -102,7 +118,7 @@ class player_t : public work_queue_t // TODO: own header
 	float pos = 0.0f;
 	loaded_project_t& project; // TODO! must be const
 
-	std::set<float> end_set = { std::numeric_limits<float>::max() };
+//	std::set<float> end_set = { std::numeric_limits<float>::max() };
 
 	/*struct pq_entry
 	{
@@ -222,21 +238,12 @@ class loaded_project_t : non_copyable_t
 
 	// player
 	// player_t player;
-
-//	daw_visit::global_map _global;
 public:
 //	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
-
-//	daw_visit::global_map& global() { return _global; }
 	effect_root_t& effect_root() { return _effect_root; }
 	effect_root_t& new_effect_root() { return _new_effect_root; }
 	loaded_project_t(project_t&& _project);
 	~loaded_project_t();
-private:
-	std::pair<daw::note_geom_t, daw::note_t> visit(daw::note_geom_t offset, const daw::note_t &n) const;
-	std::multimap<daw::note_geom_t, daw::note_t> visit(daw::note_geom_t offset, const daw::notes_t &ns) const;
-//	cmd_vectors visit(const track_t &t) const;
-//	global_map visit(global_t &g) const;
 };
 
 }

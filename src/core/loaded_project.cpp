@@ -19,11 +19,6 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <cstdarg>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <stack>
 
 #include "loaded_project.h"
 
@@ -75,12 +70,11 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 	// identify all fx
 	std::size_t next_id = 0;
 
-	std::stack<effect_t*> ready_fx;
+	array_stack<effect_t*> ready_fx;
 	ready_fx.push(&effect_root());
 	do
 	{
-		effect_t* cur_effect = ready_fx.top();
-		ready_fx.pop();
+		effect_t* cur_effect = ready_fx.pop();
 
 		if(cur_effect->id() != has_id::no_id())
 		 throw "Id given twice";
@@ -153,12 +147,10 @@ void player_t::update_effects()
 {
 	// TODO: use player's copies
 
-	std::stack<effect_t*> ready_fx;
 	ready_fx.push(&project.effect_root());
 	do
 	{
-		effect_t* cur_effect = ready_fx.top();
-		ready_fx.pop();
+		effect_t* cur_effect = ready_fx.pop();
 
 		cur_effect->proceed(pos);
 
@@ -209,6 +201,8 @@ player_t::player_t(loaded_project_t &_project)  : project(_project)
 		handles[e] = add_task(new_task);
 	}
 
+	ready_fx.reserve(_project.project.effects().size());
+
 }
 
 void player_t::play_until(float dest)
@@ -218,7 +212,6 @@ void player_t::play_until(float dest)
 //		update_effects();
 //		fill_commands();
 	//	send_commands();
-	//	std::cerr << "pos:" << pos << std::endl;
 		while(has_active_tasks(pos))
 		{
 			std::cerr << "active task!" << std::endl;

@@ -117,21 +117,22 @@ void instrument_t::clean_up()
 	}
 }
 
-float instrument_t::_proceed(float )
+float instrument_t::_proceed(float time)
 {
-	for(in_port_base* ipb : get_in_ports())
+	return work_queue_t::run_tasks(time);
+/*	for(in_port_base* ipb : get_in_ports())
 	{
 		if(ipb==nullptr)
 		 throw "OUCH!";
 		if(ipb->update())
 		{
 			std::cerr << "unread changes at: " << ipb << std::endl;
-			ipb->on_recv();
+			ipb->on_recv(time);
 			ipb->unread_changes = false;
 		}
 	}
 	return std::numeric_limits<float>::max();
-	//return work_queue_t::run_tasks(time);
+	//return work_queue_t::run_tasks(time);*/
 }
 
 /*instrument_t *instrument_t::clone() const

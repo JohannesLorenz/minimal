@@ -150,7 +150,7 @@ public:
 	bool is_trigger() const { return _is_trigger; }
 	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?
 
-	virtual void on_recv() = 0;
+	virtual void on_recv(float time) = 0;
 
 	virtual const void* get_value() const = 0;
 };
@@ -307,6 +307,8 @@ public:
 		std::cerr << "GET: " << *reinterpret_cast<const T*>(&data) << std::endl;
 		return reinterpret_cast<const void*>(&data); }
 
+	//! this has no effect
+	void set_trigger(bool = true) const { }
 
 	using type = T;
 };

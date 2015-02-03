@@ -130,66 +130,183 @@ public:
 	//	: node(base, ext + std::to_string(id)) {}
 };
 
-struct prioritized_command_base //: public work_queue_t::task_base
+struct prioritized_command_base : public work_queue_t::task_base
 {
 	std::size_t priority;
-	float next_time;
-	prioritized_command_base(std::size_t priority, float next_time) :
-		priority(priority),
-		next_time(next_time)
+	work_queue_t::handle_type handle;
+	prioritized_command_base(std::size_t priority, float ) : // TODO: float
+		task_base(std::numeric_limits<float>::max()),
+		priority(priority)
 	{
 
+	}
+	bool cmp(const task_base& rhs) const {
+		return priority < dynamic_cast<const prioritized_command_base&>(rhs).priority;
+	}
+};
+
+class prioritized_command : public prioritized_command_base
+{
+	bool changed = false;
+protected:
+	lo_port_t* lo_port;
+public:
+	prioritized_command(std::size_t priority, float next_time,
+		lo_port_t* lo_port) :
+		prioritized_command_base(priority, next_time),
+		lo_port(lo_port)
+	{
+
+	}
+
+	void proceed_base(float) { // TODO: call virtual from here?
+		if(!changed)
+		 throw "proceeding with unchanged command...";
+		changed = false;
+	}
+
+	bool set_changed() {
+		bool had_effect = (changed == false);
+		changed = true;
+		return had_effect;
+	}
+};
+
+//! for single command stuff
+class prioritized_command_cmd : public prioritized_command
+{
+public:
+	command_base* cmd; // TODO: does command_base suffice?
+	prioritized_command_cmd(std::size_t priority, float next_time, lo_port_t* lo_port,
+		command_base* cmd) :
+		prioritized_command(priority, next_time, lo_port),
+		cmd(cmd)
+		{}
+
+	void proceed(float time)
+	{
+		proceed_base(time);
+		send_single_command(*lo_port, cmd->complete_buffer());
 	}
 };
 
 template<class PortType>
-struct prioritized_command : public prioritized_command_base
+struct rtosc_in_port_t : PortType
 {
-	command<PortType>* cmd; // TODO: does command_base suffice?
-	prioritized_command(std::size_t priority, float next_time,
-		command<PortType>* cmd) :
-		prioritized_command_base(priority, next_time), cmd(cmd)
-	{
+	prioritized_command_cmd* cmd;
+	instrument_t* ins;
 
+	using PortType::PortType;
+	rtosc_in_port_t(PortType&& arg)
+		: PortType(std::move(arg))
+	{
+	}
+
+	void on_recv(float time); // see below
+//	rtosc_in_port_t(effect_t& ef) : PortType(ef) {}
+};
+
+/*
+template<class Inst, class ...OtherTypes>
+struct rtosc_in_port_t<Inst, int, OtherTypes...> // TODO: int
+{
+	int val;
+	operator int() { return val; }
+};*/
+
+// welcome to teplate-hell...
+
+template<class T, bool, class Ins> // true
+struct _type_of_rtosc_port {
+	using type = rtosc_in_port_t<T>;
+};
+
+template<class T, class Ins>
+struct _type_of_rtosc_port<T, false, Ins> {
+	using type = T;
+};
+
+template<class T, class Ins, class ...Other>
+using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), Ins>::type;
+
+template<std::size_t N, std::size_t I = 0>
+struct init_port {
+	template<class InsType, class CmdType>
+	static void exec(InsType& ins, CmdType& cmd, lo_port_t* lo_port)
+	{
+		cmd.cmd->template port_at<I>().set_trigger();
+		cmd.cmd->template port_at<I>().ins = ins;
+		cmd.cmd->template port_at<I>().cmd = &cmd;
+		cmd.cmd->template port_at<I>().lo_port = lo_port;
+
+		init_port<N, I+1>(p);
 	}
 };
 
-template<class Ins, class PortType>
-struct rtosc_in_port : PortType
+template<std::size_t N>
+struct init_port<N, N> {
+	template<class InsType, class CmdType>
+	static void exec(const InsType& , const CmdType& , const lo_port_t* ) {}
+};
+
+template<class Ins, class Cmd>
+struct functor_init_ports
 {
-	prioritized_command<rtosc_in_port<Ins, PortType>>* cmd;
 	Ins* ins;
-
-	void on_recv() {
-		send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
+	Cmd& cmd;
+	template<class ...Args> void operator()(rtosc_in_port_t<Args...>& p)
+	{
+		p.set_trigger();
+		p.ins = ins;
+		p.cmd = &cmd;
 	}
-
-	using PortType::PortType;
 };
 
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
-template<class InstClass, class PortType>
+// TODO: make InstClass = effect_t? ???????????????????????????????????????????
+template<class InstClass, class... PortTypes>
 struct in_port_with_command : node_t<InstClass>
 { // TODO: instrument.h -> ?
-	using rtosc_in_port = rtosc_in_port<InstClass, PortType>;
+	template<class Port>
+	using rtosc_in_port = type_of_rtosc_port<Port, InstClass>;
+	//using rtosc_in_ports = rtosc_in_port<PortTypes>;
 
-	prioritized_command<rtosc_in_port> cmd;
+	using cmd_type = prioritized_command_cmd;
+	command<rtosc_in_port<PortTypes>...>* cmd_ptr;
+	prioritized_command_cmd cmd;
+
 public:
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
+	template<class ...Args2>
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
 		node_t<InstClass>(ins, base, ext),
-		cmd(1, 0.0f, new command<rtosc_in_port>((base + ext).c_str(), (effect_t&)*ins))
+		cmd_ptr(new command<rtosc_in_port<PortTypes>...>((base + ext).c_str(), std::forward<Args2>(args)...)),
+		cmd(1, 0.0f, &ins->lo_port, cmd_ptr)
 	{
-		cmd.cmd->template port_at<0>().set_trigger();
+		/*cmd.cmd->template port_at<0>().set_trigger();
 		cmd.cmd->template port_at<0>().ins = ins;
-		cmd.cmd->template port_at<0>().cmd = &cmd;
+		cmd.cmd->template port_at<0>().cmd = &cmd;*/
+		//init_port<sizeof...(PortTypes)>::exec(ins, cmd, &ins->lo_port); // TODO: ref instead of & ?
+
+		functor_init_ports<InstClass, cmd_type> f{ins, cmd};
+		cmd_ptr->for_all_variables(f);
+
+		cmd.handle = ins->add_task(&cmd);
 	}
 
-	rtosc_in_port& port() {
-		return cmd.cmd->template port_at<0>();
+	//! should only be called if all args are ports
+	//! otherwise, one has to initialize the fixed args on one's own
+	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
+		in_port_with_command(ins, base, ext, rtosc_in_port<PortTypes>(*ins)...)
+	{
 	}
+
+	/*template<std::size_t I>
+	auto port_at() -> decltype(cmd.cmd->port_at<I>()) {
+		return cmd.cmd->port_at<I>();
+	}*/
 };
 
-class instrument_t : public effect_t //, protected work_queue_t
+class instrument_t : public effect_t, public work_queue_t
 {
 public:
 	lo_port_t lo_port; // TODO: private?
@@ -216,12 +333,25 @@ public:
 
 	void clean_up();
 
-	float _proceed(float);
+	float _proceed(float time);
 };
 
 template <char ...Letters> class fixed_str {
 	static std::string make_str() { return std::string(Letters...); }
 };
+
+template<class T>
+void rtosc_in_port_t<T>::on_recv(float time)
+{
+	// mark as changed
+	if(cmd->set_changed())
+	{
+		// update in pq
+		cmd->update_next_time(time);
+		ins->update(cmd->handle);
+	}
+//	send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
+}
 
 
 /*template<class Cmd, class ...Args>

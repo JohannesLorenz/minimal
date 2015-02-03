@@ -26,7 +26,7 @@ namespace mini {
 
 class work_queue_t
 {
-protected:
+public: // TODO: protected??
 	class task_base
 	{
 //		const command_base* cmd;
@@ -63,7 +63,7 @@ private:
 
 	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
 	pq_type pq;
-protected:
+public:
 	float run_tasks(float pos)
 	{
 		while(pq.top()->next_time() <= pos)

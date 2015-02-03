@@ -107,7 +107,7 @@ void init(project_t& p)
 	//auto* panning = sine_bass.part0().Ppanning<in_port_templ<int>>();
 
 	// effect connections
-	volume->port() << *m_lfo;
+	volume->cmd_ptr->port_at<0>() << *m_lfo;
 	sine_bass.note_input() << *nl;
 
 	p.effects().push_back(&sine_bass);

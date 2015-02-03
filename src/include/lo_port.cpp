@@ -126,7 +126,7 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 	return true;
 }
 
-bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const
+/*bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const
 {
 	va_list va;
 	va_start(va, msg_args);
@@ -139,7 +139,7 @@ bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) cons
 	va_end(va);
 
 	return send_raw(buffer, len);
-}
+}*/
 
 
 /*bool lo_port_t::send_rtosc_msg(const char *path) const
