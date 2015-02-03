@@ -187,7 +187,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
 
 MESSAGE("READING SUB-DIRECTORIES...")
-add_subdirectory(rtosc)
+#add_subdirectory(rtosc)
 add_subdirectory(src)
 add_subdirectory(doc)
 
