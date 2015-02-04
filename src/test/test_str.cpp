@@ -48,20 +48,20 @@ int main()
 
 		using m_note_on_t = zynaddsubfx_t::note_on<use_no_port, use_no_port, self_port_templ>;
 
-		zynaddsubfx_t z("hello world!");
-		m_note_on_t non(&z, 0, 1, self_port_templ<int, true>{});
-		non.cmd_ptr->buffer().inspect();
+		//zynaddsubfx_t z("hello world!");
+		m_note_on_t non(/*&z, */0, 1, self_port_templ<int, true>{});
+		non.buffer().inspect();
 
 
 
-		non.cmd_ptr->port_at<2>().set(99);
+		non.port_at<2>().set(99);
 
-		non.cmd_ptr->command::update();
+		non.command::update();
 
 	//	std::cerr << "ARG NOW:" << std::get<2>(non.args) << std::endl;
 
-		non.cmd_ptr->complete_buffer();
-		non.cmd_ptr->buffer().inspect();
+		non.complete_buffer();
+		non.buffer().inspect();
 #if 0 // TODO
 		lfo_t<> lfo(-42.0, +42.0, 0.0f, 4.0f);
 		command<oint<>, ofloat<in_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
