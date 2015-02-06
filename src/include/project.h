@@ -140,7 +140,9 @@ public:
 #endif
 
 //	daw::global_t& global() { return _global; }
-	std::vector<effect_t*>& effects() { return _effects; }
+	const std::vector<effect_t*>& effects() const { return _effects; }
+	//! this should rarely be used!
+	std::vector<effect_t*>& get_effects_noconst() { return _effects; }
 
 //	const std::vector<std::unique_ptr<instrument_t>>& instruments() const {
 //		return _instruments; }
@@ -165,7 +167,10 @@ public:
 	T& emplace(Args ...args) {
 		//_instruments.emplace_back(new T(args...));
 		//return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
-		return static_cast<T&>(*new T(args...));
+		effect_t* ef = new T(args...);
+		ef->set_id(_effects.size());
+		_effects.push_back(ef);
+		return static_cast<T&>(*ef);
 	}
 
 

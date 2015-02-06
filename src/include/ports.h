@@ -36,15 +36,15 @@ class out_port_base;
 
 void add_out_port(effect_t& e, out_port_base* opb);
 void add_in_port(effect_t& e, in_port_base* opb);
-/*
+
 template<class Port>
 class port_ctor
 {
 	effect_t* e;
 public:
-	port_ctor(effect_t& e) : e(e) {}
+	port_ctor(effect_t* e) : e(e) {}
 	effect_t* effect() { return e; }
-};*/
+};
 
 class port_base : public is_variable
 {
@@ -54,6 +54,7 @@ class out_port_base : public port_base
 {
 public: // TODO!! protected
 	effect_t* e;
+	std::vector<in_port_base*> readers;
 public:
 //	bool changed = true; // TODO: stamp?
 	float change_stamp = -1.0f;
@@ -122,13 +123,19 @@ private:
 protected:
 public: // TODO
 	float change_stamp = -1.0f;
+	std::size_t id;
 public:
-	bool unread_changes = false; // initally send values - TODO??
+	//bool unread_changes = false; // initally send values - TODO??
 	const out_port_base* source = nullptr;
+
+
+	in_port_base(in_port_base&& ) noexcept = default;
+
 	in_port_base(effect_t& ef) :
 		e(&ef)
 	{
 		add_in_port(ef, this);
+		std::cerr << "NEW IN PORT AT: " << this << std::endl;
 	}
 
 	in_port_base(effect_t& ef, const out_port_base& source) :
@@ -136,7 +143,11 @@ public:
 		source(&source)
 	{
 		add_in_port(ef, this);
+		std::cerr << "NEW IN PORT AT: " << this << std::endl;
 	}
+
+	template<class P>
+	in_port_base(port_ctor<P> pc) : in_port_base(*pc.effect()) {}
 
 	float get_outs_next_time() const {
 		return source->next_time;
@@ -153,6 +164,8 @@ public:
 	virtual void on_recv(float time) = 0;
 
 	virtual const void* get_value() const = 0;
+
+	virtual ~in_port_base() { std::cerr << "IN PORT " << this <<": BYE! " << std::endl; }
 };
 
 template<class T, bool IsDep = true>
@@ -172,9 +185,10 @@ public: // TODO! (protected)
 	using type = T;
 protected:
 	void update_stamp() {
-		if(unread_changes)
-		 throw "omitting a value now!";
-		unread_changes = true;
+		//if(unread_changes)
+		// throw "omitting a value now!";
+		//unread_changes = true;
+		// TODO: check for unread changes via stamp?
 		change_stamp = source->change_stamp;
 	}
 
@@ -236,11 +250,12 @@ public:
 
 //! copy-value based connection
 template<class T, bool IsDep>
-void operator<<(in_port_templ<T, IsDep>& ipt, const out_port_templ<T>& opt)
+void operator<<(in_port_templ<T, IsDep>& ipt, out_port_templ<T>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
 	ipt.source = &opt;
+	opt.readers.push_back(&ipt);
 	if(ipt.is_dependency()) // TODO: via template matching
 	 opt.e->deps.push_back(ipt.e);
 	else
@@ -250,11 +265,12 @@ void operator<<(in_port_templ<T, IsDep>& ipt, const out_port_templ<T>& opt)
 
 //! pointer based connection
 template<class T, bool IsDep>
-void operator<<(in_port_templ<const T*, IsDep>& ipt, const out_port_templ<T>& opt)
+void operator<<(in_port_templ<const T*, IsDep>& ipt, out_port_templ<T>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
 	ipt.source = &opt;
+	opt.readers.push_back(&ipt);
 	ipt.data = &opt.data;
 	if(ipt.is_dependency()) // TODO: via template matching
 	 opt.e->deps.push_back(ipt.e);
@@ -266,7 +282,7 @@ void operator<<(in_port_templ<const T*, IsDep>& ipt, const out_port_templ<T>& op
 class self_port_base : public port_base
 {
 public:
-	bool unread_changes = true; // initally send values
+	bool unread_changes = false; // initally send values - TODO
 	float get_outs_next_time() const {
 		// who knows :-)) (bad validation of protocol...)
 		return std::numeric_limits<float>::max();

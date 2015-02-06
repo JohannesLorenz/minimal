@@ -109,12 +109,12 @@ public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
-	class note_on : public command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
+	class note_on : public in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
-		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
+		using base = in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
-		note_on(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& velocity) // TODO: rvals
-			: base("/noteOn", chan, note, std::forward<port_type_of<Port3, int>>(velocity)) // TODO: forward instead of move?
+		note_on(zyn_tree_t* zyn, port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& velocity) // TODO: rvals
+			: base(zyn, "/", "noteOn", chan, note, std::forward<port_type_of<Port3, int>>(velocity)) // TODO: forward instead of move?
 		{
 		}
 	};
@@ -122,12 +122,12 @@ public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
-	class note_off : public command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
+	class note_off : public in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
-		using base = command<port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
+		using base = in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
-		note_off(port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& id)
-			: base("/noteOff", chan, note, std::forward<port_type_of<Port3, int>>(id))
+		note_off(zyn_tree_t* zyn, port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& id)
+			: base(zyn, "/", "noteOff", chan, note, std::forward<port_type_of<Port3, int>>(id))
 		{
 		}
 	};
@@ -140,8 +140,8 @@ private:
 	{
 		command_base* cmd;
 		InstClass* ins;
-		using m_note_on_t = prioritized_command_cmd;
-		using m_note_off_t = prioritized_command_cmd;
+		using m_note_on_t = note_on<use_no_port, use_no_port, self_port_templ>;
+		using m_note_off_t = note_off<use_no_port, use_no_port, self_port_templ>;
 
 		std::vector<m_note_on_t> note_ons;
 		std::vector<m_note_off_t> note_offs;
@@ -161,17 +161,22 @@ private:
 				//note_ons.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
 				using c_note_on = note_on<use_no_port, use_no_port, self_port_templ>;
 
-				c_note_on* cmd_ptr = new c_note_on(0, idx, self_port_templ<int, true>{});
-				note_ons.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
+				note_ons.emplace_back(ins, 0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
+
+			//	c_note_on* cmd_ptr = new c_note_on(0, idx, self_port_templ<int, true>{});
+			//	note_ons.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
 			}
 			idx = 0;
 			for(; idx < NOTES_MAX; ++idx)
 			{
 				// TODO: leave the rtosc...
+
+				note_offs.emplace_back(ins, 0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
+
 				//note_offs.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
 
-				c_note_off* cmd_ptr = new c_note_off(0, idx, self_port_templ<int, true>{});
-				note_offs.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
+			//	c_note_off* cmd_ptr = new c_note_off(0, idx, self_port_templ<int, true>{});
+			//	note_offs.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
 			}
 
 			set_trigger(); // TODO: here?
@@ -190,6 +195,7 @@ private:
 
 		void send_all(float pos)
 		{
+			std::cerr << "SENDING ALL..." << std::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
 			if(p.first < 0)
 			 break;
@@ -203,31 +209,36 @@ private:
 					send_single_command(*lo_port, note_offs[p.first].buffer());
 				#endif
 				// TODO!!
-//					note_offs[p.first].on_recv();
-					note_offs[p.first].set_changed();
+					// note_offs[p.first].on_recv();
 
-					note_offs[p.first].update_next_time(pos); // TODO: call on recv
-					ins->update(note_offs[p.first].handle);
 
+
+					if(note_offs[p.first].cmd.set_changed())
+					{
+						note_offs[p.first].cmd.update_next_time(pos); // TODO: call on recv
+						ins->update(note_offs[p.first].cmd.handle);
+					}
+					std::cerr << "SEND OFF" << std::endl;
 				}
 				else
 				{
 					m_note_on_t& note_on_cmd = note_ons[p.first];
-					c_note_on* non = dynamic_cast<c_note_on*>(note_on_cmd.cmd);
-
 					// self_port_t must be completed manually:
-					non->port_at<2>().set(p2.second);
-					non->command::update();
+					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
+					note_on_cmd.cmd_ptr->command::update();
 				#if 0
 					send_single_command(*lo_port, note_on_cmd.complete_buffer());
 				#endif
-					non->complete_buffer(); // TODO: call in on_recv??
+					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_recv??
+					if(note_on_cmd.cmd.set_changed())
+					{
+						note_on_cmd.cmd.update_next_time(pos); // TODO: call on recv
+						ins->update(note_on_cmd.cmd.handle);
+					}
 
-					note_on_cmd.set_changed();
-					note_on_cmd.update_next_time(pos); // TODO: call on recv
-					ins->update(note_on_cmd.handle);
-				// TODO!!
-//					note_on_cmd.on_recv();
+					std::cerr << "SEND ON" << std::endl;
+					// TODO!!
+					// note_on_cmd.on_recv();
 				}
 			}
 		}
@@ -279,6 +290,7 @@ class zynaddsubfx_t : public zyn_tree_t//, protected work_queue_t
 	std::string make_start_command() const;
 	instrument_t::udp_port_t get_port(pid_t pid, int) const;
 	command_base* make_close_command() const;
+
 public:
 	using zyn_tree_t::zyn_tree_t;
 	~zynaddsubfx_t() = default;

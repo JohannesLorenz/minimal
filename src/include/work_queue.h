@@ -26,8 +26,16 @@ namespace mini {
 
 class work_queue_t
 {
-public: // TODO: protected??
-	class task_base
+public:
+	class task_base;
+	struct cmp_func
+	{
+		bool operator() (const task_base* const& lhs, const task_base* const& rhs) const; // see below
+	};
+	typedef boost::heap::fibonacci_heap<task_base*, boost::heap::compare<cmp_func>> pq_type;
+	using handle_type = pq_type::handle_type;
+
+	class task_base // TODO: make this crtp when possible?
 	{
 //		const command_base* cmd;
 		float _next_time;
@@ -39,29 +47,11 @@ public: // TODO: protected??
 		float next_time() const { return _next_time; }
 		task_base(float next_time) : _next_time(next_time) {}
 		virtual bool cmp(const task_base& other) const { return this < &other; }
+		virtual handle_type& get_handle() { throw "not implemented"; }
 
 //		virtual float next() = 0;
 	};
-
 private:
-	using pq_entry = task_base*; // TODO: redundancy
-
-	struct cmp_func
-	{
-		bool operator() (const pq_entry& lhs, const pq_entry& rhs) const
-		{
-			return (lhs->next_time() == rhs->next_time())
-				? lhs->cmp(*rhs)
-				: lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
-
-		/*	bool left_end = lhs.itr != lhs.vals.end();
-			bool right_end = rhs.itr != rhs.vals.end();
-
-			return (right_end && !left_end) ||*/
-		}
-	};
-
-	typedef boost::heap::fibonacci_heap<pq_entry, boost::heap::compare<cmp_func>> pq_type;
 	pq_type pq;
 public:
 	float run_tasks(float pos)
@@ -69,7 +59,7 @@ public:
 		while(pq.top()->next_time() <= pos)
 		{
 
-			pq_entry top = std::move(pq.top());
+			task_base* top = std::move(pq.top());
 			pq.pop();
 
 
@@ -83,7 +73,23 @@ public:
 		return pq.top()->next_time();
 	}
 
-	using handle_type = pq_type::handle_type;
+	float run_tasks_keep(float pos)
+	{
+		while(pq.top()->next_time() <= pos)
+		{
+
+			task_base* top = std::move(pq.top());
+			top->proceed(pos);
+			update(top->get_handle());
+
+			/*const bool reinsert = top->proceed(pos);
+			if(reinsert)
+			 pq.push(top);*/
+
+		}
+		return pq.top()->next_time();
+	}
+
 	handle_type add_task(task_base* new_task) {
 		return pq.push(new_task);
 	}
@@ -105,6 +111,18 @@ public:
 
 	void update(handle_type h) { pq.update(h); }
 };
+
+inline bool work_queue_t::cmp_func::operator() (const task_base* const& lhs, const task_base* const& rhs) const
+{
+	return (lhs->next_time() == rhs->next_time())
+		? lhs->cmp(*rhs)
+		: lhs->next_time() > rhs->next_time(); // should be <, but we start with small values
+
+/*	bool left_end = lhs.itr != lhs.vals.end();
+	bool right_end = rhs.itr != rhs.vals.end();
+
+	return (right_end && !left_end) ||*/
+}
 
 }
 

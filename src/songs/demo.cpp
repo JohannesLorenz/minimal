@@ -71,15 +71,15 @@ void init(project_t& p)
 	maj.add_note(note_t(), note_geom_t(0.33, 1));
 	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
-	note_line_t* nl = new note_line_t();
-	nl->add_notes(maj, note_geom_t(0, 62));
-	nl->add_notes(maj, note_geom_t(1, 63));
-	nl->add_notes(maj, note_geom_t(2, 64));
-	nl->add_notes(maj, note_geom_t(3, 65));
-	nl->add_notes(maj, note_geom_t(4, 66));
-	nl->add_notes(maj, note_geom_t(5, 67));
-	nl->add_notes(maj, note_geom_t(6, 68));
-	nl->add_notes(maj, note_geom_t(7, 69));
+	note_line_t& nl = p.emplace<note_line_t>();
+	nl.add_notes(maj, note_geom_t(0, 62));
+	nl.add_notes(maj, note_geom_t(1, 63));
+	nl.add_notes(maj, note_geom_t(2, 64));
+	nl.add_notes(maj, note_geom_t(3, 65));
+	nl.add_notes(maj, note_geom_t(4, 66));
+	nl.add_notes(maj, note_geom_t(5, 67));
+	nl.add_notes(maj, note_geom_t(6, 68));
+	nl.add_notes(maj, note_geom_t(7, 69));
 
 #if 0
 	track_t t1/*(sine_bass)*/;
@@ -96,9 +96,9 @@ void init(project_t& p)
 	command<oint<out_port<float>>> cmd("/part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
 //	t1.add_command(cmd);
 */
-	lfo_t<int>* m_lfo = new lfo_t<int>(0.0, 64.0, 0.0, 8.0);
-	p.effects().push_back(m_lfo);
-	p.effects().push_back(nl);
+
+	lfo_t<int>& m_lfo = p.emplace<lfo_t<int>>(0.0, 64.0, 0.0, 8.);
+
 //	in_port<int> ip(sine_bass);
 //	ip.connect(m_lfo->out);
 
@@ -107,10 +107,9 @@ void init(project_t& p)
 	//auto* panning = sine_bass.part0().Ppanning<in_port_templ<int>>();
 
 	// effect connections
-	volume->cmd_ptr->port_at<0>() << *m_lfo;
-	sine_bass.note_input() << *nl;
+	volume->cmd_ptr->port_at<0>() << m_lfo;
+	sine_bass.note_input() << nl;
 
-	p.effects().push_back(&sine_bass);
 
 //	t1.add_command(cmd);
 

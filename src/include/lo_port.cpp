@@ -75,7 +75,14 @@ void lo_port_t::assert_dest_exists() {
 		throw "Could not connect to lo dest port.";
 }
 
+void lo_port_t::_clean_up()
+{
+	lo_address_free(dest);
+	up = false;
+}
+
 lo_port_t::lo_port_t(const char *udp_port) :
+	up(true),
 	dest(lo_address_new(nullptr, udp_port))
 {
 	assert_dest_exists();
@@ -88,18 +95,29 @@ lo_port_t::lo_port_t(std::size_t udp_port)
 
 lo_port_t::~lo_port_t()
 {
-	lo_address_free(dest);
+	if(up)
+	 _clean_up();
 }
 
 void lo_port_t::init(const char* udp_port)
 {
+	if(up)
+	 throw "lo port is already up";
 	dest = lo_address_new(nullptr, udp_port);
 	assert_dest_exists();
+	up = true;
 }
 
 void lo_port_t::init(std::size_t udp_port)
 {
 	init(std::to_string(udp_port).c_str());
+}
+
+void lo_port_t::clean_up()
+{
+	if(!up)
+	 throw "lo port was cleaned, but not set up";
+	_clean_up();
 }
 
 bool lo_port_t::send_raw(const char *buffer, std::size_t len) const

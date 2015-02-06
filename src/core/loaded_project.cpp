@@ -68,7 +68,7 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 	}
 
 	// identify all fx
-	std::size_t next_id = 0;
+	//std::size_t next_id = 0;
 
 	array_stack<effect_t*> ready_fx;
 	ready_fx.push(&effect_root());
@@ -78,9 +78,9 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 
 		if(cur_effect->id() != has_id::no_id())
 		 throw "Id given twice";
-		cur_effect->set_id(next_id++);
+		//cur_effect->set_id(next_id++);
 
-		std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+		//std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
 
 		const auto cb = [&](const std::vector<effect_t*>& next_vector)
 		{
@@ -174,7 +174,7 @@ void player_t::send_commands()
 
 }
 
-player_t::player_t(loaded_project_t &_project)  : project(_project)
+player_t::player_t(loaded_project_t &_project) : project(_project)
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -190,11 +190,11 @@ player_t::player_t(loaded_project_t &_project)  : project(_project)
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 	std::cerr << "Player for " << _project.project.title() << std::endl;
 
-	_project.project.effects().push_back(new sentinel_effect);
+	_project.project.emplace<sentinel_effect>();
 
 
 	std::cerr << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
-	for(effect_t*& e : _project.project.effects())
+	for(effect_t*& e : _project.project.get_effects_noconst())
 	{
 		std::cerr << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
@@ -202,6 +202,13 @@ player_t::player_t(loaded_project_t &_project)  : project(_project)
 	}
 
 	ready_fx.reserve(_project.project.effects().size());
+
+	changed_ports.resize(_project.project.effects().size());
+
+	for(std::size_t i = 0; i < _project.project.effects().size(); ++i)
+	{
+		changed_ports[i].resize(_project.project.effects()[i]->get_in_ports().size());
+	}
 
 }
 
@@ -217,23 +224,40 @@ void player_t::play_until(float dest)
 			std::cerr << "active task!" << std::endl;
 			// TODO: simple reinsert??
 			task_base* top = pop_next_task();
-
+			effect_t* this_ef = reinterpret_cast<task_effect*>(top)->effect;
 
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
 			 pq.push(top);*/
 			const float cur_next_time = top->next_time();
+			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
 			top->proceed(pos); // will update the next-time event
 
-			handles.at(reinterpret_cast<task_effect*>(top)->effect) = add_task(top);
+			handles.at(this_ef) = add_task(top);
 
-			for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
+			/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
 			{
 				handle_type h = handles.at(dep);
 				(*h)->update_next_time(cur_next_time);
 				update(h);
-			}
+			}*/
 
+
+
+			// TODO: effect should give us this array...
+			for(const out_port_base* op  : this_ef->get_out_ports())
+			if(op->change_stamp <= pos)
+			{
+				for(in_port_base* target_ip : op->readers)
+				{
+					effect_t* target_ef = target_ip->e;
+					changed_ports[target_ef->id()][target_ip->id] = true;
+
+					handle_type h = handles.at(target_ef);
+					(*h)->update_next_time(cur_next_time);
+					update(h);
+				}
+			}
 
 #if 0
 			pq_entry top = std::move(pq.top());

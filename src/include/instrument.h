@@ -143,6 +143,7 @@ struct prioritized_command_base : public work_queue_t::task_base
 	bool cmp(const task_base& rhs) const {
 		return priority < dynamic_cast<const prioritized_command_base&>(rhs).priority;
 	}
+	work_queue_t::handle_type& get_handle() { return handle; }
 };
 
 class prioritized_command : public prioritized_command_base
@@ -160,6 +161,7 @@ public:
 	}
 
 	void proceed_base(float) { // TODO: call virtual from here?
+		std::cerr << "PROCEEDING: " << this << std::endl;
 		if(!changed)
 		 throw "proceeding with unchanged command...";
 		changed = false;
@@ -167,6 +169,7 @@ public:
 
 	bool set_changed() {
 		bool had_effect = (changed == false);
+		std::cerr << "SETCHANGED: " << this << std::endl;
 		changed = true;
 		return had_effect;
 	}
@@ -175,11 +178,14 @@ public:
 //! for single command stuff
 class prioritized_command_cmd : public prioritized_command
 {
+	work_queue_t* w;
 public:
 	command_base* cmd; // TODO: does command_base suffice?
-	prioritized_command_cmd(std::size_t priority, float next_time, lo_port_t* lo_port,
+	prioritized_command_cmd(work_queue_t* w,
+		std::size_t priority, float next_time, lo_port_t* lo_port,
 		command_base* cmd) :
 		prioritized_command(priority, next_time, lo_port),
+		w(w),
 		cmd(cmd)
 		{}
 
@@ -187,6 +193,10 @@ public:
 	{
 		proceed_base(time);
 		send_single_command(*lo_port, cmd->complete_buffer());
+
+		// TODO: not sure, but max sounds correct:
+		update_next_time(std::numeric_limits<float>::max());
+		w->update(handle);
 	}
 };
 
@@ -265,22 +275,21 @@ struct functor_init_ports
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
 template<class InstClass, class... PortTypes>
-struct in_port_with_command : node_t<InstClass>
+struct _in_port_with_command : node_t<InstClass>, non_copyable_t
 { // TODO: instrument.h -> ?
-	template<class Port>
-	using rtosc_in_port = type_of_rtosc_port<Port, InstClass>;
+
 	//using rtosc_in_ports = rtosc_in_port<PortTypes>;
 
 	using cmd_type = prioritized_command_cmd;
-	command<rtosc_in_port<PortTypes>...>* cmd_ptr;
+	command<PortTypes...>* cmd_ptr;
 	prioritized_command_cmd cmd;
 
 public:
 	template<class ...Args2>
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
+	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
 		node_t<InstClass>(ins, base, ext),
-		cmd_ptr(new command<rtosc_in_port<PortTypes>...>((base + ext).c_str(), std::forward<Args2>(args)...)),
-		cmd(1, 0.0f, &ins->lo_port, cmd_ptr)
+		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
+		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, &ins->lo_port, cmd_ptr)
 	{
 		/*cmd.cmd->template port_at<0>().set_trigger();
 		cmd.cmd->template port_at<0>().ins = ins;
@@ -295,8 +304,8 @@ public:
 
 	//! should only be called if all args are ports
 	//! otherwise, one has to initialize the fixed args on one's own
-	in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
-		in_port_with_command(ins, base, ext, rtosc_in_port<PortTypes>(*ins)...)
+	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
+		_in_port_with_command(ins, base, ext, port_ctor<PortTypes>(ins)...)
 	{
 	}
 
@@ -304,6 +313,15 @@ public:
 	auto port_at() -> decltype(cmd.cmd->port_at<I>()) {
 		return cmd.cmd->port_at<I>();
 	}*/
+};
+
+template<class InstClass, class... PortTypes>
+struct in_port_with_command : _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>
+{
+//	using base = _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>;
+//	using base::_in_port_with_command;
+	using _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>::
+		_in_port_with_command;
 };
 
 class instrument_t : public effect_t, public work_queue_t
@@ -315,6 +333,7 @@ protected:
 
 	std::vector<command_base*> commands; // TODO: unique?
 private:
+	const std::vector<bool>* cp;
 	pid_t make_fork();
 public:
 	using udp_port_t = int;
@@ -323,6 +342,12 @@ public:
 	void instantiate();
 
 	virtual ~instrument_t();
+
+	void pass_changed_ports(const std::vector<bool>& _cp)
+	{ // TODO: no vector bool -> stack of ints
+		cp = &_cp;
+	}
+
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
 
 	virtual command_base *make_close_command() const = 0;

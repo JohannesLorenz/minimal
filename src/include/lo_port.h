@@ -29,8 +29,10 @@ namespace mini {
 
 class lo_port_t : non_copyable_t, non_movable_t
 {
+	bool up = false;
 	lo_address dest;
 	void assert_dest_exists();
+	void _clean_up();
 public:
 	lo_port_t(const char* udp_port);
 	lo_port_t(std::size_t udp_port); // TODO: udp port is which type?
@@ -39,6 +41,8 @@ public:
 
 	void init(const char* udp_port);
 	void init(std::size_t udp_port);
+
+	void clean_up();
 
 	// TODO: does const make sense
 //	bool send_rtosc_msg(const char *path, const char *msg_args, ...) const;

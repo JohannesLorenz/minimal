@@ -181,7 +181,7 @@ class player_t : public work_queue_t // TODO: own header
 
 		bool cmp(const task_base& other) const {
 			// ugly cast, but probably not avoidable?
-			return effect->id() > dynamic_cast<const task_effect&>(other).effect->id();
+			return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
 		}
 	};
 
@@ -194,6 +194,8 @@ class player_t : public work_queue_t // TODO: own header
 	void update_effects();
 	void fill_commands();
 	void send_commands();
+
+	std::vector<std::vector<bool>> changed_ports;
 
 public:
 	player_t(loaded_project_t& _project);

@@ -79,9 +79,11 @@ protected:
 	virtual float _proceed(float time) = 0;
 public:
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
+	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
 
 	void add_in_port(in_port_base* ipb) {
-		std::cerr << "ADDING: " << ipb << ", STAMP: " << ipb->change_stamp << std::endl;
+		ipb->id = in_ports.size();
+		std::cerr << "ADDING: " << ipb << ", STAMP: " << ipb->change_stamp << ", id: " << ipb->id << std::endl;
 		in_ports.push_back(ipb);
 	}
 	void add_out_port(out_port_base* opb) {
@@ -90,6 +92,7 @@ public:
 
 	virtual void instantiate() = 0;
 	virtual void clean_up() = 0;
+	virtual void pass_changed_ports(const std::vector<bool>& ) {}
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
@@ -130,7 +133,7 @@ class sentinel_effect : public effect_t
 {
 public:
 	sentinel_effect() {
-		set_id(std::numeric_limits<std::size_t>::max());
+		//set_id(std::numeric_limits<std::size_t>::max());
 		set_next_time(std::numeric_limits<float>::max());
 	}
 	float _proceed(float ) { throw "impossible"; }

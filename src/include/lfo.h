@@ -43,6 +43,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	const float min, max, mm2, middle;
 	const float start, end, times, outside, step;
 	const float repeat;
+	const float premult;
 	//float time =
 
 	//using lfo_out = lfo_out<OutType>;
@@ -59,9 +60,9 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		}
 		else if(time < end)
 		{
-			freq_lfo_out<OutType>::set(middle + sinf(time-start) * mm2, time);
+			freq_lfo_out<OutType>::set(middle + cosf((time-start) * premult) * mm2, time);
 			// TODO: repeat etc.
-			std::cerr << "lfo value: " << middle + sinf(time-start) * mm2 << std::endl;
+			std::cerr << "lfo value: " << middle + cosf((time-start) * premult) * mm2 << std::endl;
 
 			return time + step;
 		}
@@ -85,7 +86,9 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		times(times),
 		outside(outside),
 		step(step),
-		repeat((end - start)/times) {
+		repeat((end - start)/times),
+		premult(2 * M_PI/(end - start))
+	{
 		set_next_time(start);
 	}
 };

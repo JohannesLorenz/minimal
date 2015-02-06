@@ -119,7 +119,28 @@ void instrument_t::clean_up()
 
 float instrument_t::_proceed(float time)
 {
-	return work_queue_t::run_tasks(time);
+	if(work_queue_t::has_active_tasks(time))
+	 throw "should not have active tasks yet";
+
+	// read all changed ports to put new commands on queue
+	for(std::size_t i = 0; i < cp->size(); ++i)
+	if((*cp)[i])
+	{
+		std::cerr << "in port: " << i << std::endl;
+		if(in_ports[i]->update())
+		{
+			in_ports[i]->on_recv(time);
+		}
+	}
+
+	// execute new commands
+	work_queue_t::run_tasks_keep(time);
+
+	// all ports are triggers, so sleep
+	return std::numeric_limits<float>::max();
+
+	//return time + 0.1f; // TODO??????????????????????????????
+//	return work_queue_t::run_tasks(time);
 /*	for(in_port_base* ipb : get_in_ports())
 	{
 		if(ipb==nullptr)
