@@ -68,6 +68,10 @@ int main()
 		c2._buffer.inspect();
 		c2.complete_buffer().inspect();
 #endif
+		command<const char*> str_cmd("/string", "hello world!");
+		str_cmd.buffer().inspect();
+		str_cmd.complete_buffer().inspect();
+
 	} catch (const char* s)
 	{
 		std::cerr << s << std::endl;

@@ -159,7 +159,7 @@ private:
 			{
 				// TODO: leave the rtosc...
 				//note_ons.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
-				using c_note_on = note_on<use_no_port, use_no_port, self_port_templ>;
+				//using c_note_on = note_on<use_no_port, use_no_port, self_port_templ>;
 
 				note_ons.emplace_back(ins, 0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
 

@@ -86,6 +86,10 @@ std::ostream& operator<<(std::ostream& stream,
 		const char* c = &*itr;
 		switch(*args)
 		{
+			case 's':
+				stream << "string: " << c << std::endl;
+				itr += strlen(c) + 1 + pad_next<4>(strlen(c) + 1);
+				break;
 			case 'i':
 				stream << "int: " << swap_endian(*(int32_t*)c);
 				itr += 4;

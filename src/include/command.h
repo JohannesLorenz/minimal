@@ -61,10 +61,11 @@ public:
 namespace detail
 {
 
+#if 0
 	template<class T>
 	constexpr std::size_t length_of() {
 //		return util::dont_instantiate_me_func<std::size_t>();
-		return pad_size<T>::value();
+		return pad_size<T>::value;
 	}
 //	template<>
 //	constexpr std::size_t length_of<int>() { return 4; }
@@ -86,11 +87,19 @@ namespace detail
 
 	template<>
 	constexpr std::size_t est_length_args<>() { return 0; }
-}
+#endif
 
-template<std::size_t PadSize>
-constexpr std::size_t pad(std::size_t pos) {
-	return pos + ((PadSize - pos % PadSize) % PadSize);
+	template<std::size_t I, class ...Args>
+	struct est_length_args
+	{
+		constexpr static std::size_t exec(const std::tuple<Args...>& t) {
+			return pad_size(std::get<I>(t)) + est_length_args<I-1, Args...>(); }
+	};
+
+	template<class ...Args>
+	struct est_length_args<0, Args...> {
+		constexpr static std::size_t exec(const std::tuple<Args...>& ) { return 0; }
+	};
 }
 
 namespace command_detail
@@ -118,10 +127,10 @@ namespace command_detail
 	};
 
 	template<bool SizeFix> // SizeFix = false
-	struct _fill_single
+	struct _fill_single // todo: rename: pad/resize
 	{
 		template<class T>
-		static void exec(std::vector<char>& )
+		static void exec(std::vector<char>&, const T& )
 		{
 			// general case: can not fill
 		}
@@ -131,11 +140,11 @@ namespace command_detail
 	struct _fill_single<true>
 	{
 		template<class T>
-		static void exec(std::vector<char>& s)
+		static void exec(std::vector<char>& s, const T& elem)
 		{
 			//std::cerr << "resizing: "<< s.size() << " -> "<< s.size() + pad_size<T>::value() <<std::endl;
-			s.resize(s.size() + pad_size<T>::value());
-			std::fill(s.end() - pad_size<T>::value(), s.end(), 0); // debug only
+			s.resize(s.size() + pad_size(elem));
+			std::fill(s.end() - pad_size(elem), s.end(), 0); // debug only
 		}
 	};
 
@@ -146,14 +155,14 @@ namespace command_detail
 		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
-			constexpr bool _is_const = is_const<tp_at>();
-			constexpr bool _size_fix = size_fix<tp_at>();
+			constexpr bool _is_const = is_const<tp_at>::value;
+			constexpr bool _size_fix = size_fix<tp_at>::value;
 
 			// case 1: it's const -> fill it in
 			_append_single<_is_const>::exec(s, std::get<I>(tp));
 			// case 2: not const, but fixed size -> buffer it
 			constexpr bool case_2 = (!_is_const) && _size_fix;
-			_fill_single<case_2>::template exec<tp_at>(s);
+			_fill_single<case_2>::template exec<tp_at>(s, std::get<I>(tp));
 			// continue if const or fix
 			_append<_size_fix || _is_const, N, I+1, Args2...>::exec(s, tp);
 		}
@@ -219,9 +228,9 @@ namespace command_detail
 	struct _complete_single<false, EndReached>
 	{
 		template<class T>
-		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& )
+		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& elem)
 		{
-			*itr += pad_size<T>::value();
+			*itr += pad_size(elem);
 			// do not complete
 		}
 	};
@@ -234,10 +243,10 @@ namespace command_detail
 		{
 			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
 			// TODO: non fix size
-			constexpr bool cond1 = !is_const<tp_at>() || All;
+			constexpr bool cond1 = !is_const<tp_at>::value || All;
 			_complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
 
-			constexpr bool next_all = All || !size_fix<tp_at>(); // first non fix marks
+			constexpr bool next_all = All || !size_fix<tp_at>::value; // first non fix marks
 			_complete<next_all, N, I+1, Args2...>::exec(v, itr, tp);
 
 		/*	// case 1: it's const -> fill it in
@@ -320,7 +329,7 @@ protected:
 	constexpr std::size_t est_length() const {
 		return pad<4>(path().length() + 1) // path + \0
 			+ pad<4>(sizeof...(Args) + 2)// ,<types>\0
-			+ detail::est_length_args<Args...>();
+			+ detail::est_length_args<sizeof...(Args), Args...>::exec(args);
 	}
 public:
 	template<class ...Args2>
@@ -334,7 +343,7 @@ public:
 	virtual ~_command();
 
 	std::string type_str() const { // TODO: static variant?
-		std::string res { ',' , sign<Args>()... };
+		std::string res { ',' , sign<Args>::value... };
 		return res; // TODO: in one line! constexpr?
 	}
 };
