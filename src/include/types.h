@@ -148,6 +148,9 @@ struct pad_size// : util::dont_instantiate_me<T>
 	}
 };*/
 
+/*
+	pad_size
+*/
 constexpr std::size_t c_strlen(const char* ptr) { return (*ptr) ? (c_strlen(ptr + 1) + 1) : 0; }
 
 template<std::size_t PadSize>
@@ -155,17 +158,17 @@ constexpr std::size_t pad(std::size_t pos) {
 	return pos + ((PadSize - pos % PadSize) % PadSize);
 }
 
+template<std::size_t S>
+using has_pad_size = std::integral_constant<std::size_t, S>;
+
 template<class T>
 struct _pad_size : _pad_size<type_of_variable<T>> {};
 
 template<>
-struct _pad_size<char*> : std::integral_constant<std::size_t, 4> {};
+struct _pad_size<int> : has_pad_size<4> {};
 
 template<>
-struct _pad_size<int> : std::integral_constant<std::size_t, 4> {};
-
-template<>
-struct _pad_size<float> : std::integral_constant<std::size_t, 4> {};
+struct _pad_size<float> : has_pad_size<4> {};
 
 constexpr std::size_t pad_size(const char* str) {
 	return pad<4>(c_strlen(str) + 1);
@@ -175,22 +178,6 @@ template<class T>
 constexpr std::size_t pad_size(const T& ) {
 	return _pad_size<T>::value;
 }
-
-//! inherits from base type of variable
-//! OOP can be really interesting sometimes...
-/*template<class T> // TODO: clean up structs where you can use funcs now
-struct pad_size<variable<T>> : public pad_size<T>
-{
-};*/
-
-template<class T, bool>
-struct _type_and_bool
-{
-	using type = T;
-};
-
-template<class T>
-using type_and_bool = _type_and_bool<T, _is_variable<T>()>;
 
 
 #if 0
@@ -204,9 +191,6 @@ template<class T>
 bool value(const T& elem) { return _value<type_and_bool<T>>(elem); }
 #endif
 
-
-
-
 /*
 
 template<class T, bool>
@@ -215,22 +199,9 @@ bool value(const variable<T>& v) { return v.get(); }
 template<class T>
 bool value(const T& elem) { return elem; }*/
 
-/*template<class T>
-struct detail_is_const
-{
-	constexpr static bool exec() { return !_is_variable<T>(); }
-};
-
-template<class T>
-struct detail_is_const<const T>
-{
-	constexpr static bool exec() { return true; }
-};
-
-template<class T>
-constexpr bool is_const() { return detail_is_const<T>::exec(); }
+/*
+	is_const
 */
-
 template<class T>
 struct is_const {
 	constexpr static bool value = !_is_variable<T>();
@@ -239,20 +210,9 @@ struct is_const {
 template<class T>
 struct is_const <const T> : std::true_type {};
 
-
 /*
-template<class T>
-struct is_const
-{
-	constexpr static bool value() { return true; }
-};
-
-template<class T>
-struct is_const<variable<T>>
-{
-	constexpr static bool value() { return false; }
-};*/
-
+	size_fix
+*/
 template<class T>
 struct size_fix;
 
@@ -280,32 +240,6 @@ struct size_fix<int> : std::true_type {};
 template<>
 struct size_fix<float> : std::true_type {};
 
-#if 0
-
-template<class T>
-constexpr bool _size_fix() { return false; } // TODO: don't instantiate me!
-
-template<>
-constexpr bool _size_fix<int>() { return true; }
-
-template<>
-constexpr bool _size_fix<float>() { return true; }
-
-
-template<class T>
-struct size_fix
-{
-	constexpr static bool value() { return _size_fix<T>(); }
-};
-
-template<class T>
-struct size_fix<variable<T>>
-{
-	constexpr static bool value() {
-		return _size_fix<typename variable<T>::type>(); }
-};
-#endif
-
 /*
 template<class T>
 struct get_type
@@ -319,31 +253,11 @@ struct get_type<variable<T>>
 	using type = typename variable<T>::type; // TODO: without struct?
 };*/
 
-//template<class T>
-//constexpr inline char sign() { return sign<typename T::type>(); }
-
+/*
+	sign
+*/
 template<char Sgn>
-struct has_sign {
-	static constexpr char value = Sgn;
-};
-
-/*template<class T>
-constexpr inline char _sign() {
-	static_assert(_is_variable<T>(), "T must be a variable or primitive.");
-	return sign<typename T::type>();
-}
-
-template<>
-constexpr inline char _sign<std::string>() { return 's'; }
-
-template<>
-constexpr inline char _sign<int>() { return 'i'; }
-
-template<>
-constexpr inline char _sign<float>() { return 'f'; }
-
-template<>
-constexpr inline char sign<float>() { return 'f'; }*/
+using has_sign = std::integral_constant<char, Sgn>;
 
 template<class T>
 struct sign : sign<typename T::type> {}; // TODO: notify that T must be a variable
@@ -360,6 +274,9 @@ struct sign<int> : has_sign<'i'> {};
 template<>
 struct sign<float> : has_sign<'f'> {};
 
+/*
+	to_osc_string
+*/
 inline std::vector<char> store_int32_t(const int32_t* i) {
 	constexpr int32_t ff = 0xff;
 	return {
@@ -468,38 +385,8 @@ public:
 };
 #endif
 
-
 using osc_int = int;
 using osc_float = float;
-
-
-namespace variable_detail
-{
-
-#if 0
-template<class T>
-bool update(T& ) {
-	return false;
-}
-
-template<class T>
-bool update(variable<T>& v) {
-	return v.update();
-}
-
-template<class T>
-float get_next_time(const T& ) {
-	return std::numeric_limits<float>::max();
-}
-
-template<class T>
-float get_next_time(const variable<T>& v) {
-	return v.get_next_time();
-}
-#endif
-
-}
-
 
 }
 
