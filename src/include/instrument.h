@@ -111,6 +111,11 @@ protected:
 		return new NodeT(ins, name(), ext);
 	}
 
+	/*template<class NodeT, char ...Lttrs>
+	NodeT* spawn() const {
+		return NodeT(ins, name(), std::string{Lttrs...});
+	}*/
+
 	template<class NodeT>
 	NodeT spawn(const std::string& ext) const {
 		return NodeT(ins, name(), ext);
@@ -120,9 +125,15 @@ protected:
 	NodeT spawn(const std::string& ext, std::size_t id) const {
 		return spawn<NodeT>(ext + std::to_string(id));
 	}
+
+	template<class NodeT, std::size_t Id>
+	NodeT spawn(const std::string& ext) const {
+		return spawn<NodeT>(ext + std::to_string(Id));
+	}
 public:
 	node_t(InstClass* ins, const std::string& base, const std::string& ext)
-		: named_t(base + ext), ins(ins) {}
+		// base is assumed to already end on '/'
+		: named_t(base + ext + "/"), ins(ins) {}
 
 
 
@@ -161,7 +172,7 @@ public:
 	}
 
 	void proceed_base(float) { // TODO: call virtual from here?
-		std::cerr << "PROCEEDING: " << this << std::endl;
+	//	std::cerr << "PROCEEDING: " << this << std::endl;
 		if(!changed)
 		 throw "proceeding with unchanged command...";
 		changed = false;
@@ -169,7 +180,7 @@ public:
 
 	bool set_changed() {
 		bool had_effect = (changed == false);
-		std::cerr << "SETCHANGED: " << this << std::endl;
+	//	std::cerr << "SETCHANGED: " << this << std::endl;
 		changed = true;
 		return had_effect;
 	}

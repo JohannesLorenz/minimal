@@ -51,26 +51,12 @@ void init(project_t& p)
 
 	using namespace daw;
 
-/*	notes_t maj(note_geom_t(0, 0)); // TODO: no arg
-	maj.note(note_geom_t(0, 0));
-	maj.note(note_geom_t(4, 1));
-	maj.note(note_geom_t(7, 2));
-
-	global_t& global = p.global();
-	track_t& t1 = global.track(geom_t(0)); // TODO: tempo, channel, instr
-	notes_t& notes = t1.notes(note_geom_t(0, 42)); // start from note "42"
-
-	// 4 major chords
-	notes.notes(note_geom_t(0, 0)) = maj;
-	notes.notes(note_geom_t(2, 1)) = maj;
-	notes.notes(note_geom_t(4, 2)) = maj;
-	notes.notes(note_geom_t(5, 3)) = maj;*/
-
 	notes_t maj(note_geom_t(0, 0));
 	maj.add_note(note_t(), note_geom_t(0, 0));
 	maj.add_note(note_t(), note_geom_t(0.33, 1));
 	maj.add_note(note_t(), note_geom_t(0.67, 2));
 
+	// 8 major chords
 	note_line_t& nl = p.emplace<note_line_t>();
 	nl.add_notes(maj, note_geom_t(0, 62));
 	nl.add_notes(maj, note_geom_t(1, 63));
@@ -99,17 +85,28 @@ void init(project_t& p)
 
 	lfo_t<int>& m_lfo = p.emplace<lfo_t<int>>(0.0, 64.0, 0.0, 8.);
 
+	lfo_t<int>& constant_0 = p.emplace<lfo_t<int>>(0.0, 0.0, std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 1.0f, 0.0f);
+	lfo_t<int>& constant_1 = p.emplace<lfo_t<int>>(0.0, 0.0, std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 1.0f, 1.0f);
+	lfo_t<int>& constant_m2 = p.emplace<lfo_t<int>>(0.0, 0.0, std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 1.0f, -2.0f);
+
 //	in_port<int> ip(sine_bass);
 //	ip.connect(m_lfo->out);
 
 	//zyn::p_envsustain<in_port_templ<int>>* envsustain = sine_bass.add0().global().amp_env().envsustain<in_port_templ<int>>(); // todo: need discretizer
 	auto* volume = sine_bass.volume<in_port_templ<int>>();
-	//auto* panning = sine_bass.part0().Ppanning<in_port_templ<int>>();
+	auto* panning = sine_bass.part0().Ppanning<in_port_templ<int>>();
+	auto* ins_fx_i = sine_bass.insefx<>().efftype<in_port_templ<int>>();
+		//sine_bass.part<0>().partefx<0>().efftype<in_port_templ<int>>();
+	auto* ins_fx_part = sine_bass.part<0>().partefx<0>().eff0_part_id<in_port_templ<int>>();
+
 
 	// effect connections
 	volume->cmd_ptr->port_at<0>() << m_lfo;
-	sine_bass.note_input() << nl;
+	panning->cmd_ptr->port_at<0>() << constant_0;
+	ins_fx_part->cmd_ptr->port_at<0>() << constant_m2; // -2 is global
+	ins_fx_i->cmd_ptr->port_at<0>() << constant_1;
 
+	sine_bass.note_input() << nl;
 
 //	t1.add_command(cmd);
 

@@ -36,7 +36,13 @@ struct lfo_con : ef_con_t<lfo_t<OutType>>, public port_chain<freq_lfo_out<OutTyp
 {
 };*/
 
-template<class OutType>
+enum class lfo_type
+{
+	cos,
+	constant
+};
+
+template<class OutType, lfo_type Lfo = lfo_type::cos>
 struct lfo_t : effect_t, freq_lfo_out<OutType>
 {
 	//using base = port_chain<lfo_out<OutType>>;
@@ -89,9 +95,17 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		repeat((end - start)/times),
 		premult(2 * M_PI/(end - start))
 	{
-		set_next_time(start);
+		set_next_time(0.0f); // must be set initially, even if 0.0f < start
 	}
 };
+
+// TODO: why freq?
+/*
+template<class OutType>
+struct lfo_t<OutType, lfo_type::constant> : effect_t, freq_lfo_out<OutType>
+{
+
+}*/
 
 }
 

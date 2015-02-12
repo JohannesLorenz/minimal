@@ -27,9 +27,9 @@
 namespace mini {
 
 zyn_tree_t::zyn_tree_t(const char *name) :
-	zyn::znode_t(this, "/", ""),
+	zyn::znode_t(this, "", ""),
 	instrument_t(name),
-	notes_t_port(this, "/", "/noteOn")
+	notes_t_port(this, "", "noteOn")
 {
 }
 

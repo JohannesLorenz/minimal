@@ -38,7 +38,7 @@ namespace zyn {
 using znode_t = node_t<zyn_tree_t>;
 
 template<class PortT>
-using p_envsustain = in_port_with_command<zyn_tree_t, PortT>;
+using port = in_port_with_command<zyn_tree_t, PortT>;
 
 class amp_env : znode_t
 {
@@ -50,8 +50,8 @@ public:
 		//return p_envsustain();
 	}*/
 	template<class Port>
-	zyn::p_envsustain<Port>* envsustain() const {
-		return spawn_new<zyn::p_envsustain<Port>>("Penvsustain");
+	zyn::port<Port>* envsustain() const {
+		return spawn_new<zyn::port<Port>>("Penvsustain");
 	}
 
 	/*template<class Port1>
@@ -65,8 +65,9 @@ class global : znode_t
 public:
 	using znode_t::znode_t;
 	zyn::amp_env amp_env() const {
-		return spawn<zyn::amp_env>("AmpEnvelope/");
+		return spawn<zyn::amp_env>("AmpEnvelope");
 	}
+
 };
 
 
@@ -82,10 +83,10 @@ public:
 	using znode_t::znode_t;
 	//! shortcut, since voice0 is popular
 	zyn::voice0 voice0() const {
-		return spawn<zyn::voice0>("voice0/");
+		return spawn<zyn::voice0>("voice0");
 	}
 	zyn::global global() const {
-		return spawn<zyn::global>("global/");
+		return spawn<zyn::global>("global");
 	}
 };
 
@@ -103,8 +104,105 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
+#ifdef NEW_PORT_TYPES
+template<char ...Chars>
+class cstr
+{
+};
+
+template<class Port, char ...Chars>
+class named_port : cstr<Chars...>
+{
+};
+
+template<int I>
+struct lookup_name;
+
+template<int I, class Search, class Content>
+struct lookup_name_dtl : util::dont_instantiate_me<Content>
+{
+};
+
+template<int I, class Search, class Port, char ...Chars>
+struct lookup_name_dtl<I, Search, std::pair<cstr<Chars...>, Port>>
+{
+	template<class Tpl>
+	static const char* exec() {
+		return lookup_name<I-1>::template exec<Tpl, Search>();
+	}
+};
+
+template<int I, class Search, char ...Chars>
+struct lookup_name_dtl<I, Search, std::pair<cstr<Chars...>, Search>>
+{
+	template<class >
+	static std::array<char, sizeof...(Chars)> exec() {
+		return { Chars... };
+	}
+};
+
+
+template<int I>
+struct lookup_name
+{
+	template<class Tpl, class Search>
+	static std::array<char, 0> exec()
+	{
+		return lookup_name_dtl<I, Search, typename std::tuple_element<I, Tpl>::type>::template exec<Tpl>();
+	}
+};
+
+template<>
+struct lookup_name<-1>
+{
+	template<class , class Search>
+	static const char* exec()
+	{
+		util::dont_instantiate_me_func<Search>();
+	}
+};
+
+namespace z
+{
+	template<class Parent>
+	struct next
+	{
+
+	};
+
+
+	template<class Parent>
+	struct insefx
+	{
+		using self = insefx<Parent>;
+		using next = next<self>;
+
+		using ports = std::tuple<std::pair<cstr<'n', 'e', 'x', 't'>, next>>;
+	};
+
+	template<class Self>
+	struct path_to_string
+	{
+		static std::string exec() { return "/"; }
+	};
+
+	template<class Parent, template<class > class Self>
+	struct path_to_string<Self<Parent>>
+	{
+		static std::string exec() {
+			// TODO: replace Self<Parent> by simply Self?
+			return lookup_name<std::tuple_size<typename Parent::ports>::value - 1>::template exec<typename Parent::ports, Self<Parent>>().data();
+		}
+	};
+
+}
+#endif
+
+
+
 class zyn_tree_t : public zyn::znode_t, public instrument_t
 {
+	// todo: only send some params on new note?
 public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
@@ -153,47 +251,16 @@ private:
 		{
 			note_ons.reserve(NOTES_MAX);
 			note_offs.reserve(NOTES_MAX);
-			// TODO: one for loop suffices
-			std::size_t idx = 0;
-			for(; idx < NOTES_MAX; ++idx)
+			for(std::size_t idx = 0; idx < NOTES_MAX; ++idx)
 			{
-				// TODO: leave the rtosc...
-				//note_ons.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
-				//using c_note_on = note_on<use_no_port, use_no_port, self_port_templ>;
-
 				note_ons.emplace_back(ins, 0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
-
-			//	c_note_on* cmd_ptr = new c_note_on(0, idx, self_port_templ<int, true>{});
-			//	note_ons.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
-			}
-			idx = 0;
-			for(; idx < NOTES_MAX; ++idx)
-			{
-				// TODO: leave the rtosc...
-
 				note_offs.emplace_back(ins, 0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
-
-				//note_offs.emplace_back(0 /*chan*/, idx/*offs*/, self_port_templ<int, true>{});
-
-			//	c_note_off* cmd_ptr = new c_note_off(0, idx, self_port_templ<int, true>{});
-			//	note_offs.emplace_back(1, 0.0f, &ins->lo_port, cmd_ptr);
 			}
 
 			set_trigger(); // TODO: here?
 		}
 
-		/*void proceed(float time) {
-			proceed_base(time);
-			send_all();
-		}*/
-
-		void on_recv(float pos) {
-			//update_next_time(time);
-			//ins->update(cmd->handle);
-			send_all(pos);
-		}
-
-		void send_all(float pos)
+		void on_recv(float pos)
 		{
 			std::cerr << "SENDING ALL..." << std::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
@@ -205,9 +272,6 @@ private:
 				std::pair<int, int> p2 = notes_in::data->lines[p.first][p.second];				
 				if(p2.first < 0)
 				{
-				#if 0
-					send_single_command(*lo_port, note_offs[p.first].buffer());
-				#endif
 				// TODO!!
 					// note_offs[p.first].on_recv();
 
@@ -218,7 +282,6 @@ private:
 						note_offs[p.first].cmd.update_next_time(pos); // TODO: call on recv
 						ins->update(note_offs[p.first].cmd.handle);
 					}
-					std::cerr << "SEND OFF" << std::endl;
 				}
 				else
 				{
@@ -226,9 +289,7 @@ private:
 					// self_port_t must be completed manually:
 					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
 					note_on_cmd.cmd_ptr->command::update();
-				#if 0
-					send_single_command(*lo_port, note_on_cmd.complete_buffer());
-				#endif
+
 					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_recv??
 					if(note_on_cmd.cmd.set_changed())
 					{
@@ -236,7 +297,6 @@ private:
 						ins->update(note_on_cmd.cmd.handle);
 					}
 
-					std::cerr << "SEND ON" << std::endl;
 					// TODO!!
 					// note_on_cmd.on_recv();
 				}
@@ -257,14 +317,31 @@ public:
 	 */
 
 	zyn::adpars add0() const {
-		return spawn<zyn::adpars>("part0/kit0/adpars/");
+		return spawn<zyn::adpars>("part0/kit0/adpars");
 	}
 
 	notes_t_port_t<zyn_tree_t>& note_input() {
 		return notes_t_port;
 	}
 
-	class part : zyn::znode_t
+
+	struct fx_t : zyn::znode_t
+	{
+		using zyn::znode_t::znode_t;
+		template<class Port>
+		zyn::port<Port>* efftype() const { // TODO: panning must be int...
+			return spawn_new<zyn::port<Port>>("efftype");
+		}
+
+		// TODO: template is useless
+		template<class Port>
+		zyn::port<Port>* eff0_part_id() const { // TODO: panning must be int...
+			return new zyn::port<Port>(ins, "/", "Pinsparts0");
+			//return spawn_new<zyn::port<Port>>("efftype");
+		}
+	};
+
+	class part_t : zyn::znode_t
 	{
 	public:
 		using zyn::znode_t::znode_t;
@@ -272,20 +349,55 @@ public:
 		//	return spawn<zyn::amp_env>("AmpEnvelope/");
 		//}
 		template<class Port>
-		zyn::p_envsustain<Port>* Ppanning() const { // TODO: panning must be int...
-			return spawn_new<in_port_with_command<zyn_tree_t, Port>>("Ppanning");
+		zyn::port<Port>* Ppanning() const { // TODO: panning must be int...
+			return spawn_new<zyn::port<Port>>("Ppanning");
 		}
+
+		template<std::size_t Id = 0>
+		fx_t partefx() const { // TODO: panning must be int...
+			return spawn<fx_t, Id>("partefx");
+		}
+
+	//	using T = fx_t (zyn_tree_t::*)(const std::string& ext) const;
+	//	const T partefx2 = &zyn_tree_t::spawn<fx_t, 0>;
+
+
+		//using partefx2 = zyn_tree_t::spawn<fx_t, 0>; // TODO: instead, return struct which has operator()?
 	};
 
-	part part0() const { return spawn<part>("part0/"); } // TODO: large tuple for these
+	//void f(){
 
+	/*	(void)ptr;
+		//const T* const insefx2 = spawn<fx_t, 0>;
+	}*/
+	template<std::size_t Id = 0>
+	fx_t insefx() const { return spawn<fx_t, Id>("insefx"); }
+
+
+	template<std::size_t Id>
+	part_t part() const { return spawn<part_t, Id>("part"); } // TODO: large tuple for these
+	part_t part0() const { return part<0>(); }
+
+
+/*	// TODO???
+	using volume_ptr_t = zyn::port<int>*(*)();
+	//spawn_new<zyn::port<Port>>;
+	volume_ptr_t volume = &spawn_new<zyn::port<int>>;
+*/
 	template<class Port>
-	zyn::p_envsustain<Port>* volume() const {
-		return spawn_new<in_port_with_command<zyn_tree_t, Port>>("volume");
+	zyn::port<Port>* volume() const {
+		return spawn_new<zyn::port<Port>>("volume");
 	}
+
+#ifdef NEW_PORT_TYPES
+	using insefx = z::insefx<zyn_tree_t>; // todo: automatic, via inheriting?
+	std::tuple<std::pair<cstr<'i', 'n', 's', 'e', 'f', 'x'>, insefx>> ports;
+#endif
+
+	// /insefx0/efftype:b , :i
 };
 
-class zynaddsubfx_t : public zyn_tree_t//, protected work_queue_t
+class zynaddsubfx_t : public zyn_tree_t
 {
 	std::string make_start_command() const;
 	instrument_t::udp_port_t get_port(pid_t pid, int) const;

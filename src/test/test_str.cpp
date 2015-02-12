@@ -72,6 +72,7 @@ int main()
 		str_cmd.buffer().inspect();
 		str_cmd.complete_buffer().inspect();
 
+
 	} catch (const char* s)
 	{
 		std::cerr << s << std::endl;
