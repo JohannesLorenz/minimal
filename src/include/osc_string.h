@@ -40,12 +40,17 @@ public:
 	const char* raw() const { return _data.data(); }
 	std::size_t size() const { return _data.size(); }
 
-	std::vector<char>::iterator get_itr_first_arg() {
+	std::vector<char>::iterator get_itr_type_str() {
 		std::vector<char>::iterator itr = _data.begin() + strlen(_data.data());
 		++itr;
 		itr += pad_next<4>(std::distance(_data.begin(), itr));
 		if(*(itr++)!=',')
 		 throw "rtosc string invalid: type string does not start with `,'";
+		return itr;
+	}
+
+	std::vector<char>::iterator get_itr_first_arg() {
+		std::vector<char>::iterator itr = get_itr_type_str();
 		itr += strlen(&*itr);
 		++itr;
 		itr += pad_next<4>(std::distance(_data.begin(), itr));

@@ -106,6 +106,9 @@ void init(project_t& p)
 	ins_fx_part->cmd_ptr->port_at<0>() << constant_m2; // -2 is global
 	ins_fx_i->cmd_ptr->port_at<0>() << constant_1;
 
+
+
+
 	sine_bass.note_input() << nl;
 
 //	t1.add_command(cmd);

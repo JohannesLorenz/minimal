@@ -161,6 +161,7 @@ constexpr std::size_t pad(std::size_t pos) {
 template<std::size_t S>
 using has_pad_size = std::integral_constant<std::size_t, S>;
 
+//! TODO: assert if T is not a variable
 template<class T>
 struct _pad_size : _pad_size<type_of_variable<T>> {};
 
@@ -169,6 +170,9 @@ struct _pad_size<int> : has_pad_size<4> {};
 
 template<>
 struct _pad_size<float> : has_pad_size<4> {};
+
+template<>
+struct _pad_size<bool> : has_pad_size<0> {};
 
 constexpr std::size_t pad_size(const char* str) {
 	return pad<4>(c_strlen(str) + 1);
@@ -204,7 +208,9 @@ bool value(const T& elem) { return elem; }*/
 */
 template<class T>
 struct is_const {
-	constexpr static bool value = !_is_variable<T>();
+	constexpr static bool value = (!_is_variable<T>())
+		|| std::is_same<type_of_variable<T>, bool>();
+		// bool is both const in arg and data
 };
 
 template<class T>
@@ -240,6 +246,9 @@ struct size_fix<int> : std::true_type {};
 template<>
 struct size_fix<float> : std::true_type {};
 
+template<>
+struct size_fix<bool> : std::true_type {};
+
 /*
 template<class T>
 struct get_type
@@ -252,6 +261,29 @@ struct get_type<variable<T>>
 {
 	using type = typename variable<T>::type; // TODO: without struct?
 };*/
+
+/*
+	get_value
+*/
+
+template<class T, bool b> // true
+struct _get_value
+{
+	static const typename T::type& exec(const T& elem) {
+		return elem.get();
+	}
+};
+
+template<class T>
+struct _get_value<T, false>
+{
+	static const T& exec(const T& elem) {
+		return elem;
+	}
+};
+
+template<class T>
+using get_value = _get_value<T, _is_variable<T>()>;
 
 /*
 	sign
@@ -274,6 +306,37 @@ struct sign<int> : has_sign<'i'> {};
 template<>
 struct sign<float> : has_sign<'f'> {};
 
+template<class T>
+struct _has_fixed_sign : std::true_type {};
+
+template<>
+struct _has_fixed_sign<bool> : std::false_type {};
+
+template<class T>
+constexpr bool has_fixed_sign() { return _has_fixed_sign<type_of_variable<T>>::value; }
+
+// sign functions which have has_fixed_sign::value = false
+inline char _sign_of(bool value) {
+	return value ? 'T' : 'F';
+}
+
+template<class T>
+inline char sign_of(const T& value) {
+	return _sign_of(get_value<T>::exec(value));
+}
+
+/*template<class T>
+struct extended_sign {
+	const char* value = &sign<T>::value;
+};
+
+template<>
+struct extended_sign<bool> {
+	const char* value = "T:F";
+};*/
+
+
+
 /*
 	to_osc_string
 */
@@ -286,35 +349,32 @@ inline std::vector<char> store_int32_t(const int32_t* i) {
 		static_cast<char>((*i) & ff) };
 }
 
-template<class T, bool b> // true
-struct _get_value
-{
-	static const typename T::type& exec(const T& elem) {
-		return elem.get();
-	}
-};
-
 template<class T>
-struct _get_value<T, false>
-{
-	static const T& exec(const T& elem) {
-		return elem;
-	}
-};
-
-template<class T>
-using get_value = _get_value<T, _is_variable<T>()>;
-
-
-template<class T>
-std::vector<char> to_osc_string(const T& elem) {
+std::vector<char> to_osc_string_4_byte(const T& elem) {
 	return store_int32_t((int32_t*)(&get_value<T>::exec(elem)));
+}
+
+inline std::vector<char> to_osc_string(const int& i) {
+	return to_osc_string_4_byte(i);
+}
+
+inline std::vector<char> to_osc_string(const float& f) {
+	return to_osc_string_4_byte(f);
+}
+
+inline std::vector<char> to_osc_string(const bool& ) {
+	return {};
 }
 
 inline std::vector<char> to_osc_string(const char* const& elem) {
 	std::vector<char> res(pad_size(elem), 0);
 	std::copy(elem, elem + strlen(elem) + 1, res.begin());
 	return res;
+}
+
+template<class T>
+std::vector<char> to_osc_string(const T& elem) {
+	return to_osc_string(get_value<T>::exec(elem));
 }
 
 /*
@@ -385,7 +445,7 @@ public:
 };
 #endif
 
-using osc_int = int;
+using osc_int = int; // TODO: int32?
 using osc_float = float;
 
 }

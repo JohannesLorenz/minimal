@@ -77,6 +77,18 @@ public:
 	using znode_t::znode_t;
 };
 
+class padpars : znode_t
+{
+public:
+	using znode_t::znode_t;
+/*	zyn::voice0 voice0() const {
+		return spawn<zyn::voice0>("voice0");
+	}
+	zyn::global global() const {
+		return spawn<zyn::global>("global");
+	}*/ // TODO
+};
+
 class adpars : znode_t
 {
 public:
@@ -318,6 +330,10 @@ public:
 
 	zyn::adpars add0() const {
 		return spawn<zyn::adpars>("part0/kit0/adpars");
+	}
+
+	zyn::padpars pad0() const {
+		return spawn<zyn::padpars>("part0/kit0/padpars");
 	}
 
 	notes_t_port_t<zyn_tree_t>& note_input() {

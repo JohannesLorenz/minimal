@@ -72,6 +72,18 @@ int main()
 		str_cmd.buffer().inspect();
 		str_cmd.complete_buffer().inspect();
 
+{
+		command<osc_float, bool, bool, self_port_templ<bool>, osc_int> has_bool("/bool", 42.0, false, true, self_port_templ<bool>{}, 42);
+		//inspect_rtosc_string(fl.buffer);
+
+		has_bool.buffer().inspect();
+
+		has_bool.port_at<3>().set(true);
+		has_bool.command::update();
+
+		has_bool.complete_buffer().inspect();
+}
+
 
 	} catch (const char* s)
 	{

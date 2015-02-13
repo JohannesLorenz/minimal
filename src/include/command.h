@@ -42,7 +42,7 @@ public:
 	const std::string& path() const { return _path; }
 	command_base(const char* _path) :
 		_path(_path) {}
-	virtual std::string type_str() const = 0;
+//	virtual std::string type_str() const = 0;
 //	virtual bool update() = 0;
 	virtual const osc_string& complete_buffer() const = 0;
 //	virtual float get_next_time() const = 0;
@@ -56,6 +56,9 @@ public:
 	virtual bool operator==(const command_base& other) const = 0;
 	virtual bool operator<(const command_base& other) const = 0;
 };
+
+template<std::size_t I, class ...Args2>
+using type_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
 
 
 namespace detail
@@ -104,8 +107,9 @@ namespace detail
 
 namespace command_detail
 {
+	//! pushes back a given element to the vector if Printable is true
 	template<bool Printable> // Printable = false
-	struct _append_single
+	struct push_back_single
 	{
 		template<class T>
 		static void exec(std::vector<char>& , const T& )
@@ -115,7 +119,7 @@ namespace command_detail
 	};
 
 	template<>
-	struct _append_single<true>
+	struct push_back_single<true>
 	{
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
@@ -127,7 +131,7 @@ namespace command_detail
 	};
 
 	template<bool SizeFix> // SizeFix = false
-	struct _fill_single // todo: rename: pad/resize
+	struct pad_single // todo: rename: pad/resize
 	{
 		template<class T>
 		static void exec(std::vector<char>&, const T& )
@@ -137,7 +141,7 @@ namespace command_detail
 	};
 
 	template<>
-	struct _fill_single<true>
+	struct pad_single<true>
 	{
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
@@ -148,28 +152,29 @@ namespace command_detail
 		}
 	};
 
-
+	//! prefills a vector with a tuple as far as possible,
+	//! using push back or pad instructions
 	template<bool Ok, std::size_t N, std::size_t I, class ...Args2>
-	struct _append
+	struct prefill
 	{
 		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
 		{
-			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+			using tp_at = type_at<I, Args2...>;
 			constexpr bool _is_const = is_const<tp_at>::value;
 			constexpr bool _size_fix = size_fix<tp_at>::value;
 
 			// case 1: it's const -> fill it in
-			_append_single<_is_const>::exec(s, std::get<I>(tp));
+			push_back_single<_is_const>::exec(s, std::get<I>(tp));
 			// case 2: not const, but fixed size -> buffer it
 			constexpr bool case_2 = (!_is_const) && _size_fix;
-			_fill_single<case_2>::template exec<tp_at>(s, std::get<I>(tp));
+			pad_single<case_2>::template exec<tp_at>(s, std::get<I>(tp));
 			// continue if const or fix
-			_append<_size_fix || _is_const, N, I+1, Args2...>::exec(s, tp);
+			prefill<_size_fix || _is_const, N, I+1, Args2...>::exec(s, tp);
 		}
 	};
 
 	template<std::size_t N, std::size_t I, class ...Args2>
-	struct _append<false, N, I, Args2...>
+	struct prefill<false, N, I, Args2...>
 	{
 		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
 		{
@@ -178,7 +183,7 @@ namespace command_detail
 	};
 
 	template<bool Ok, std::size_t N, class ...Args2>
-	struct _append<Ok, N, N, Args2...>
+	struct prefill<Ok, N, N, Args2...>
 	{
 		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
 		{
@@ -189,9 +194,9 @@ namespace command_detail
 
 	// TODO: generalize all this: template<class ...Args, bool Active> action { exec(); }... then inherit
 
-
-	template<bool DoComplete, bool EndReached> // DoComplete = true, EndReached = true
-	struct _complete_single
+	//! single version of complete for if resize is needed
+	template<bool DoComplete, bool NeedResize> // DoComplete = true, NeedResize = true
+	struct complete_single
 	{
 		template<class T>
 		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
@@ -200,21 +205,23 @@ namespace command_detail
 			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
 			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?*/
 
-			_append_single<true>::exec(v, elem);
+			push_back_single<true>::exec(v, elem);
 			*itr = v.end(); // obviously...
 
 		//	v.resize();
 		}
 	};
 
+	//! single version of complete for if still in reserved area
 	template<>
-	struct _complete_single<true, false> // DoComplete = true, EndReached = false
+	struct complete_single<true, false> // DoComplete = true, NeedResize = false
 	{
 		template<class T>
 		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& elem)
 		{
-		//	std::cerr << " app single" << std::endl;
 			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
+
+		//	std::cerr << "complete_single of "<< get_value<T>::exec(elem) << ": " << osc_str.size() << " bytes: " << std::endl;
 			// note the difference: no inserter here
 		//	std::cerr << "test before: " << osc_string(v) << std::endl;
 			std::copy(osc_str.begin(), osc_str.end(), *itr); // TODO: move?
@@ -224,8 +231,8 @@ namespace command_detail
 		}
 	};
 
-	template<bool EndReached> // DoComplete = false => do nothing
-	struct _complete_single<false, EndReached>
+	template<bool NeedResize> // DoComplete = false => do nothing
+	struct complete_single<false, NeedResize>
 	{
 		template<class T>
 		static void exec(std::vector<char>& , std::vector<char>::iterator* itr, const T& elem)
@@ -235,31 +242,24 @@ namespace command_detail
 		}
 	};
 
-
+	//! completes a pre-filled vector with a tuple
 	template<bool All, std::size_t N, std::size_t I, class ...Args2> // All = false
-	struct _complete
+	struct complete
 	{
 		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const std::tuple<Args2...>& tp)
 		{
-			using tp_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
+			using tp_at = type_at<I, Args2...>;
 			// TODO: non fix size
 			constexpr bool cond1 = !is_const<tp_at>::value || All;
-			_complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
+			complete_single<cond1, All>::exec(v, itr, std::get<I>(tp));
 
 			constexpr bool next_all = All || !size_fix<tp_at>::value; // first non fix marks
-			_complete<next_all, N, I+1, Args2...>::exec(v, itr, tp);
-
-		/*	// case 1: it's const -> fill it in
-			_append_single<tp_at::is_const()>::exec(s, std::get<I>(tp));
-			// case 2: not const, but fixed size -> buffer it
-			_fill_single<tp_at::size_fix()>::template exec<tp_at>(s);
-			// continue if const or fix
-			_append<tp_at::size_fix() || tp_at::is_const(), N, I+1, Args2...>::exec(s, tp);*/
+			complete<next_all, N, I+1, Args2...>::exec(v, itr, tp);
 		}
 	};
 
 	template<bool All, std::size_t N, class ...Args2> // All = false
-	struct _complete<All, N, N, Args2...>
+	struct complete<All, N, N, Args2...>
 	{
 		static void exec(std::vector<char>& , std::vector<char>::iterator* , const std::tuple<Args2...>& )
 		{
@@ -267,54 +267,92 @@ namespace command_detail
 		}
 	};
 
-#if 0
-	template<std::size_t N, std::size_t I>
-	struct _update
+
+
+	template<bool FixedSign> // = true
+	struct fill_enhanced_type_str_single
 	{
-		template<class ...Args2>
-		static bool exec(std::tuple<Args2...>& tpl)
+		template<std::size_t I, class ...Args2>
+		static void exec(std::string& s, const std::tuple<Args2...>& )
 		{
-			bool this_up = variable_detail::update(std::get<I>(tpl));
-			bool last_up = _update<N, I+1>::template exec<Args2...>(tpl);
-			return this_up || last_up;
+			s.push_back(sign<typename std::tuple_element<I, std::tuple<Args2...>>::type>::value);
 		}
 	};
 
-	template<std::size_t N>
-	struct _update<N, N>
+	template<>
+	struct fill_enhanced_type_str_single<false>
+	{
+		template<std::size_t I, class ...Args2>
+		static void exec(std::string& s, const std::tuple<Args2...>& tp)
+		{
+			s.push_back(sign_of(std::get<I>(tp)));
+		}
+	};
+
+
+	template<std::size_t N, std::size_t I = 0>
+	struct fill_enhanced_type_str
 	{
 		template<class ...Args2>
-		static bool exec(const std::tuple<Args2...>& )
+		static void exec(std::string& s, const std::tuple<Args2...>& tp)
 		{
-			return false; // no value updated at start
+			using tp_at = type_at<I, Args2...>;
+			constexpr bool fixed_sign = has_fixed_sign<tp_at>();
+			fill_enhanced_type_str_single<fixed_sign>::template exec<I>(s, tp);
+			fill_enhanced_type_str<N, I+1>::exec(s, tp);
+		}
+	};
+
+	template<std::size_t N> // All = false
+	struct fill_enhanced_type_str<N, N>
+	{
+		template<class ...Args2>
+		static void exec(std::string& , const std::tuple<Args2...>& )
+		{
 			// end reached
 		}
 	};
 
-	template<std::size_t N, std::size_t I>
-	struct _next_time
+
+	template<bool FixedSign> // = true
+	struct update_enhanced_type_str_single
+	{
+		template<std::size_t I, class ...Args2>
+		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
+		{
+		}
+	};
+
+	template<>
+	struct update_enhanced_type_str_single<false>
+	{
+		template<std::size_t I, class ...Args2>
+		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp)
+		{
+			// TODO: is going backward cache efficient?
+			*(itr + I) = sign_of(std::get<I>(tp));
+		}
+	};
+
+
+	template<std::size_t N, std::size_t I = 0>
+	struct update_enhanced_type_str
 	{
 		template<class ...Args2>
-		static float exec(const std::tuple<Args2...>& tpl)
-		{
-			return std::min(
-					variable_detail::get_next_time(std::get<I>(tpl)),
-					_next_time<N, I+1>::template exec<Args2...>(tpl)
-				);
+		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp) {
+			using tp_at = type_at<I, Args2...>;
+			update_enhanced_type_str_single<has_fixed_sign<tp_at>()>::template exec<I>(itr, tp);
+			update_enhanced_type_str<N, I+1>::exec(itr, tp);
 		}
 	};
 
 	template<std::size_t N>
-	struct _next_time<N, N>
+	struct update_enhanced_type_str<N, N>
 	{
 		template<class ...Args2>
-		static float exec(const std::tuple<Args2...>& )
-		{
-			return std::numeric_limits<float>::max();
-			// end reached
-		}
+		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& ) {}
 	};
-#endif
+
 }
 
 // TODO: unused class
@@ -342,10 +380,10 @@ public:
 
 	virtual ~_command();
 
-	std::string type_str() const { // TODO: static variant?
+/*	std::string type_str() const { // TODO: static variant?
 		std::string res { ',' , sign<Args>::value... };
 		return res; // TODO: in one line! constexpr?
-	}
+	}*/
 };
 
 template<class ...Args>
@@ -421,12 +459,13 @@ private:
 		do {
 			res.push_back('\0');
 		} while(res.size() % 4);
-		std::string t_s = base_t::type_str();
+		std::string t_s(","); //= base_t::type_str();
+		command_detail::fill_enhanced_type_str<sizeof...(Args)>::exec(t_s, base_t::args);
 		std::copy(t_s.begin(), t_s.end(), std::back_inserter(res));
 		do {
 			res.push_back('\0');
 		} while(res.size() % 4);
-		command_detail::_append<true, sizeof...(Args), 0, Args...>::exec(res, base_t::args);
+		command_detail::prefill<true, sizeof...(Args), 0, Args...>::exec(res, base_t::args); // TODO: default args
 		return res;
 	}
 
@@ -455,8 +494,11 @@ public:
 #endif
 	const osc_string& complete_buffer() const
 	{
-		auto itr = _buffer.get_itr_first_arg();
-		command_detail::_complete<false, sizeof...(Args), 0, Args...>::exec(_buffer.data(), &itr, base_t::args);
+		auto itr = _buffer.get_itr_type_str();
+		command_detail::update_enhanced_type_str<sizeof...(Args)>::exec(itr, base_t::args);
+
+		itr = _buffer.get_itr_first_arg(); // TODO: reuse old itr
+		command_detail::complete<false, sizeof...(Args), 0, Args...>::exec(_buffer.data(), &itr, base_t::args);
 		return buffer();
 	}
 	const osc_string& buffer() const { return _buffer; }

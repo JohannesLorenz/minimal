@@ -43,6 +43,8 @@ T swap_endian(T u)
 
 namespace mini {
 
+//#define DUMP_RAW
+
 std::ostream& operator<<(std::ostream& stream,
 	const osc_string& r_str)
 {
@@ -50,15 +52,18 @@ std::ostream& operator<<(std::ostream& stream,
 
 #ifdef DUMP_RAW
 	{
+	std::size_t count = 0;
 	bool first_word = true;
 	stream << "RAW OSC string:" << std::endl;
 	for(const char& x : str)
 	{
 		stream << +x;
 		first_word = first_word && (bool)x;
-		if(first_word && isprint(x))
+		if(/*first_word &&*/ isprint(x))
 		 stream << " ('" << x << "')";
 		stream << std::endl;
+		if(!(++count % 4))
+		 stream << "--" << std::endl;
 	}
 	}
 #endif
@@ -97,6 +102,12 @@ std::ostream& operator<<(std::ostream& stream,
 			case 'f':
 				stream << "float: " << swap_endian(*(float*)c);
 				itr += 4;
+				break;
+			case 'T':
+				stream << "bool: true";
+				break;
+			case 'F':
+				stream << "bool: false";
 				break;
 			default:
 				stream << "(unknown type: " << *args << ")";
