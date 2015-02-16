@@ -41,7 +41,6 @@ void init(project_t& p)
 //	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
 
 
-
 /*	// tracks
 	track_t& track1 = p.add_track(sine_bass);
 	//t.add_timeline(~~)
@@ -67,22 +66,6 @@ void init(project_t& p)
 	nl.add_notes(maj, note_geom_t(6, 68));
 	nl.add_notes(maj, note_geom_t(7, 69));
 
-#if 0
-	track_t t1/*(sine_bass)*/;
-	// 4 major chords
-	t1.add_notes(maj, note_geom_t(0, 62));
-	t1.add_notes(maj, note_geom_t(1, 63));
-	t1.add_notes(maj, note_geom_t(2, 64));
-	t1.add_notes(maj, note_geom_t(3, 65));
-#endif
-
-/*	lfo_t* m_lfo = new lfo_t;
-	p.effects().push_back(m_lfo);
-
-	command<oint<out_port<float>>> cmd("/part0/kit0/adpars/global/AmpEnvelope/Penvsustain", m_lfo->out);
-//	t1.add_command(cmd);
-*/
-
 	lfo_t<int>& m_lfo = p.emplace<lfo_t<int>>(0.0, 64.0, 0.0, 8.);
 
 	lfo_t<int>& constant_0 = p.emplace<lfo_t<int>>(0.0, 0.0, std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), 1.0f, 0.0f);
@@ -99,25 +82,13 @@ void init(project_t& p)
 		//sine_bass.part<0>().partefx<0>().efftype<in_port_templ<int>>();
 	auto* ins_fx_part = sine_bass.part<0>().partefx<0>().eff0_part_id<in_port_templ<int>>();
 
-
 	// effect connections
 	volume->cmd_ptr->port_at<0>() << m_lfo;
 	panning->cmd_ptr->port_at<0>() << constant_0;
 	ins_fx_part->cmd_ptr->port_at<0>() << constant_m2; // -2 is global
 	ins_fx_i->cmd_ptr->port_at<0>() << constant_1;
 
-
-
-
 	sine_bass.note_input() << nl;
-
-//	t1.add_command(cmd);
-
-
-
-//	global_t& global = p.global();
-//	global.add_track(t1);
-
 
 	// PEnable
 	// "part0/kit0/adpars/voice0/AmpEnvelope/Penvsustain:i"

@@ -87,6 +87,7 @@ public:
 	zyn::global global() const {
 		return spawn<zyn::global>("global");
 	}*/ // TODO
+	padpars() {}
 };
 
 class adpars : znode_t
