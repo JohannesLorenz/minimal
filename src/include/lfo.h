@@ -99,13 +99,25 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	}
 };
 
-// TODO: why freq?
-/*
-template<class OutType>
-struct lfo_t<OutType, lfo_type::constant> : effect_t, freq_lfo_out<OutType>
+template<class OutType, OutType Value>
+struct constant : effect_t, freq_lfo_out<OutType>
 {
+	constant() : // TODO: lfo base class?
+		freq_lfo_out<OutType>((effect_t&)*this)
+	{
+		freq_lfo_out<OutType>::set(Value, 0.0f);
+		set_next_time(0.0f);
+	}
 
-}*/
+	void instantiate() {}
+	void clean_up() {}
+
+	// this will be only called on startup
+	float _proceed(float ) {
+		//freq_lfo_out<OutType>::set(Value, time);
+		return std::numeric_limits<float>::max();
+	}
+};
 
 }
 

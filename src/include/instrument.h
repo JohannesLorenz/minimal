@@ -36,6 +36,7 @@
 #include "effect.h"
 #include "work_queue.h"
 #include "lo_port.h"
+#include "initializer_list"
 
 
 namespace mini
@@ -98,18 +99,43 @@ public:
 };
 #endif
 
+class node_t_base : public named_t
+{
+protected:
+	std::map<std::string, node_t_base*> used_ch;
+	using named_t::named_t;
+
+public:
+	void print_all_used(std::ostream& os = std::cerr) const
+	{
+		os << name() << std::endl;
+		for(const auto& pr : used_ch) {
+			pr.second->print_all_used(os);
+		}
+	}
+};
+
 template<class InstClass>
-class node_t : public named_t
+class node_t : public node_t_base
 {
 public: // TODO
 	InstClass* ins;
 // the inheriting class must define the sub-nodes
+
+	//! if no node with ext exists, adds it. always returns the ref
+	template<class NodeT> NodeT& add_if_new(const std::string& ext)
+	{
+		return static_cast<NodeT&>(
+			*used_ch.emplace(ext, new NodeT(ins, name(), ext)).
+			first->second);
+	}
+
 protected:
 
-	template<class NodeT>
-	NodeT* spawn_new(const std::string& ext) const {
+	/*template<class NodeT>
+	NodeT* spawn_new(const std::string& ext) {
 		return new NodeT(ins, name(), ext);
-	}
+	}*/
 
 	/*template<class NodeT, char ...Lttrs>
 	NodeT* spawn() const {
@@ -117,23 +143,24 @@ protected:
 	}*/
 
 	template<class NodeT>
-	NodeT spawn(const std::string& ext) const {
-		return NodeT(ins, name(), ext);
+	NodeT& spawn(const std::string& ext) {
+		std::cerr << "ADDING? " << ext << (used_ch.find(ext) == used_ch.end()) << std::endl;
+		return add_if_new<NodeT>(ext);
 	}
 
 	template<class NodeT>
-	NodeT spawn(const std::string& ext, std::size_t id) const {
+	NodeT& spawn(const std::string& ext, std::size_t id) {
 		return spawn<NodeT>(ext + std::to_string(id));
 	}
 
 	template<class NodeT, std::size_t Id>
-	NodeT spawn(const std::string& ext) const {
+	NodeT& spawn(const std::string& ext) {
 		return spawn<NodeT>(ext + std::to_string(Id));
 	}
 public:
 	node_t(InstClass* ins, const std::string& base, const std::string& ext)
 		// base is assumed to already end on '/'
-		: named_t(base + ext + "/"), ins(ins) {}
+		: node_t_base(base + ext + "/"), ins(ins) {}
 
 
 
@@ -341,9 +368,9 @@ public:
 	lo_port_t lo_port; // TODO: private?
 protected:
 	pid_t pid; // TODO: private?
-
-	std::vector<command_base*> commands; // TODO: unique?
 private:
+	std::vector<command_base*> const_commands;
+
 	const std::vector<bool>* cp;
 	pid_t make_fork();
 public:
@@ -351,6 +378,8 @@ public:
 	using effect_t::effect_t;
 
 	void instantiate();
+
+	instrument_t(const char* name, std::initializer_list<command_base*> const_commands);
 
 	virtual ~instrument_t();
 

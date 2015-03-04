@@ -279,6 +279,19 @@ void operator<<(in_port_templ<const T*, IsDep>& ipt, out_port_templ<T>& opt)
 	ipt.e->writers.push_back(opt.e);
 }
 
+template<class T, T Value>
+struct _constant
+{
+	constexpr static T value = Value;
+};
+
+//! constant value connection // TODO: also for pointer?
+template<class T, T V, bool IsDep>
+void operator<<(in_port_templ<T, IsDep>& ipt, const _constant<T, V>&) // TODO: forward
+{
+	ipt.data = V;
+}
+
 class self_port_base : public port_base
 {
 public:

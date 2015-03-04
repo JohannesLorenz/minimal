@@ -85,6 +85,15 @@ void instrument_t::instantiate()
 
 	// TODO: init in effect ctor? (probably not doable in every case)
 	set_next_time(std::numeric_limits<float>::max());
+
+	for(const command_base* cmd : const_commands)
+	 send_single_command(lo_port, cmd->buffer());
+}
+
+instrument_t::instrument_t(const char *name, std::initializer_list<command_base *> const_commands) :
+	effect_t(name),
+	const_commands(const_commands)
+{
 }
 
 void instrument_t::clean_up()
@@ -110,7 +119,7 @@ void instrument_t::clean_up()
 
 
 	//std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : commands)
+	for(command_base*& cb : const_commands)
 	{
 	//	std::cout << name() << ": deleting " << cb->path() << std::endl;
 		delete cb;

@@ -35,12 +35,16 @@ class zyn_tree_t;
 
 namespace zyn {
 
-using znode_t = node_t<zyn_tree_t>;
+struct znode_t : public node_t<zyn_tree_t>
+{
+	bool used;
+	using node_t<zyn_tree_t>::node_t;
+};
 
 template<class PortT>
 using port = in_port_with_command<zyn_tree_t, PortT>;
 
-class amp_env : znode_t
+class amp_env : public znode_t
 {
 public:
 	using znode_t::znode_t;
@@ -50,8 +54,8 @@ public:
 		//return p_envsustain();
 	}*/
 	template<class Port>
-	zyn::port<Port>* envsustain() const {
-		return spawn_new<zyn::port<Port>>("Penvsustain");
+	zyn::port<Port>& envsustain() {
+		return spawn<zyn::port<Port>>("Penvsustain");
 	}
 
 	/*template<class Port1>
@@ -60,24 +64,23 @@ public:
 	}*/
 };
 
-class global : znode_t
+class global : public znode_t
 {
 public:
 	using znode_t::znode_t;
-	zyn::amp_env amp_env() const {
+	zyn::amp_env amp_env() {
 		return spawn<zyn::amp_env>("AmpEnvelope");
 	}
-
 };
 
 
-class voice0 : znode_t
+class voice0 : public znode_t
 {
 public:
 	using znode_t::znode_t;
 };
 
-class padpars : znode_t
+class padpars : public znode_t
 {
 public:
 	using znode_t::znode_t;
@@ -87,18 +90,18 @@ public:
 	zyn::global global() const {
 		return spawn<zyn::global>("global");
 	}*/ // TODO
-	padpars() {}
+	//padpars() {}
 };
 
-class adpars : znode_t
+class adpars : public znode_t
 {
 public:
 	using znode_t::znode_t;
 	//! shortcut, since voice0 is popular
-	zyn::voice0 voice0() const {
+	zyn::voice0 voice0() {
 		return spawn<zyn::voice0>("voice0");
 	}
-	zyn::global global() const {
+	zyn::global global() {
 		return spawn<zyn::global>("global");
 	}
 };
@@ -329,11 +332,12 @@ public:
 	 *  ports
 	 */
 
-	zyn::adpars add0() const {
-		return spawn<zyn::adpars>("part0/kit0/adpars");
+	zyn::adpars add0() {
+		//return spawn<zyn::adpars>("part0/kit0/adpars");
+		return part0().kit0().adpars();
 	}
 
-	zyn::padpars pad0() const {
+	zyn::padpars pad0() {
 		return spawn<zyn::padpars>("part0/kit0/padpars");
 	}
 
@@ -342,23 +346,32 @@ public:
 	}
 
 
-	struct fx_t : zyn::znode_t
+	struct fx_t : public zyn::znode_t
 	{
 		using zyn::znode_t::znode_t;
 		template<class Port>
-		zyn::port<Port>* efftype() const { // TODO: panning must be int...
-			return spawn_new<zyn::port<Port>>("efftype");
+		zyn::port<Port>& efftype() { // TODO: panning must be int...
+			return spawn<zyn::port<Port>>("efftype");
 		}
 
 		// TODO: template is useless
 		template<class Port>
-		zyn::port<Port>* eff0_part_id() const { // TODO: panning must be int...
-			return new zyn::port<Port>(ins, "/", "Pinsparts0");
+		zyn::port<Port>& eff0_part_id() { // TODO: panning must be int...
+			return *new zyn::port<Port>(ins, "/", "Pinsparts0");
 			//return spawn_new<zyn::port<Port>>("efftype");
 		}
 	};
 
-	class part_t : zyn::znode_t
+	class kit_t : public zyn::znode_t
+	{
+	public:
+		using zyn::znode_t::znode_t;
+		zyn::adpars adpars() {
+			return spawn<zyn::adpars>("adpars");
+		}
+	};
+
+	class part_t : public zyn::znode_t
 	{
 	public:
 		using zyn::znode_t::znode_t;
@@ -366,13 +379,17 @@ public:
 		//	return spawn<zyn::amp_env>("AmpEnvelope/");
 		//}
 		template<class Port>
-		zyn::port<Port>* Ppanning() const { // TODO: panning must be int...
-			return spawn_new<zyn::port<Port>>("Ppanning");
+		zyn::port<Port>& Ppanning() { // TODO: panning must be int...
+			return spawn<zyn::port<Port>>("Ppanning");
 		}
 
 		template<std::size_t Id = 0>
-		fx_t partefx() const { // TODO: panning must be int...
+		fx_t partefx() { // TODO: panning must be int...
 			return spawn<fx_t, Id>("partefx");
+		}
+
+		kit_t kit0() {
+			return spawn<kit_t>("kit0");
 		}
 
 	//	using T = fx_t (zyn_tree_t::*)(const std::string& ext) const;
@@ -388,12 +405,12 @@ public:
 		//const T* const insefx2 = spawn<fx_t, 0>;
 	}*/
 	template<std::size_t Id = 0>
-	fx_t insefx() const { return spawn<fx_t, Id>("insefx"); }
+	fx_t insefx() { return spawn<fx_t, Id>("insefx"); }
 
 
 	template<std::size_t Id>
-	part_t part() const { return spawn<part_t, Id>("part"); } // TODO: large tuple for these
-	part_t part0() const { return part<0>(); }
+	part_t part() { return spawn<part_t, Id>("part"); } // TODO: large tuple for these
+	part_t part0() { return part<0>(); }
 
 
 /*	// TODO???
@@ -402,8 +419,8 @@ public:
 	volume_ptr_t volume = &spawn_new<zyn::port<int>>;
 */
 	template<class Port>
-	zyn::port<Port>* volume() const {
-		return spawn_new<zyn::port<Port>>("volume");
+	zyn::port<Port>& volume() {
+		return spawn<zyn::port<Port>>("volume");
 	}
 
 #ifdef NEW_PORT_TYPES
