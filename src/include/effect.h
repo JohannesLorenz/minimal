@@ -93,7 +93,6 @@ public:
 	virtual void instantiate() = 0;
 	virtual void clean_up() = 0;
 	virtual void pass_changed_ports(const std::vector<bool>& ) {}
-	virtual void port_precomputable(const in_port_base& ) { return true; }
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started

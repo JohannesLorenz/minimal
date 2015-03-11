@@ -17,70 +17,45 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <cstdlib>
-#include <cassert>
-#include <iostream>
-#include <unistd.h>
-#include <termios.h>
-#include "loaded_project.h"
-#include "plugin.h"
-#include "lo_port.h"
+#ifndef RECORDER_H
+#define RECORDER_H
 
-using namespace mini;
+#include <sndfile.hh>
 
-void main_init()
+#include "ringbuffer.h"
+#include "effect.h"
+
+namespace mini
 {
-	// TODO: needed?
-	//For misc utf8 chars
-	setlocale(LC_ALL, "");
 
-	struct termios ctrl;
-	tcgetattr(STDIN_FILENO, &ctrl);
-	// turn off canonical mode => input unbuffered
-	ctrl.c_lflag &= ~ICANON;
-	tcsetattr(STDIN_FILENO, TCSANOW, &ctrl);
+struct audio_out : out_port_templ<ringbuffer_t>
+{
+};
+
+struct audio_in : out_port_templ<ringbuffer_t*>
+{
+};
+
+/*class recorder_client_t : client_t
+{
+	jack_thread_info_t* info;
+	void process(jack_nframes_t frames);
+	void shutdown();
+};*/
+
+class recorder_t : public effect_t, public audio_in
+{
+	SndfileHandle fp;
+	ringbuffer_t rb;
+	float* framebuf;
+public:
+	recorder_t(const char *filename,
+		int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16);
+	~recorder_t() { delete[] framebuf; }
+
+	float _proceed(float time);
+};
+
 }
 
-/*project_t main_load_project(const char* lib_name)
-{
-	plugin_t plugin = plugin_t(lib_name);
-
-	project_t pro;
-
-	std::cout << "Attempting to load project: " << lib_name << std::endl;
-	plugin.load_project(pro); // TODO: return pro?
-
-	std::cout << "Loaded project: " << pro.title() << std::endl;
-
-//	loaded_project lo_pro(project_t(pro));
-
-	return pro;
-}*/
-
-int main(int argc, char** argv)
-{
-	try {
-		main_init();
-
-		assert(argc == 2);
-
-		//std::cout << "main:" << main_load_project(argv[1]).title() << std::endl;
-
-		plugin_t plugin(argv[1]);
-		project_t pro;
-
-		plugin.load_project(pro);
-
-		loaded_project_t lpro(std::move(pro));
-
-		player_t pl(lpro);
-		pl.play_until(4.0f);
-
-	//	sleep(5);
-	} catch(const char* msg) {
-		std::cout << "Aborting on error thrown: " << std::endl
-			<< msg << std::endl;
-	}
-
-	return EXIT_SUCCESS;
-}
+#endif // RECORDER_H

@@ -17,70 +17,36 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <cstdlib>
-#include <cassert>
-#include <iostream>
-#include <unistd.h>
-#include <termios.h>
-#include "loaded_project.h"
-#include "plugin.h"
-#include "lo_port.h"
+#include "recorder.h"
 
-using namespace mini;
+namespace mini {
 
-void main_init()
+recorder_t::recorder_t(const char* filename, int format) :
+	audio_in(*this),
+	fp(SndfileHandle(filename, SFM_WRITE, format
+		, 2 // channels
+		, 48000 // srate
+	)),
+	rb(/*ringbuffer_t::sample_size() **/ 16384), // TODO: size...
+	framebuf(new float[/*rb.bytes_per_frame() /*/ sizeof(float)])
 {
-	// TODO: needed?
-	//For misc utf8 chars
-	setlocale(LC_ALL, "");
-
-	struct termios ctrl;
-	tcgetattr(STDIN_FILENO, &ctrl);
-	// turn off canonical mode => input unbuffered
-	ctrl.c_lflag &= ~ICANON;
-	tcsetattr(STDIN_FILENO, TCSANOW, &ctrl);
 }
 
-/*project_t main_load_project(const char* lib_name)
-{
-	plugin_t plugin = plugin_t(lib_name);
-
-	project_t pro;
-
-	std::cout << "Attempting to load project: " << lib_name << std::endl;
-	plugin.load_project(pro); // TODO: return pro?
-
-	std::cout << "Loaded project: " << pro.title() << std::endl;
-
-//	loaded_project lo_pro(project_t(pro));
-
-	return pro;
-}*/
-
-int main(int argc, char** argv)
-{
-	try {
-		main_init();
-
-		assert(argc == 2);
-
-		//std::cout << "main:" << main_load_project(argv[1]).title() << std::endl;
-
-		plugin_t plugin(argv[1]);
-		project_t pro;
-
-		plugin.load_project(pro);
-
-		loaded_project_t lpro(std::move(pro));
-
-		player_t pl(lpro);
-		pl.play_until(4.0f);
-
-	//	sleep(5);
-	} catch(const char* msg) {
-		std::cout << "Aborting on error thrown: " << std::endl
-			<< msg << std::endl;
+float recorder_t::_proceed(float time)
+{ // TODO: separate IO thread?
+	// TODO: read multiple at a time
+#if 0
+	while(rb.can_read()) // TODO: & snd file can capture
+	{
+		rb.read(reinterpret_cast<char*>(framebuf),
+			rb.bytes_per_frame());
+		if(fp.writef(framebuf, 1) != 1)
+		{
+			throw "soundfile write error";
+		}
 	}
+#endif
+	return time + 0.1f; // TODO!!
+}
 
-	return EXIT_SUCCESS;
 }

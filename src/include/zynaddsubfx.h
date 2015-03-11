@@ -24,6 +24,7 @@
 #include "instrument.h"
 #include "ports.h"
 #include "impl.h"
+#include "ringbuffer.h"
 
 namespace mini
 {

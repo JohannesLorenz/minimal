@@ -22,14 +22,17 @@ HEADERS += src/core/plugin.h \
 	src/include/lfo.h \
 	src/include/types.h \
 	src/include/zynaddsubfx.h \
-    src/include/osc_string.h \
-    src/include/lo_port.h \
-      src/include/command.h \
-    src/include/effect.h \
-src/include/work_queue.h \
-src/include/daw_visit.h \
-src/include/note_line.h \
-    src/include/ports.h
+	src/include/osc_string.h \
+	src/include/lo_port.h \
+	src/include/command.h \
+	src/include/effect.h \
+	src/include/work_queue.h \
+	src/include/daw_visit.h \
+	src/include/note_line.h \
+	src/include/ports.h \
+	src/include/ringbuffer.h \
+	src/include/recorder.h \
+	src/include/soundfile.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -40,11 +43,14 @@ SOURCES += src/core/main.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
 	src/include/zynaddsubfx.cpp \
-        src/include/osc_string.cpp \
-    src/include/lo_port.cpp \
-    src/include/daw_visit.cpp \
-    src/include/note_line.cpp \
-    src/include/command.cpp
+	src/include/osc_string.cpp \
+	src/include/lo_port.cpp \
+	src/include/daw_visit.cpp \
+	src/include/note_line.cpp \
+	src/include/command.cpp \
+	src/include/ringbuffer.cpp \
+	src/include/recorder.cpp \
+	src/include/soundfile.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

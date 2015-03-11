@@ -147,6 +147,21 @@ include_directories(${LIBLO_INCLUDE_DIRS})
 list(APPEND AUDIO_LIBRARIES ${LIBLO_LIBRARIES})
 list(APPEND AUDIO_LIBRARY_DIRS ${LIBLO_LIBRARY_DIRS})
 
+pkg_check_modules(JACK jack)
+
+SET (JackEnable ${JACK_FOUND} CACHE BOOL
+	"Enable support for JACK Audio Connection toolKit")
+
+if(JackEnable)
+	list(APPEND AUDIO_LIBRARIES ${JACK_LIBRARIES})
+	list(APPEND AUDIO_LIBRARY_DIRS ${JACK_LIBRARY_DIRS})
+	add_definitions(-DJACK=1)
+endif(JackEnable)
+
+pkg_check_modules(SNDFILE sndfile)
+list(APPEND AUDIO_LIBRARIES ${SNDFILE_LIBRARIES})
+list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
+
 link_directories(${AUDIO_LIBRARY_DIRS})
 #target_link_libraries(minimal ${AUDIO_LIBRARIES})
 

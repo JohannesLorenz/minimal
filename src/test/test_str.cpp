@@ -21,6 +21,7 @@
 #include "lfo.h"
 #include "osc_string.h"
 #include "zynaddsubfx.h"
+#include "ringbuffer.h"
 
 using namespace mini;
 
@@ -83,6 +84,34 @@ int main()
 
 		has_bool.complete_buffer().inspect();
 }
+
+
+	{
+		// test the ringbuffer
+		ringbuffer_t rb(4);
+		ringbuffer_reader_t rd(rb);
+
+		std::size_t n = rb.write("abcd", 5);
+		std::cerr << "written: " << n << std::endl;
+		assert(n==4);
+		{
+			auto s = rd.read_sequence(4);
+			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << ' '  << +s[3] << std::endl;
+			assert(s[0] == 97 && s[1] == 98 && s[2] == 99 && s[3] == 100);
+		}
+		rb.write("ab", 3);
+		{
+			auto s = rd.read_sequence(3);
+			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << std::endl;
+			assert(s[0] == 97 && s[1] == 98 && s[2] == 0);
+		}
+		rb.write("x", 2);
+		{
+			auto s = rd.read_sequence(2);
+			std::cerr << +s[0] << ' '  << +s[1] << std::endl;
+			assert(s[0] == 120 && s[1] == 0);
+		}
+	}
 
 
 	} catch (const char* s)

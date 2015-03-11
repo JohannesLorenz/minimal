@@ -120,6 +120,7 @@ public: // TODO!! protected
 	effect_t* e;
 private:
 	bool _is_trigger = false;
+	bool _is_precomputable;
 protected:
 public: // TODO
 	float change_stamp = -1.0f;
@@ -160,6 +161,9 @@ public:
 
 	bool is_trigger() const { return _is_trigger; }
 	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?
+
+	bool is_precomputable() const { return _is_precomputable; } // TODO: can those be removed?
+	void set_precomputable(bool is_precomputable = true) { _is_precomputable = is_precomputable; }
 
 	virtual void on_recv(float time) = 0;
 
