@@ -94,23 +94,35 @@ int main()
 		std::size_t n = rb.write("abcd", 5);
 		std::cerr << "written: " << n << std::endl;
 		assert(n==4);
+		assert(!rb.write_space());
+		// simulate impossible write
+		assert(!rb.write("xyz", 4));
 		{
 			auto s = rd.read_sequence(4);
 			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << ' '  << +s[3] << std::endl;
 			assert(s[0] == 97 && s[1] == 98 && s[2] == 99 && s[3] == 100);
+
+			// TODO: check read space == 0
 		}
 		rb.write("ab", 3);
+		assert(rb.write_space() == 1);
 		{
 			auto s = rd.read_sequence(3);
 			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << std::endl;
 			assert(s[0] == 97 && s[1] == 98 && s[2] == 0);
 		}
 		rb.write("x", 2);
+		assert(rb.write_space() == 1);
 		{
-			auto s = rd.read_sequence(2);
-			std::cerr << +s[0] << ' '  << +s[1] << std::endl;
-			assert(s[0] == 120 && s[1] == 0);
+			auto s = rd.read_sequence(1);
+			std::cerr << +s[0] << std::endl;
+			assert(s[0] == 120);
+
+			auto s2 = rd.read_sequence(1);
+			std::cerr << +s2[0] << std::endl;
+			assert(s2[0] == 0);
 		}
+		assert(rb.write_space() == 3);
 	}
 
 

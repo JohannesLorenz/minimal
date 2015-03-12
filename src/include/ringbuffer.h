@@ -85,7 +85,7 @@ class ringbuffer_t : protected ringbuffer_common_t
 {
 	std::atomic<std::size_t> w_left; //, w_right;
 	std::atomic<std::size_t> readers_left;
-	std::size_t num_readers; //!< to be const after initialisation
+	std::size_t num_readers = 0; //!< to be const after initialisation
 
 //	volatile std::size_t read_ptr;
 //	std::atomic<std::size_t> iteration;
@@ -136,10 +136,12 @@ class ringbuffer_reader_t : protected ringbuffer_common_t
 		const std::size_t old_read_ptr = read_ptr;
 
 		read_ptr = (read_ptr + range) & size_mask;
-		if((read_ptr ^ old_read_ptr) & (size >> 1)) // highest bit flipped
+		// TODO: inefficient or
+		if(((read_ptr ^ old_read_ptr) & (size >> 1)) || range == size) // highest bit flipped
 		{
-			std::cerr << "decreasing readers left..." << std::endl;
+			std::cerr << "decreasing readers left from " << ref->readers_left <<  "..." << std::endl;
 			--ref->readers_left;
+			std::cerr << " ... to " << ref->readers_left << std::endl;
 		}
 
 	}

@@ -222,7 +222,8 @@ std::size_t ringbuffer_t::write (const char *src, size_t cnt)
 
 	std::cerr << "wl, old wl: " << w_left << old_w_left << std::endl;
 
-	if((w_left ^ old_w_left) & (size >> 1)) // highest bit flipped
+	// TODO: inefficient or:
+	if((w_left ^ old_w_left) & (size >> 1) || to_write == size) // highest bit flipped
 	{
 		if(readers_left)
 		 throw "impossible";
