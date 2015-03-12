@@ -128,10 +128,10 @@ std::size_t ringbuffer_t::write_space() const
 	std::cerr << "size: " << size << ", wl: " << w_left.load(std::memory_order_relaxed) << ", size_mask: " << size_mask << std::endl;
 	std::cerr << "rl: " << readers_left.load(std::memory_order_relaxed) << std::endl;
 	std::cerr << "WS: " <<
-		((size >> 1) - (w_left.load(std::memory_order_relaxed) & (size_mask >> 1)))
+		((size - w_left.load(std::memory_order_relaxed) & (size_mask)))
 		<< "+" << ((readers_left.load(std::memory_order_relaxed) == false) * (size >> 1)) << std::endl;
 
-	return ((size >> 1) - (w_left.load(std::memory_order_relaxed) & (size_mask >> 1))) // = way to next half
+	return ((size - w_left.load(std::memory_order_relaxed) & (size_mask))) // = way to next half
 		+ ((readers_left.load(std::memory_order_relaxed) == false) * (size >> 1))
 		;
 }
