@@ -93,7 +93,7 @@ int main()
 
 		std::size_t n = rb.write("abcd", 5);
 		std::cerr << "written: " << n << std::endl;
-		assert(n==4);
+		assert(n==3);
 		assert(!rb.write_space());
 		// simulate impossible write
 		assert(!rb.write("xyz", 4));

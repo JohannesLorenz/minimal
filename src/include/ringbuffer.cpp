@@ -125,15 +125,18 @@ std::size_t ringbuffer_t::write_space() const
 	// case 2: all r are already in the half of w
 	//  => write_space is end of this half + other half
 
-	std::cerr << "size: " << size << ", wl: " << w_left.load(std::memory_order_relaxed) << ", size_mask: " << size_mask << std::endl;
+/*	std::cerr << "size: " << size << ", wl: " << w_left.load(std::memory_order_relaxed) << ", size_mask: " << size_mask << std::endl;
 	std::cerr << "rl: " << readers_left.load(std::memory_order_relaxed) << std::endl;
 	std::cerr << "WS: " <<
-		((size - w_left.load(std::memory_order_relaxed) & (size_mask)))
-		<< "+" << ((readers_left.load(std::memory_order_relaxed) == false) * (size >> 1)) << std::endl;
+		((size >> 1) - (w_left.load(std::memory_order_relaxed) & (size_mask >> 1)))
+		<< "+" << ((readers_left.load(std::memory_order_relaxed) == false) * (size_mask >> 1)) << std::endl;
 
-	return ((size - w_left.load(std::memory_order_relaxed) & (size_mask))) // = way to next half
-		+ ((readers_left.load(std::memory_order_relaxed) == false) * (size >> 1))
-		;
+	return ((size >> 1) - (w_left.load(std::memory_order_relaxed) & (size_mask >> 1))) // = way to next half
+		+ ((readers_left.load(std::memory_order_relaxed) == false) * (size_mask >> 1))
+		;*/
+
+	return size_mask_real - (w_left.load(std::memory_order_relaxed) & (size_mask_real)) // => to end of cur block
+		+ ((readers_left.load(std::memory_order_relaxed) == false) * (size_real)); // => exactly one more block
 }
 
 /*size_t ringbuffer_reader_t::read(char *dest, size_t cnt)
@@ -180,7 +183,7 @@ std::size_t ringbuffer_t::write (const char *src, size_t cnt)
 {
 
 	std::size_t free_cnt;
-	std::size_t cnt2;
+	std::size_t human_end;
 	std::size_t to_write;
 	std::size_t n1, n2;
 
@@ -188,16 +191,16 @@ std::size_t ringbuffer_t::write (const char *src, size_t cnt)
 		return 0;
 	}
 
-	to_write = cnt > free_cnt ? free_cnt : cnt;
-	// the readers are no obstacle, but you can not write more
-	// than the buffer ;)
-//	to_write = cnt > size ? size : cnt;
 
-	cnt2 = w_left.load(std::memory_order_relaxed) + to_write;
+	// TODO: we often know what ?: results in, in case cnt << free_cnt
+	std::size_t m_cnt = (cnt << 1) + (w_left.load(std::memory_order_relaxed) & 1);
+	to_write = m_cnt > (free_cnt) ? free_cnt : cnt;
 
-	if (cnt2 > size) {
+	human_end = w_left.load(std::memory_order_relaxed) + to_write;
+
+	if (human_end > size) {
 		n1 = size - w_left.load(std::memory_order_relaxed);
-		n2 = cnt2 & size_mask;
+		n2 = human_end & size_mask;
 	} else {
 		n1 = to_write;
 		n2 = 0;
