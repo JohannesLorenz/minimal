@@ -15,12 +15,12 @@ if(COMPILER STREQUAL "gcc")
 	set(FLTO_FLAGS "-flto")
 
 	SET( CMAKE_CXX_COMPILER "g++" )
-	SET( CMAKE_CC_COMPILER "gcc" )
+	SET( CMAKE_C_COMPILER "gcc" )
 elseif(COMPILER STREQUAL "clang")
 	set(FLTO_FLAGS "") # not supported by clang on most platforms
 
 	SET( CMAKE_CXX_COMPILER "clang++" )
-	SET( CMAKE_CC_COMPILER "clang" )
+	SET( CMAKE_C_COMPILER "clang" )
 else()
 	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang]")
 endif()
@@ -205,6 +205,7 @@ MESSAGE("READING SUB-DIRECTORIES...")
 #add_subdirectory(rtosc)
 add_subdirectory(src)
 add_subdirectory(doc)
+
 
 #target_link_libraries(calc ...)
 
