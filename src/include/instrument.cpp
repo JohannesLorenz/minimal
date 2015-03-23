@@ -90,7 +90,7 @@ void instrument_t::instantiate()
 	 send_single_command(lo_port, cmd->buffer());
 }
 
-instrument_t::instrument_t(const char *name, std::initializer_list<command_base *> const_commands) :
+instrument_t::instrument_t(const char *name, std::initializer_list<const command_base *> const_commands) :
 	effect_t(name),
 	const_commands(const_commands)
 {
@@ -119,7 +119,7 @@ void instrument_t::clean_up()
 
 
 	//std::cout << "destroying instrument: " << name() << std::endl;
-	for(command_base*& cb : const_commands)
+	for(const command_base*& cb : const_commands)
 	{
 	//	std::cout << name() << ": deleting " << cb->path() << std::endl;
 		delete cb;

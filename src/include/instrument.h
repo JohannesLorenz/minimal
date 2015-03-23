@@ -113,6 +113,8 @@ public:
 			pr.second->print_all_used(os);
 		}
 	}
+
+	virtual void on_preinit() {}
 };
 
 template<class InstClass>
@@ -369,7 +371,7 @@ public:
 protected:
 	pid_t pid; // TODO: private?
 private:
-	std::vector<command_base*> const_commands;
+	std::vector<const command_base*> const_commands;
 
 	const std::vector<bool>* cp;
 	pid_t make_fork();
@@ -379,7 +381,10 @@ public:
 
 	void instantiate();
 
-	instrument_t(const char* name, std::initializer_list<command_base*> const_commands);
+	instrument_t(const char* name, std::initializer_list<const command_base*> const_commands);
+	void add_const_command(const command_base* cmd) {
+		const_commands.push_back(cmd);
+	}
 
 	virtual ~instrument_t();
 

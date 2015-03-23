@@ -92,6 +92,10 @@ public:
 		return spawn<zyn::global>("global");
 	}*/ // TODO
 	//padpars() {}
+
+	void on_preinit() {
+		ins->add_const_command(command<bool>("... pad enabled", true));
+	}
 };
 
 class adpars : public znode_t
@@ -104,6 +108,10 @@ public:
 	}
 	zyn::global global() {
 		return spawn<zyn::global>("global");
+	}
+
+	void on_preinit() {
+		ins->add_const_command(command<bool>("... add enabled", true));
 	}
 };
 
