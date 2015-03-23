@@ -17,46 +17,65 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef RECORDER_H
-#define RECORDER_H
+// mostly a copy of jack's ringbuffer, however, with multiple readers
 
-#include <sndfile.hh>
+#include <algorithm>
+//#include <jack/jack.h>
+//#include <jack/ringbuffer.h>
 
-#include "ringbuffer/src/lib/ringbuffer.h"
+#include <stdlib.h>
+#include <string.h>
+#include <limits>
+
 #include "jack.h"
-#include "effect.h"
 
-namespace mini
+
+namespace mini {
+
+#if 0
+std::size_t ringbuffer_t::can_read_size() const {
+	return jack_ringbuffer_read_space(ring);
+}
+
+/*constexpr std::size_t ringbuffer_t::sample_size()
 {
+	return sizeof(jack_default_audio_sample_t);
+}*/
 
-struct audio_out : out_port_templ<ringbuffer_t>
+std::size_t ringbuffer_t::read(char *framebuf, std::size_t size) {
+	return jack_ringbuffer_read(ring, framebuf, size);
+}
+
+std::size_t ringbuffer_t::write(const char *framebuf, std::size_t size) {
+	return jack_ringbuffer_write(ring, framebuf, size);
+}
+
+void ringbuffer_t::prepare() { std::fill_n(ring->buf, ring->size, 0); }
+
+ringbuffer_t::ringbuffer_t(std::size_t size)
+	: ring(jack_ringbuffer_create(size))
 {
-};
+}
 
-struct audio_in : out_port_templ<ringbuffer_t*>
+ringbuffer_t::~ringbuffer_t() { jack_ringbuffer_free(ring); }
+#endif
+
+std::size_t client_t::sample_rate() const
 {
-};
+	return jack_get_sample_rate(client);
+}
 
-/*class recorder_client_t : client_t
+client_t::client_t(const char* clientname)
 {
-	jack_thread_info_t* info;
-	void process(jack_nframes_t frames);
-	void shutdown();
-};*/
+	client = jack_client_open (clientname, JackNullOption, nullptr);
+	jack_set_process_callback(client, p_process, this);
+	jack_on_shutdown(client, p_shutdown, this);
+}
 
-class recorder_t : public effect_t, public audio_in
+client_t::~client_t()
 {
-	SndfileHandle fp;
-	ringbuffer_t rb;
-	float* framebuf;
-public:
-	recorder_t(const char *filename,
-		int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16);
-	~recorder_t() { delete[] framebuf; }
-
-	float _proceed(float time);
-};
+	jack_client_close(client);
+}
 
 }
 
-#endif // RECORDER_H

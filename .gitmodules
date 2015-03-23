@@ -1,3 +1,6 @@
 [submodule "rtosc"]
 	path = rtosc
 	url = git://github.com/fundamental/rtosc.git
+[submodule "src/include/ringbuffer"]
+	path = src/include/ringbuffer
+	url = git@github.com:JohannesLorenz/ringbuffer.git

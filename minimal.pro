@@ -30,9 +30,9 @@ HEADERS += src/core/plugin.h \
 	src/include/daw_visit.h \
 	src/include/note_line.h \
 	src/include/ports.h \
-	src/include/ringbuffer.h \
 	src/include/recorder.h \
-	src/include/soundfile.h
+	src/include/soundfile.h \
+    src/include/jack.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -48,9 +48,9 @@ SOURCES += src/core/main.cpp \
 	src/include/daw_visit.cpp \
 	src/include/note_line.cpp \
 	src/include/command.cpp \
-	src/include/ringbuffer.cpp \
 	src/include/recorder.cpp \
-	src/include/soundfile.cpp
+	src/include/soundfile.cpp \
+    src/include/jack.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

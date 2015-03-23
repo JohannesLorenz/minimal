@@ -21,7 +21,6 @@
 #include "lfo.h"
 #include "osc_string.h"
 #include "zynaddsubfx.h"
-#include "ringbuffer.h"
 
 using namespace mini;
 
@@ -73,7 +72,7 @@ int main()
 		str_cmd.buffer().inspect();
 		str_cmd.complete_buffer().inspect();
 
-{
+	{
 		command<osc_float, bool, bool, self_port_templ<bool>, osc_int> has_bool("/bool", 42.0, false, true, self_port_templ<bool>{}, 42);
 		//inspect_rtosc_string(fl.buffer);
 
@@ -83,48 +82,7 @@ int main()
 		has_bool.command::update();
 
 		has_bool.complete_buffer().inspect();
-}
-
-
-	{
-		// test the ringbuffer
-		ringbuffer_t rb(4);
-		ringbuffer_reader_t rd(rb);
-
-		std::size_t n = rb.write("abcd", 5);
-		std::cerr << "written: " << n << std::endl;
-		assert(n==4);
-		assert(!rb.write_space());
-		// simulate impossible write
-		assert(!rb.write("xyz", 4));
-		{
-			auto s = rd.read_sequence(4);
-			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << ' '  << +s[3] << std::endl;
-			assert(s[0] == 97 && s[1] == 98 && s[2] == 99 && s[3] == 100);
-
-			// TODO: check read space == 0
-		}
-		rb.write("ab", 3);
-		assert(rb.write_space() == 1);
-		{
-			auto s = rd.read_sequence(3);
-			std::cerr << +s[0] << ' ' << +s[1] << ' '  << +s[2] << std::endl;
-			assert(s[0] == 97 && s[1] == 98 && s[2] == 0);
-		}
-		rb.write("x", 2);
-		assert(rb.write_space() == 1);
-		{
-			auto s = rd.read_sequence(1);
-			std::cerr << +s[0] << std::endl;
-			assert(s[0] == 120);
-
-			auto s2 = rd.read_sequence(1);
-			std::cerr << +s2[0] << std::endl;
-			assert(s2[0] == 0);
-		}
-		assert(rb.write_space() == 3);
 	}
-
 
 	} catch (const char* s)
 	{
