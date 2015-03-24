@@ -114,7 +114,13 @@ public:
 		}
 	}
 
-	virtual void on_preinit() {}
+	virtual void on_preinit() {} // TODO: priv
+	void preinit() {
+		on_preinit();
+		for(const auto& pr : used_ch) {
+			pr.second->on_preinit();
+		}
+	}
 };
 
 template<class InstClass>

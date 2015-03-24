@@ -92,6 +92,18 @@ public:
 	virtual void shutdown() = 0;
 };
 
+struct jack_port_data {};
+
+struct jack_out : out_port_templ<jack_port_data>
+{
+
+};
+
+struct jack_in : in_port_templ<jack_port_data>
+{
+
+};
+
 }
 
 #endif // RINGBUFFER_H

@@ -80,6 +80,8 @@ pid_t instrument_t::make_fork()
 
 void instrument_t::instantiate()
 {
+	on_preinit();
+
 	pid = make_fork();
 	lo_port.init(get_port(pid, 0 /*TODO*/));
 
