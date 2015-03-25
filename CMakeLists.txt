@@ -25,6 +25,8 @@ else()
 	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang]")
 endif()
 
+SET(COMPILER_SET "1")
+
 #Name your project here
 project(minimal)
 

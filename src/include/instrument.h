@@ -123,9 +123,12 @@ public:
 	}
 };
 
-template<class InstClass>
+class instrument_t;
+
+template<class InstClassOld>
 class node_t : public node_t_base
 {
+	using InstClass = instrument_t;
 public: // TODO
 	InstClass* ins;
 // the inheriting class must define the sub-nodes
