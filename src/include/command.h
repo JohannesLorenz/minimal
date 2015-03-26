@@ -34,7 +34,7 @@ namespace mini
 class command_base
 {
 protected:
-	std::string _path; // TODO: std string everywhere
+	std::string _path;
 public:
 
 	using call_functor = void (*)(const char*, const char*, ...);
