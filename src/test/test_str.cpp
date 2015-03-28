@@ -87,8 +87,10 @@ int main()
 	} catch (const char* s)
 	{
 		std::cerr << s << std::endl;
+		return 1;
 	}
 
+	std::cerr << "SUCCESS" << std::endl;
 	return 0;
 }
 

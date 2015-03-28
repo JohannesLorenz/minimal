@@ -76,6 +76,8 @@ template<class T>
 class out_port_templ : public out_port_base
 {
 protected:
+	//! identifies us as a base for children
+	using base = out_port_templ<T>;
 public:
 	T data;
 	bool start = true;
@@ -87,8 +89,10 @@ public:
 	using type = T;
 	using data_type = T;
 
-	out_port_templ(effect_t& e) : out_port_base(e)
-		//: data(e)
+	template <class ...Args>
+	out_port_templ(effect_t& e, Args... args) :
+		out_port_base(e),
+		data(args...)
 	{
 		add_out_port(e, this);
 	}
@@ -376,7 +380,7 @@ struct note_signal_t
 
 struct notes_out : out_port_templ<note_signal_t>
 {
-	using out_port_templ<note_signal_t>::out_port_templ;
+	using base::out_port_templ;
 };
 
 struct notes_in : in_port_templ<const note_signal_t*>

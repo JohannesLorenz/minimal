@@ -26,6 +26,7 @@
 #include <iostream> // TODO
 #include <map>
 #include <set>
+#include <initializer_list>
 // ...
 // when is it going to end?
 
@@ -36,7 +37,6 @@
 #include "effect.h"
 #include "work_queue.h"
 #include "lo_port.h"
-#include "initializer_list"
 
 
 namespace mini
@@ -125,7 +125,7 @@ public:
 
 class instrument_t;
 
-template<class InstClassOld>
+template<class >
 class node_t : public node_t_base
 {
 	using InstClass = instrument_t;
@@ -178,6 +178,62 @@ public:
 	//node(std::string base, std::string ext, std::size_t id)
 	//	: node(base, ext + std::to_string(id)) {}
 };
+
+
+
+
+
+
+
+
+
+
+class instrument_t : public effect_t, public work_queue_t
+{
+public:
+	lo_port_t lo_port; // TODO: private?
+protected:
+	pid_t pid; // TODO: private?
+private:
+	std::vector<const command_base*> const_commands;
+
+	const std::vector<bool>* cp;
+	pid_t make_fork();
+public:
+	using udp_port_t = int;
+	using effect_t::effect_t;
+
+	void instantiate();
+
+	instrument_t(const char* name, std::initializer_list<const command_base*> const_commands);
+	void add_const_command(const command_base& cmd) {
+		const_commands.push_back(&cmd);
+	}
+
+	virtual ~instrument_t();
+
+	void pass_changed_ports(const std::vector<bool>& _cp)
+	{ // TODO: no vector bool -> stack of ints
+		cp = &_cp;
+	}
+
+//	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
+
+	virtual command_base *make_close_command() const = 0;
+
+	virtual std::string make_start_command() const = 0;
+	//! shall return the lo port (UDP) after the program was started
+	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
+
+	void clean_up();
+
+	float _proceed(float time);
+};
+
+
+
+
+
 
 struct prioritized_command_base : public work_queue_t::task_base
 {
@@ -323,8 +379,8 @@ struct functor_init_ports
 
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
-template<class InstClass, class... PortTypes>
-struct _in_port_with_command : node_t<InstClass>, non_copyable_t
+template<class /*InstClass*/, class... PortTypes>
+struct _in_port_with_command : node_t<void>, non_copyable_t
 { // TODO: instrument.h -> ?
 
 	//using rtosc_in_ports = rtosc_in_port<PortTypes>;
@@ -333,10 +389,12 @@ struct _in_port_with_command : node_t<InstClass>, non_copyable_t
 	command<PortTypes...>* cmd_ptr;
 	prioritized_command_cmd cmd;
 
+	using InstClass = instrument_t;
+
 public:
 	template<class ...Args2>
 	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
-		node_t<InstClass>(ins, base, ext),
+		node_t<void>(ins, base, ext),
 		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
 		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, &ins->lo_port, cmd_ptr)
 	{
@@ -371,48 +429,6 @@ struct in_port_with_command : _in_port_with_command<InstClass, type_of_rtosc_por
 //	using base::_in_port_with_command;
 	using _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>::
 		_in_port_with_command;
-};
-
-class instrument_t : public effect_t, public work_queue_t
-{
-public:
-	lo_port_t lo_port; // TODO: private?
-protected:
-	pid_t pid; // TODO: private?
-private:
-	std::vector<const command_base*> const_commands;
-
-	const std::vector<bool>* cp;
-	pid_t make_fork();
-public:
-	using udp_port_t = int;
-	using effect_t::effect_t;
-
-	void instantiate();
-
-	instrument_t(const char* name, std::initializer_list<const command_base*> const_commands);
-	void add_const_command(const command_base* cmd) {
-		const_commands.push_back(cmd);
-	}
-
-	virtual ~instrument_t();
-
-	void pass_changed_ports(const std::vector<bool>& _cp)
-	{ // TODO: no vector bool -> stack of ints
-		cp = &_cp;
-	}
-
-//	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
-
-	virtual command_base *make_close_command() const = 0;
-
-	virtual std::string make_start_command() const = 0;
-	//! shall return the lo port (UDP) after the program was started
-	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
-
-	void clean_up();
-
-	float _proceed(float time);
 };
 
 template <char ...Letters> class fixed_str {

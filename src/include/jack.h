@@ -17,8 +17,8 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef RINGBUFFER_H
-#define RINGBUFFER_H
+#ifndef JACK_H
+#define JACK_H
 
 #include <atomic>
 #include <cstddef>
@@ -106,4 +106,4 @@ struct jack_in : in_port_templ<jack_port_data>
 
 }
 
-#endif // RINGBUFFER_H
+#endif // JACK_H

@@ -17,48 +17,21 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <unistd.h> // TODO
-#include <fstream>
+#ifndef AUDIO_INSTRUMENT_H
+#define AUDIO_INSTRUMENT_H
 
-#include "lo_port.h"
-#include "config.h"
-#include "zynaddsubfx.h"
+#include "instrument.h"
+#include "audio.h"
 
-namespace mini {
-
-zyn_tree_t::zyn_tree_t(const char *name) :
-	zyn::znode_t(this, "", ""),
-	audio_instrument_t(name),
-	notes_t_port(this, "", "noteOn")
+namespace mini
 {
-}
 
-std::string zynaddsubfx_t::make_start_command() const
+class audio_instrument_t : public instrument_t, public audio_out
 {
-	const std::string cmd = ZYN_BINARY
-		" --no-gui -O alsa"; // TODO: read from options file
-	return cmd;
-}
-
-instrument_t::udp_port_t zynaddsubfx_t::get_port(pid_t pid, int) const
-{
-	udp_port_t port;
-	std::string tmp_filename = "/tmp/zynaddsubfx_"
-			+ std::to_string(pid);
-	std::cout << "Reading " << tmp_filename << std::endl;
-	sleep(1); // wait for zyn to be started... (TODO)
-	std::ifstream stream(tmp_filename);
-	if(!stream.good()) {
-		throw "Error: Communication to zynaddsubfx failed.";
-	}
-	stream >> port;
-	return port;
-}
-
-command_base *zynaddsubfx_t::make_close_command() const
-{
-	return new command<>("/close-ui");
-}
+public:
+	audio_instrument_t(const char* name);
+};
 
 }
 
+#endif // AUDIO_INSTRUMENT_H

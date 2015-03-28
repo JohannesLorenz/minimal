@@ -24,6 +24,7 @@
 #include "instrument.h"
 #include "ports.h"
 #include "impl.h"
+#include "audio_instrument.h" // TODO: separate audio_instrument_t ?
 
 namespace mini
 {
@@ -222,9 +223,7 @@ namespace z
 }
 #endif
 
-
-
-class zyn_tree_t : public zyn::znode_t, public instrument_t
+class zyn_tree_t : public zyn::znode_t, public audio_instrument_t
 {
 	// todo: only send some params on new note?
 public:
