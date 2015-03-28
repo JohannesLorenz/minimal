@@ -28,21 +28,17 @@ namespace mini {
 
 plugin_t::plugin_t(const char *path)
 {
-	handle = dlopen(path, RTLD_LAZY); //< ok, but valgrind memory leak
+	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
 	if(!handle)
-	{
-		std::cerr << "Error loading library " << path << ": "
-			  << dlerror() << std::endl;
-		/*return false;*/ // TODO: throw
-	}
+	 throw dlerror();
 }
 
 plugin_t::~plugin_t() { dlclose(handle); }
 
 bool plugin_t::load_project(project_t &pro)
 {
-	void (*init_project)(project_t&); // TODO: prefer "using"
-	char *error;
+	void (*init_project)(project_t&);
+	const char *error;
 
 	// for the cast syntax, consult man dlopen (3)
 	*(void**) (&init_project) = dlsym(handle, "init");
@@ -51,7 +47,7 @@ bool plugin_t::load_project(project_t &pro)
 		std::cerr << "Error calling init() from plugin: "
 			  << error << std::endl;
 		pro.invalidate();
-		return false;
+		return false; // TODO: throw?
 	}
 
 	init_project(pro);

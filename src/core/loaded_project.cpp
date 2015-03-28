@@ -221,7 +221,6 @@ void player_t::play_until(float dest)
 	//	send_commands();
 		while(has_active_tasks(pos))
 		{
-			std::cerr << "active task!" << std::endl;
 			// TODO: simple reinsert??
 			task_base* top = pop_next_task();
 			effect_t* this_ef = reinterpret_cast<task_effect*>(top)->effect;
@@ -262,16 +261,7 @@ void player_t::play_until(float dest)
 #if 0
 			pq_entry top = std::move(pq.top());
 			pq.pop();
- // TODO !!! ??
-/* auto x4 = dynamic_cast<const activator_events*>(top.activator);
-auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 
-			if(x3 == x4->events.end())
-			 throw "End";*/
-
-
-//			std::cerr << pos << ": Next: " << *top.itr << std::endl;
-//			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
 			//project.cons()[top.ins]
 
 			project.cons().front().send_osc_str(top.cmd->buffer());
@@ -279,29 +269,9 @@ auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
 
 			top.itr->operator ++();
 
-/*			if(!top.activator)
-			 throw "TACTIV";
-			if(!top.itr)
-			 throw "TOPITR";*/
-
 			pq.push(std::move(top));
 
 #endif
-/*
-auto x2 = dynamic_cast<const activator_events*>(top.activator);
-auto x1 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
-			if(x1
-			!= x2->events.end())
-		//	if(top.itr != top.activator.end())
-			{
-				pq.push(std::move(top));
-			}
-			else
-			{
-				throw "found end itr, missing sentinel?";
-			}*/
-
-
 		//	if(top.itr == top.vals.end())
 		//	 throw "end";
 
@@ -321,12 +291,6 @@ void player_t::task_events::proceed(float)
 {
 
 	// TODO !!! ??
-	/* auto x4 = dynamic_cast<const activator_events*>(top.activator);
-auto x3 = dynamic_cast<const activator_events_itr*>(top.itr)->itr;
-
-			if(x3 == x4->events.end())
-			 throw "End";*/
-
 
 	//			std::cerr << pos << ": Next: " << *top.itr << std::endl;
 	//			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;

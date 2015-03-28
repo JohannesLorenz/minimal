@@ -42,7 +42,7 @@ public:
 	~plugin_t();
 
 	bool load_project(project_t& pro);
-	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
+//	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
 };
 
 }

@@ -120,23 +120,6 @@ class player_t : public work_queue_t // TODO: own header
 
 //	std::set<float> end_set = { std::numeric_limits<float>::max() };
 
-	/*struct pq_entry
-	{
-		//float next;
-	//	const instrument_t* ins;
-		const command_base* cmd;
-		//const std::set<float>& vals;
-
-		//const activator_base* const activator;
-		activator_base_itr* const itr;
-
-
-
-		//float next_val;
-		//std::set<float>::const_iterator itr;
-
-	};*/
-
 /*	class task_events : public task_base
 	{
 	//	const loaded_project_t& project;
@@ -185,12 +168,6 @@ class player_t : public work_queue_t // TODO: own header
 		}
 	};
 
-	/*struct pq_entry
-	{
-		task_base* task;
-		float next_time;
-	};*/
-
 	void update_effects();
 	void fill_commands();
 	void send_commands();
@@ -201,12 +178,6 @@ public:
 	player_t(loaded_project_t& _project);
 
 	void play_until(float dest);
-};
-
-class command_table
-{
-
-
 };
 
 class effect_root_t : public effect_t
