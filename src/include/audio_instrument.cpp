@@ -27,6 +27,29 @@ constexpr std::size_t rb_size = buffer_size * sample_size;
 namespace mini
 {
 
+int
+process (jack_nframes_t nframes, void *arg)
+{
+	int chn;
+	size_t i;
+
+	// copy nframes samples to a memory area and set pointer
+	float* mem = jack_port_get_buffer (port, nframes);
+
+	/* Sndfile requires interleaved data. It is simpler here to
+	* just queue interleaved samples to a single ringbuffer. */
+	for (i = 0; i < nframes; i++) {
+	for (chn = 0; chn < nports; chn++) {
+	if (jack_ringbuffer_write (rb, (void *) (in[chn]+i),
+	sample_size)
+	< sample_size)
+	overruns++;
+	}
+	}
+
+	return 0;
+}
+
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
 	audio_out((effect_t&)*this, rb_size) {
