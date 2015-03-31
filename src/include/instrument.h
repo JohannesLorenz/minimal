@@ -380,7 +380,7 @@ struct functor_init_ports
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
 template<class /*InstClass*/, class... PortTypes>
-struct _in_port_with_command : node_t<void>, non_copyable_t
+struct _in_port_with_command : node_t<void>, util::non_copyable_t
 { // TODO: instrument.h -> ?
 
 	//using rtosc_in_ports = rtosc_in_port<PortTypes>;

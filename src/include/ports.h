@@ -118,7 +118,7 @@ public:
 class lo_port_t;
 
 // TODO: abstract port base
-class in_port_base : public non_copyable_t, public port_base
+class in_port_base : public util::non_copyable_t, public port_base
 {
 public: // TODO!! protected
 	effect_t* e;

@@ -116,7 +116,7 @@ public:
 
 //! Consists of all data which is needed to serialize a project.
 //! This class will never be instantiated in an so file
-class project_t : public non_copyable_t
+class project_t : public util::non_copyable_t
 {
 	bool valid = true;
 	float _tempo = 140.0;

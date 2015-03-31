@@ -27,7 +27,7 @@
 
 namespace mini {
 
-class lo_port_t : non_copyable_t, non_movable_t
+class lo_port_t : util::non_copyable_t, util::non_movable_t
 {
 	bool up = false;
 	lo_address dest;
@@ -50,7 +50,7 @@ public:
 	//bool send_rtosc_msg(const char *path) const;
 };
 
-class lo_server_t : non_copyable_t
+class lo_server_t : util::non_copyable_t
 {
 	lo_server srv;
 	void handle_events();

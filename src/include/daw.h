@@ -67,9 +67,9 @@ namespace daw
 	};
 
 	template<class Geom, class ...Children>
-	class seg_base : public counted_t<Geom, Children...> // : non_copyable_t
+	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
 	{
-		using counted = counted_t<Geom, Children...>;
+		using counted = util::counted_t<Geom, Children...>;
 	public:
 		// TODO: private and protected accessors?
 		using geom_t = Geom;

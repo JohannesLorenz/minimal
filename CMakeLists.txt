@@ -55,42 +55,7 @@ SET(ZYN_BINARY "" CACHE STRING "/usr/bin/zynaddsubfx")
 # testing
 enable_testing ()
 
-#
-# Machine
-#
-#IF(WIN32)
-#	SET(OS "win32")
-#ELSE(WIN32)
-#	SET(OS "linux")
-#ENDIF(WIN32)
-#
-#SET(MY_HOST_X86 FALSE)
-#SET(MY_HOST_X86_64 FALSE)
-#
-#IF(IS_X86)
-#	SET(MY_HOST_X86 TRUE)
-#	SET(MY_HOST_STR "x86")
-#ELSEIF(IS_X86_64)
-#	SET(MY_HOST_X86_64 TRUE)
-#	SET(MY_HOST_STR "x86_64")
-#ELSE(IS_X86)
-#	MESSAGE("Can't identify target host. Assuming 32 bit platform.")
-#	SET(MY_HOST_X86 TRUE)
-#	SET(MY_HOST_STR "x86")
-#ENDIF(IS_X86)
-#
-#MESSAGE("-- Target host is ${OS}, ${MY_HOST_STR}")
-
-#include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/res/")
 SET(src_base "${CMAKE_CURRENT_SOURCE_DIR}/src/")
-#SET(res_dir "${src_base}res/")
-
-#SET(general "${res_dir}/io.cpp" "${res_dir}/io.h" "${res_dir}/general.h" "${res_dir}/general.cpp" "${res_dir}/random.h")
-#SET(geometry "${res_dir}/geometry.h" "${res_dir}/geometry.cpp")
-#SET(eq_solver "${res_dir}/equation_solver.cpp" "${res_dir}/equation_solver.h" "${res_dir}/eqs_internal.h" "${res_dir}/eqs_functions.cpp" "${res_dir}/eqs_functions.h")
-#SET(ca "${res_dir}/ca.h")
-#SET(ca_basics "${res_dir}/ca_basics.h")
-#SET(image "${res_dir}/image.h" "${res_dir}/image.cpp")
 
 function(cp_script script_name)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${script_name}
@@ -108,26 +73,6 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/version.h)
-
-# if(CUSTOM_INCLUDE_PATHS STREQUAL "")
-# else()
-# 	include_directories("${CUSTOM_INCLUDE_PATHS}")
-# endif()
-#link_directories("${ADD_LINK_DIRS}")
-
-# INCLUDE (CheckIncludeFiles)
-
-
-# add the command to generate the source code
-add_custom_command (
-	OUTPUT _sza2
-	COMMAND echo ${VERSION} > ${CMAKE_CURRENT_BINARY_DIR}/sza2
-)
-
-add_custom_target (
-	sza2
-	DEPENDS _sza2
-)
 
 MESSAGE("CHECKING FOR LIBRARIES...")
 
@@ -167,13 +112,6 @@ list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
 link_directories(${AUDIO_LIBRARY_DIRS})
 #target_link_libraries(minimal ${AUDIO_LIBRARIES})
 
-#find_package(Qt4)
-#if(QT4_FOUND)
-#	set(BUILD_QT_GUI true)
-#else(QT4_FOUND)
-#	set(BUILD_QT_GUI false)
-#endif(QT4_FOUND)
-
 #if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/usr/CMakeLists.txt")
 #	set(BUILD_USR_DIR true)
 #else()
@@ -208,12 +146,6 @@ MESSAGE("READING SUB-DIRECTORIES...")
 add_subdirectory(src)
 add_subdirectory(doc)
 
-
-#target_link_libraries(calc ...)
-
-
-#add_test (test sh ${CMAKE_CURRENT_BINARY_DIR}/src/test.sh)
-#TODO: use cmake instead of sh script?
 
 #
 # CPack Stuff

@@ -22,6 +22,8 @@
 
 #include <vector>
 
+namespace util {
+
 //! This class is in no way copyable, but movable
 class non_copyable_t
 {
@@ -74,8 +76,6 @@ public:
 	}
 	static const Store& at(const id_t& id) { return elems[id]; }
 };
-
-namespace util {
 
 /*
 	templates for structs that you don't want to instantiate

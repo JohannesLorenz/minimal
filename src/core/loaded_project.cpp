@@ -286,22 +286,4 @@ void player_t::play_until(float dest)
 	}
 }
 
-#if 0
-void player_t::task_events::proceed(float)
-{
-
-	// TODO !!! ??
-
-	//			std::cerr << pos << ": Next: " << *top.itr << std::endl;
-	//			std::cerr << pos << ": Would send: " << top.cmd->complete_buffer() << std::endl;
-	//project.cons()[top.ins]
-
-	if(!cmd)
-	 throw "CMD";
-	ins->con.send_osc_str(cmd->buffer());
-	update_next_time(*++itr);
-
-}
-#endif
-
 }

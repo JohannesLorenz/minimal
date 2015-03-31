@@ -58,7 +58,7 @@ public:
 	static constexpr std::size_t no_id() { return -1; }
 };
 
-class effect_t : non_copyable_t, public has_id, public named_t //: public port_chain
+class effect_t : util::non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
 	std::vector<in_port_base*> in_ports;

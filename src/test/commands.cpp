@@ -41,6 +41,8 @@ int main()
 		fl.command::update();
 
 		fl.complete_buffer().inspect();
+		
+		assert(!fl.buffer().data().compare("/float\0\0,fi\0\0", 12));
 
 	//	std::cerr << "pad size: " << mini::pad_size<vint>::value() << std::endl;
 
@@ -62,12 +64,8 @@ int main()
 
 		non.cmd_ptr->complete_buffer();
 		non.cmd_ptr->buffer().inspect();
-#if 0 // TODO
-		lfo_t<> lfo(-42.0, +42.0, 0.0f, 4.0f);
-		command<oint<>, ofloat<in_port<float>>, oint<>> c2("/test2", 16384, lfo.out, 0);
-		c2._buffer.inspect();
-		c2.complete_buffer().inspect();
-#endif
+		
+		
 		command<const char*> str_cmd("/string", "hello world!");
 		str_cmd.buffer().inspect();
 		str_cmd.complete_buffer().inspect();

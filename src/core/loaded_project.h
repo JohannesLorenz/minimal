@@ -188,7 +188,7 @@ class effect_root_t : public effect_t
 };
 
 //! this class takes a project and then does some things to handle it
-class loaded_project_t : non_copyable_t
+class loaded_project_t : util::non_copyable_t
 {
 	friend class player_t;
 
