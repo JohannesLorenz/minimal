@@ -27,13 +27,50 @@ constexpr std::size_t rb_size = buffer_size * sample_size;
 namespace mini
 {
 
+int
+process (jack_nframes_t nframes, void *arg)
+{
+	int chn;
+	size_t i;
+
+	// copy nframes samples to a memory area and set pointer
+	float* mem = jack_port_get_buffer (port, nframes);
+
+	/* Sndfile requires interleaved data. It is simpler here to
+	* just queue interleaved samples to a single ringbuffer. */
+	for (i = 0; i < nframes; i++) {
+	for (chn = 0; chn < nports; chn++) {
+	if (jack_ringbuffer_write (rb, (void *) (in[chn]+i),
+	sample_size)
+	< sample_size)
+	overruns++;
+	}
+	}
+
+	return 0;
+}
+
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
-	audio_out((effect_t&)*this, rb_size) {
+	audio_out((effect_t&)*this, rb_size),
+	ports {
+		jack_port_register(client, "rb0", JACK_DEFAULT_AUDIO_TYPE,
+			JackPortIsInput, 0),
+		jack_port_register(client, "rb1", JACK_DEFAULT_AUDIO_TYPE,
+			JackPortIsInput, 0)
+	}
+{
+	// load ringbuffers into cache
+	audio_out::data[0].touch();
+	audio_out::data[1].touch();
 
-	// connect jack out to audio out
+	if(!ports[0] || !ports[1])
+	 throw "can not register port";
 
-
+	if (jack_connect (info->client, "out_1", "rb0") // TODO: out_1 from where?
+		|| jack_connect (info->client, "out_2", "rb1")) {
+		throw "cannot connect input port TODO to TODO";
+	}
 }
 
 }

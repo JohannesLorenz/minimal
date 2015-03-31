@@ -26,12 +26,15 @@
 namespace mini
 {
 
-struct audio_out : out_port_templ<ringbuffer_t>
+template<class T, std::size_t N = 2>
+using multiplex = std::array<T, N>;
+
+struct audio_out : out_port_templ<multiplex<ringbuffer_t>>
 {
 	using base::out_port_templ;
 };
 
-struct audio_in : in_port_templ<ringbuffer_reader_t>
+struct audio_in : in_port_templ<multiplex<ringbuffer_t>>
 {
 	using base::in_port_templ;
 };
