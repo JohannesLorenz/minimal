@@ -52,11 +52,25 @@ process (jack_nframes_t nframes, void *arg)
 
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
-	audio_out((effect_t&)*this, rb_size) {
+	audio_out((effect_t&)*this, rb_size),
+	ports {
+		jack_port_register(client, "rb0", JACK_DEFAULT_AUDIO_TYPE,
+			JackPortIsInput, 0),
+		jack_port_register(client, "rb1", JACK_DEFAULT_AUDIO_TYPE,
+			JackPortIsInput, 0)
+	}
+{
+	// load ringbuffers into cache
+	audio_out::data[0].touch();
+	audio_out::data[1].touch();
 
-	// connect jack out to audio out
+	if(!ports[0] || !ports[1])
+	 throw "can not register port";
 
-
+	if (jack_connect (info->client, "out_1", "rb0") // TODO: out_1 from where?
+		|| jack_connect (info->client, "out_2", "rb1")) {
+		throw "cannot connect input port TODO to TODO";
+	}
 }
 
 }

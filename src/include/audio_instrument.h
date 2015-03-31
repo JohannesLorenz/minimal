@@ -20,17 +20,17 @@
 #ifndef AUDIO_INSTRUMENT_H
 #define AUDIO_INSTRUMENT_H
 
+#include <jack/types.h>
+
 #include "instrument.h"
 #include "audio.h"
-
-#include <jack/jack.h>
 
 namespace mini
 {
 
 class audio_instrument_t : public instrument_t, public audio_out
 {
-	multiplex<jack_port_t> ports;
+	multiplex<jack_port_t*> ports;
 public:
 	audio_instrument_t(const char* name);
 };
