@@ -18,12 +18,14 @@ You will need the following libraries, headers and tools:
   * at least g++ 4.8 or clang 3.3
   * boost
   * cmake
-  * zynaddsubfx, a version from at least November 2014
+  * zynaddsubfx, a version from at least April 2015 (TODO: make optional)
 
 1 Installation of the commandline interface
 :::::::::::::::::::::::::::::::::::::::::::
 
-In this directory, type:
+The initial installation and updating are different processes.
+
+For the initial installation, type in this directory:
 
   git submodule init
   git submodule update
@@ -36,6 +38,10 @@ In this directory, type:
 	-DCMAKE_BUILD_TYPE=Release \
 	-DZYN_BINARY=/path/to/zynaddsubfx \
 	..
+
+In order to update the code, go to the main directory and type
+
+  ./update
 
 2 Running
 :::::::::

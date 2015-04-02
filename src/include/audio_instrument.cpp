@@ -63,7 +63,7 @@ int audio_instrument_t::process (jack_nframes_t nframes)
 
 void audio_instrument_t::init_2()
 {
-	init_3();
+//	init_3();
 }
 
 int
@@ -80,30 +80,31 @@ _shutdown (void *arg)
 
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
-	audio_out((effect_t&)*this, rb_size, rb_size)
+	audio_out((effect_t&)*this, rb_size, rb_size),
+	client(nullptr) // TODO
 {
 }
 
-void audio_instrument_t::init(jack_client_t &client)
+void audio_instrument_t::init(/*jack_client_t &client*/)
 {
 	// load ringbuffers into cache
 	audio_out::data[0].touch();
 	audio_out::data[1].touch();
 
-	ports[0] = jack_port_register(&client, "rb0", JACK_DEFAULT_AUDIO_TYPE,
+	ports[0] = jack_port_register(client, "rb0", JACK_DEFAULT_AUDIO_TYPE,
 			JackPortIsInput, 0);
-	ports[1] = jack_port_register(&client, "rb1", JACK_DEFAULT_AUDIO_TYPE,
+	ports[1] = jack_port_register(client, "rb1", JACK_DEFAULT_AUDIO_TYPE,
 			JackPortIsInput, 0);
 	if(!ports[0] || !ports[1])
 	 throw "can not register port";
 
-	if (jack_connect (&client, "out_1", "rb0") // TODO: out_1 from where?
-		|| jack_connect (&client, "out_2", "rb1")) {
+	if (jack_connect (client, "out_1", "rb0") // TODO: out_1 from where?
+		|| jack_connect (client, "out_2", "rb1")) {
 		throw "cannot connect input port TODO to TODO";
 	}
 
-	jack_set_process_callback(&client, _process, this);
-	jack_on_shutdown (&client, _shutdown, this);
+	jack_set_process_callback(client, _process, this);
+	jack_on_shutdown (client, _shutdown, this);
 }
 
 }

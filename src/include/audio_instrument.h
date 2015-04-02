@@ -31,9 +31,12 @@ namespace mini
 class audio_instrument_t : public instrument_t, public audio_out
 {
 	multiplex<jack_port_t*> ports;
+	jack_client_t* client;
 public:
 	audio_instrument_t(const char* name);
-	void init(jack_client_t& client);
+private: // TODO
+	void init(/*jack_client_t& client*/);
+public:
 	int process(jack_nframes_t nframes);
 	void shutdown() {}
 
