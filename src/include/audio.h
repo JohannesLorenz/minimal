@@ -26,8 +26,20 @@
 namespace mini
 {
 
+//template<class T, std::size_t N = 2>
+//using multiplex = std::array<T, N>;
+
 template<class T, std::size_t N = 2>
-using multiplex = std::array<T, N>;
+struct multiplex
+{
+	T data[N];
+
+	template<class ...Args>
+	multiplex(Args&&... args) : data{std::forward<Args>(args)...} {} // TODO: std forward
+
+	const T& operator[](std::size_t i) const { return data[i]; }
+	T& operator[](std::size_t i) { return data[i]; }
+};
 
 struct audio_out : out_port_templ<multiplex<ringbuffer_t>>
 {

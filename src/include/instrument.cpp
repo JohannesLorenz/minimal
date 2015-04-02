@@ -90,6 +90,8 @@ void instrument_t::instantiate()
 
 	for(const command_base* cmd : const_commands)
 	 send_single_command(lo_port, cmd->buffer());
+
+	init_2();
 }
 
 instrument_t::instrument_t(const char *name, std::initializer_list<const command_base *> const_commands) :

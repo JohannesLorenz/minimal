@@ -17,12 +17,22 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <algorithm>
+
 #include "project.h"
 #include "lfo.h"
 #include "osc_string.h"
 #include "zynaddsubfx.h"
 
 using namespace mini;
+
+bool are_equal(const std::vector<char>& v, const char* ptr, std::size_t n)
+{
+	for(auto itr = v.begin(); n; --n, ++itr, ++ptr)
+	 if(*itr != *ptr)
+	  return false;
+	return true;
+}
 
 int main()
 {
@@ -42,7 +52,7 @@ int main()
 
 		fl.complete_buffer().inspect();
 		
-		assert(!fl.buffer().data().compare("/float\0\0,fi\0\0", 12));
+		assert(are_equal(fl.buffer().data(), "/float\0\0,fi\0\0", 12));
 
 	//	std::cerr << "pad size: " << mini::pad_size<vint>::value() << std::endl;
 

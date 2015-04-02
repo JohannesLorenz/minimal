@@ -203,6 +203,7 @@ public:
 	using udp_port_t = int;
 	using effect_t::effect_t;
 
+	virtual void init_2() = 0;
 	void instantiate();
 
 	instrument_t(const char* name, std::initializer_list<const command_base*> const_commands);
