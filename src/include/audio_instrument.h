@@ -22,6 +22,7 @@
 
 #include <jack/types.h>
 
+#include "jack.h"
 #include "instrument.h"
 #include "audio.h"
 
@@ -31,7 +32,7 @@ namespace mini
 class audio_instrument_t : public instrument_t, public audio_out
 {
 	multiplex<jack_port_t*> ports;
-	jack_client_t* client;
+	client_t client;
 public:
 	audio_instrument_t(const char* name);
 private: // TODO

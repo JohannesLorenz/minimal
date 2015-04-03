@@ -72,24 +72,35 @@ public:
 
 class client_t
 {
-	jack_client_t *client;
+public: // TODO
+	jack_client_t *client = nullptr;
+private:
 	// TODO: pass function pointer as template?
-	static int p_process(jack_nframes_t frames, void* _cl) {
+/*	static int p_process(jack_nframes_t frames, void* _cl) {
 		client_t* cl = reinterpret_cast<client_t*>(_cl);
 		return cl->process(frames);
 	}
 	static void p_shutdown(void* _cl) {
 		client_t* cl = reinterpret_cast<client_t*>(_cl);
 		cl->shutdown();
-	}
+	}*/
 public:
 	std::size_t sample_rate() const;
 
+	jack_port_t* register_port(const char *port_name,
+		const char *port_type, unsigned long flags,
+		unsigned long buffer_size);
+
+	int connect(const char *source_port,
+		const char *destination_port);
+
 	client_t(const char *clientname);
+	client_t() {}
+	void init(const char* clientname);
 	virtual ~client_t();
 
-	virtual int process(jack_nframes_t) = 0;
-	virtual void shutdown() = 0;
+/*	virtual int process(jack_nframes_t) = 0;
+	virtual void shutdown() = 0;*/
 };
 
 /*struct jack_port_data {};

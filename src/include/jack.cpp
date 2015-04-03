@@ -65,16 +65,46 @@ std::size_t client_t::sample_rate() const
 	return jack_get_sample_rate(client);
 }
 
-client_t::client_t(const char* clientname)
+jack_port_t *client_t::register_port(const char* port_name,
+	const char* port_type, unsigned long flags,
+	unsigned long buffer_size)
+{
+	return jack_port_register(client, port_name,
+				  port_type, flags, buffer_size);
+}
+
+int client_t::connect(const char *source_port, const char *destination_port)
+{
+	return jack_connect(client, source_port, destination_port);
+}
+
+void error_cb(const char* err) {
+	std::cerr << "Jack Error: " << err << std::endl;
+}
+
+void info_cb(const char* info) {
+	std::cerr << "Jack Info: " << info << std::endl;
+}
+
+client_t::client_t(const char* clientname) :
+	client(jack_client_open (clientname, JackNullOption, nullptr))
+{
+//	jack_set_process_callback(client, p_process, this);
+	//	jack_on_shutdown(client, p_shutdown, this);
+	jack_set_error_function(error_cb);
+	jack_set_info_function(info_cb);
+}
+
+void client_t::init(const char *clientname)
 {
 	client = jack_client_open (clientname, JackNullOption, nullptr);
-	jack_set_process_callback(client, p_process, this);
-	jack_on_shutdown(client, p_shutdown, this);
+	jack_activate(client);
 }
 
 client_t::~client_t()
 {
-	jack_client_close(client);
+	if(client)
+	 jack_client_close(client);
 }
 
 }

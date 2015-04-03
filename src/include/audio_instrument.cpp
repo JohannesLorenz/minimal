@@ -19,6 +19,7 @@
 
 #include <jack/jack.h>
 #include "audio_instrument.h"
+#include <cstdio> // TODO
 
 constexpr std::size_t buffer_size = 1 << 14;
 constexpr std::size_t sample_size = sizeof(jack_default_audio_sample_t);
@@ -63,6 +64,7 @@ int audio_instrument_t::process (jack_nframes_t nframes)
 
 void audio_instrument_t::init_2()
 {
+	init();
 //	init_3();
 }
 
@@ -80,31 +82,53 @@ _shutdown (void *arg)
 
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
-	audio_out((effect_t&)*this, rb_size, rb_size),
-	client(nullptr) // TODO
+	audio_out((effect_t&)*this, rb_size, rb_size)
 {
 }
 
 void audio_instrument_t::init(/*jack_client_t &client*/)
 {
+	std::cerr << "initing with pid: " << pid << std::endl;
+	client.init(("jack_client_" + std::to_string(pid)).c_str());
+	std::cerr << "init" << std::endl;
+
 	// load ringbuffers into cache
 	audio_out::data[0].touch();
 	audio_out::data[1].touch();
 
-	ports[0] = jack_port_register(client, "rb0", JACK_DEFAULT_AUDIO_TYPE,
+	ports[0] = client.register_port("rb0", JACK_DEFAULT_AUDIO_TYPE,
 			JackPortIsInput, 0);
-	ports[1] = jack_port_register(client, "rb1", JACK_DEFAULT_AUDIO_TYPE,
+	ports[1] = client.register_port("rb1", JACK_DEFAULT_AUDIO_TYPE,
 			JackPortIsInput, 0);
 	if(!ports[0] || !ports[1])
 	 throw "can not register port";
 
-	if (jack_connect (client, "out_1", "rb0") // TODO: out_1 from where?
-		|| jack_connect (client, "out_2", "rb1")) {
+	const std::string z_client_name = "zynaddsubfx_" + std::to_string(pid);
+	std::string z_port_names[2] = { z_client_name + ":out_" + std::to_string(1),
+		z_client_name + ":out_" + std::to_string(2) };
+
+	std::cerr << "available jack ports: " << std::endl;
+	system("jack_lsp");
+	std::cerr << z_port_names[0] << " -> " << jack_port_name(ports[0]) << std::endl;
+	std::cerr << z_port_names[1] << " -> " << jack_port_name(ports[1]) << std::endl;
+
+	if(!client.client)
+	 throw "CLIENT";
+
+
+
+	if (client.connect(z_port_names[0].c_str(), jack_port_name(ports[0])) // TODO: out_1 from where?
+		|| client.connect (z_port_names[1].c_str(), jack_port_name(ports[1]))) {
+
+		int prob = client.connect(z_port_names[0].c_str(), jack_port_name(ports[0]));
+		std::cerr << "PROBLEM: " << prob << std::endl;
+		perror("???");
+
 		throw "cannot connect input port TODO to TODO";
 	}
 
-	jack_set_process_callback(client, _process, this);
-	jack_on_shutdown (client, _shutdown, this);
+	jack_set_process_callback(client.client, _process, this);
+	jack_on_shutdown (client.client, _shutdown, this);
 }
 
 }
