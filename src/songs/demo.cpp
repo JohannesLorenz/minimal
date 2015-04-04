@@ -18,6 +18,7 @@
 /*************************************************************************/
 
 #include "zynaddsubfx.h"
+#include "jack_player.h"
 #include "project.h"
 #include "lfo.h"
 #include "note_line.h"
@@ -36,6 +37,8 @@ void init(project_t& p)
 	// instruments
 	// TODO: disallow "zynaddsubfx sine_base ...."
 	zyn_tree_t& sine_bass = p.emplace<zynaddsubfx_t>("sine bass");
+	jack_player_t& player = p.emplace<jack_player_t>();
+
 	//sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
 
 //	sine_bass.add_command_fixed<zynaddsubfx_t::note_on<>>(0, 42, 10);
@@ -91,6 +94,8 @@ void init(project_t& p)
 	sine_bass.note_input() << nl;
 
 	sine_bass.print_all_used();
+
+	player << sine_bass;
 
 	// PEnable
 	// "part0/kit0/adpars/voice0/AmpEnvelope/Penvsustain:i"

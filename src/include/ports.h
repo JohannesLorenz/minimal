@@ -21,11 +21,11 @@
 #define IO_PORTS_H
 
 #include <array>
-#include <iostream> // TODO!
 #include <limits>
 
 #include "types.h"
 #include "utils.h"
+#include "io.h" // TODO
 
 namespace mini
 {
@@ -90,7 +90,7 @@ public:
 	using data_type = T;
 
 	template <class ...Args>
-	out_port_templ(effect_t& e, Args... args) :
+	out_port_templ(effect_t& e, Args... args) : // TODO: forward?
 		out_port_base(e),
 		data(args...)
 	{
@@ -129,10 +129,20 @@ protected:
 public: // TODO
 	float change_stamp = -1.0f;
 	std::size_t id;
-public:
+
 	//bool unread_changes = false; // initally send values - TODO??
+protected:
 	const out_port_base* source = nullptr;
 
+/*
+	friends
+*/
+	template<class T1, class T2, bool IsDep>
+	friend void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt);
+
+	template<class T, bool IsDep>
+	friend void operator<<(in_port_templ<const T*, IsDep>& ipt, out_port_templ<T>& opt);
+public:
 
 	in_port_base(in_port_base&& ) noexcept = default;
 
@@ -140,16 +150,16 @@ public:
 		e(&ef)
 	{
 		add_in_port(ef, this);
-		std::cerr << "NEW IN PORT AT: " << this << std::endl;
+		//std::cerr << "NEW IN PORT AT: " << this << std::endl;
 	}
-
+/*
 	in_port_base(effect_t& ef, const out_port_base& source) :
 		e(&ef),
 		source(&source)
 	{
 		add_in_port(ef, this);
 		std::cerr << "NEW IN PORT AT: " << this << std::endl;
-	}
+	}*/
 
 	template<class P>
 	in_port_base(port_ctor<P> pc) : in_port_base(*pc.effect()) {}
@@ -173,7 +183,7 @@ public:
 
 	virtual const void* get_value() const = 0;
 
-	virtual ~in_port_base() { std::cerr << "IN PORT " << this <<": BYE! " << std::endl; }
+	virtual ~in_port_base() {}
 };
 
 template<class T, bool IsDep = true>
@@ -185,6 +195,12 @@ public: // TODO! (protected)
 	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
 
 	using in_port_base::in_port_base;
+	template <class ...Args>
+	in_port_templ_base(effect_t& e, Args... args) : // TODO: forward?
+		in_port_base(e),
+		data(args...)
+	{
+	}
 
 	bool is_dependency() const { return IsDep; }
 
@@ -200,6 +216,29 @@ protected:
 		change_stamp = source->change_stamp;
 	}
 
+};
+
+template<class T, bool IsDep>
+class in_port_templ_noassign : public in_port_templ_base<T, IsDep>
+{
+protected:
+	//! identifies us as a base for children
+	using base = in_port_templ<T, IsDep>;
+	using templ_base = in_port_templ_base<T, IsDep>;
+public:
+	using in_port_templ_base<T, IsDep>::in_port_templ_base;
+protected:
+	bool set()
+	{
+		templ_base::update_stamp();
+		return true;
+	}
+
+public:
+	bool update() {
+		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
+		return (out_port_changed) && set();
+	}
 };
 
 template<class T, bool IsDep = true>
@@ -224,41 +263,21 @@ public:
 
 	bool update() {
 		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
-		std::cerr << "OUT PORT CHANGED? " << out_port_changed << std::endl;
+	//	std::cerr << "OUT PORT CHANGED? " << out_port_changed << std::endl;
 		return (out_port_changed) && set(*(static_cast<const T*>(templ_base::source->get_value())));
 	}
 
 };
 
 template<class T, bool IsDep>
-class in_port_templ<T*, IsDep> : public in_port_templ_base<T*, IsDep>
+struct in_port_templ<T*, IsDep> : public in_port_templ_noassign<T*, IsDep>
 {
-protected:
-	//! identifies us as a base for children
-	using base = in_port_templ<T*, IsDep>;
-	using templ_base = in_port_templ_base<T*, IsDep>;
 public:
-	using in_port_templ_base<T*, IsDep>::in_port_templ_base;
-protected:
-	bool set(const T* )
-	{
-		templ_base::update_stamp();
-		return true;
-	}
-
-public:
-	bool update() {
-		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
-		return (out_port_changed) && set((static_cast<const T*>(templ_base::source->get_value())));
-	}
+	using in_port_templ_noassign<T*, IsDep>::in_port_templ_noassign;
 };
 
-
-
-
-//! copy-value based connection
-template<class T, bool IsDep>
-void operator<<(in_port_templ<T, IsDep>& ipt, out_port_templ<T>& opt)
+template<class T1, class T2, bool IsDep>
+void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt)
 {
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
@@ -271,20 +290,20 @@ void operator<<(in_port_templ<T, IsDep>& ipt, out_port_templ<T>& opt)
 	ipt.e->writers.push_back(opt.e);
 }
 
+
+//! copy-value based connection
+template<class T1, class T2, bool IsDep> // TODO: make traits such that T1 matches T2
+void operator<<(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt)
+{
+	internal_connect(ipt, opt);
+}
+
 //! pointer based connection
 template<class T, bool IsDep>
 void operator<<(in_port_templ<const T*, IsDep>& ipt, out_port_templ<T>& opt)
 {
-	if(ipt.source != nullptr)
-	 throw "double connect to in port";
-	ipt.source = &opt;
-	opt.readers.push_back(&ipt);
+	internal_connect(ipt, opt);
 	ipt.data = &opt.data;
-	if(ipt.is_dependency()) // TODO: via template matching
-	 opt.e->deps.push_back(ipt.e);
-	else
-	 opt.e->readers.push_back(ipt.e);
-	ipt.e->writers.push_back(opt.e);
 }
 
 template<class T, T Value>
@@ -341,7 +360,7 @@ public:
 	constexpr bool update() const { return true; }
 
 	const void* get_value() const {
-		std::cerr << "GET: " << *reinterpret_cast<const T*>(&data) << std::endl;
+		io::mlog << "GET: " << *reinterpret_cast<const T*>(&data) << io::endl;
 		return reinterpret_cast<const void*>(&data); }
 
 	//! this has no effect

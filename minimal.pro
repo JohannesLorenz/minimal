@@ -34,7 +34,10 @@ HEADERS += src/core/plugin.h \
 	src/include/soundfile.h \
 	src/include/jack.h \
 	src/include/audio.h \
-	src/include/audio_instrument.h
+	src/include/audio_instrument.h \
+	src/include/pid.h \
+	src/include/io.h \
+	src/include/jack_player.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -53,7 +56,11 @@ SOURCES += src/core/main.cpp \
 	src/include/recorder.cpp \
 	src/include/soundfile.cpp \
 	src/include/jack.cpp \
-	src/include/audio_instrument.cpp
+	src/include/audio_instrument.cpp \
+	src/include/pid.cpp \
+	src/include/io.cpp \
+	src/include/effect.cpp \
+	src/include/jack_player.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

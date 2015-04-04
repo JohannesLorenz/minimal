@@ -17,36 +17,55 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "recorder.h"
+#ifndef IO_H
+#define IO_H
+
+//#define ENABLE_IO
+
+//#ifdef ENABLE_IO
+#include <iostream>
+//#endif
 
 namespace mini {
+namespace io {
 
-recorder_t::recorder_t(const char* filename, int format) :
-	audio_in((effect_t&)*this, rb_size, rb_size),
-	fp(SndfileHandle(filename, SFM_WRITE, format
-		, 2 // channels
-		, 48000 // srate
-	)),
-	rb(/*ringbuffer_t::sample_size() **/ 16384), // TODO: size...
-	framebuf(new float[/*rb.bytes_per_frame() /*/ sizeof(float)])
+#ifdef ENABLE_IO
+using mlog_t = std::ostream;
+mlog_t& mlog = std::clog;
+mlog_t& endl(mlog_t& os) {
+	return std::endl(os);
+}
+mlog_t& mlog_no_rt = std::clog;
+#else
+
+struct mlog_t
 {
-}
-
-float recorder_t::_proceed(float time)
-{ // TODO: separate IO thread?
-	// TODO: read multiple at a time
-#if 0
-	while(rb.can_read()) // TODO: & snd file can capture
-	{
-		rb.read(reinterpret_cast<char*>(framebuf),
-			rb.bytes_per_frame());
-		if(fp.writef(framebuf, 1) != 1)
-		{
-			throw "soundfile write error";
-		}
+	//! this function does nothing
+	template<class T>
+	mlog_t& operator<<(const T&) {
+		return *this;
 	}
-#endif
-	return time + 0.1f; // TODO!!
+};
+
+extern mlog_t mlog;
+
+inline mlog_t& endl(mlog_t& os) {
+	return os;
 }
 
+/*namespace std
+{
+template<typename _CharT, typename _Traits>
+class basic_ostream;
+typedef basic_ostream<char> 		ostream;
+}*/
+
+// TODO: fwd declare ostream
+
+extern std::ostream& mlog_no_rt;
+#endif
+
 }
+}
+
+#endif // IO_H

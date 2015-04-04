@@ -21,8 +21,8 @@
 #define RTOSC_STRING_H
 
 #include <vector>
-#include <iostream>
 #include <cstring>
+#include "io.h"
 
 namespace mini {
 
@@ -57,7 +57,7 @@ public:
 		return itr;
 	}
 
-	std::ostream& inspect(std::ostream& stream = std::cerr) const {
+	std::ostream& inspect(std::ostream& stream = io::mlog_no_rt) const {
 		return stream << *this << std::endl;
 	}
 

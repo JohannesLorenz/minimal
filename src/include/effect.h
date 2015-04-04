@@ -23,11 +23,13 @@
 #include <set>
 #include <vector>
 #include <array>
+
 #include "daw.h"
 #include "types.h"
 #include "work_queue.h"
 #include "ports.h" // TODO!!! not needed!
 #include "simple.h"
+#include "io.h"
 
 const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
@@ -81,14 +83,8 @@ public:
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
 
-	void add_in_port(in_port_base* ipb) {
-		ipb->id = in_ports.size();
-		std::cerr << "ADDING: " << ipb << ", STAMP: " << ipb->change_stamp << ", id: " << ipb->id << std::endl;
-		in_ports.push_back(ipb);
-	}
-	void add_out_port(out_port_base* opb) {
-		out_ports.push_back(opb);
-	}
+	void add_in_port(in_port_base* ipb);
+	void add_out_port(out_port_base* opb);
 
 	virtual void instantiate() = 0;
 	virtual void clean_up() = 0;
@@ -97,7 +93,7 @@ public:
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
 	float proceed(float time) {
-		std::cerr << "proceeding with effect " << id() << std::endl;
+		io::mlog << "proceeding with effect " << id() << io::endl;
 		return next_time = _proceed(time);
 	}
 

@@ -18,12 +18,9 @@
 /*************************************************************************/
 
 #include <jack/jack.h>
+#include "pid.h"
 #include "audio_instrument.h"
-#include <cstdio> // TODO
-
-constexpr std::size_t buffer_size = 1 << 14;
-constexpr std::size_t sample_size = sizeof(jack_default_audio_sample_t);
-constexpr std::size_t rb_size = buffer_size * sample_size;
+#include "io.h"
 
 namespace mini
 {
@@ -84,13 +81,17 @@ audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
 	audio_out((effect_t&)*this, rb_size, rb_size)
 {
+	add_out_port(static_cast<audio_out*>(this));
 }
+
+template<class T>
+void test(out_port_templ<T>&) {}
 
 void audio_instrument_t::init(/*jack_client_t &client*/)
 {
-	std::cerr << "initing with pid: " << pid << std::endl;
-	client.init(("jack_client_" + std::to_string(pid)).c_str());
-	std::cerr << "init" << std::endl;
+	io::mlog_no_rt << "initing with pid: " << pid << std::endl;
+	client.init(("jack_client_" + os_pid_as_padded_string(pid)).c_str());
+	io::mlog_no_rt << "init" << std::endl;
 
 	// load ringbuffers into cache
 	audio_out::data[0].touch();
@@ -103,14 +104,14 @@ void audio_instrument_t::init(/*jack_client_t &client*/)
 	if(!ports[0] || !ports[1])
 	 throw "can not register port";
 
-	const std::string z_client_name = "zynaddsubfx_" + std::to_string(pid);
+	const std::string z_client_name = "zynaddsubfx_" + os_pid_as_padded_string(pid);
 	std::string z_port_names[2] = { z_client_name + ":out_" + std::to_string(1),
 		z_client_name + ":out_" + std::to_string(2) };
 
-	std::cerr << "available jack ports: " << std::endl;
+	io::mlog_no_rt << "available jack ports: " << std::endl;
 	system("jack_lsp");
-	std::cerr << z_port_names[0] << " -> " << jack_port_name(ports[0]) << std::endl;
-	std::cerr << z_port_names[1] << " -> " << jack_port_name(ports[1]) << std::endl;
+	io::mlog_no_rt << z_port_names[0] << " -> " << jack_port_name(ports[0]) << std::endl;
+	io::mlog_no_rt << z_port_names[1] << " -> " << jack_port_name(ports[1]) << std::endl;
 
 	if(!client.client)
 	 throw "CLIENT";
@@ -121,7 +122,7 @@ void audio_instrument_t::init(/*jack_client_t &client*/)
 		|| client.connect (z_port_names[1].c_str(), jack_port_name(ports[1]))) {
 
 		int prob = client.connect(z_port_names[0].c_str(), jack_port_name(ports[0]));
-		std::cerr << "PROBLEM: " << prob << std::endl;
+		io::mlog_no_rt << "PROBLEM: " << prob << std::endl;
 		perror("???");
 
 		throw "cannot connect input port TODO to TODO";

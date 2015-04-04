@@ -25,6 +25,7 @@
 #include "ports.h"
 #include "impl.h"
 #include "audio_instrument.h" // TODO: separate audio_instrument_t ?
+#include "io.h"
 
 namespace mini
 {
@@ -285,7 +286,7 @@ private:
 
 		void on_recv(float pos)
 		{
-			std::cerr << "SENDING ALL..." << std::endl;
+			io::mlog << "zyn notes port::on_recv" << io::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
 			if(p.first < 0)
 			 break;

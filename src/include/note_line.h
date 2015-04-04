@@ -24,6 +24,7 @@
 #include "daw.h"
 #include "ports.h"
 #include "impl.h"
+#include "io.h"
 
 namespace mini {
 
@@ -158,7 +159,7 @@ public:
 
 	float _proceed(float time)
 	{
-		std::cerr << "proceeding with note line... " << std::endl;
+		io::mlog << "proceeding with note line... " << io::endl;
 		float next = impl->_proceed(time);
 		return next;
 	}

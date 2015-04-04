@@ -23,19 +23,13 @@
 #include <sndfile.hh>
 
 #include "ringbuffer/src/lib/ringbuffer.h"
+#include "audio.h"
 #include "jack.h"
 #include "effect.h"
 
 namespace mini
 {
 
-struct audio_out : out_port_templ<ringbuffer_t>
-{
-};
-
-struct audio_in : out_port_templ<ringbuffer_t*>
-{
-};
 
 /*class recorder_client_t : client_t
 {

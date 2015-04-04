@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include "io.h"
 #include "note_line.h"
 
 namespace mini
@@ -54,7 +55,7 @@ float note_line_impl::_proceed(float time)
 
 			notes_at->first = event.id;
 			notes_at->second = event.volume;
-			std::cerr << "note on: " << event.id <<  std::endl;
+			io::mlog << "note on: " << event.id << io::endl;
 		}
 		else
 		{
@@ -65,13 +66,13 @@ float note_line_impl::_proceed(float time)
 
 			notes_at->first = -1;
 
-			std::cerr << "note off: " << event.id <<  std::endl;
+			io::mlog << "note off: " << event.id << io::endl;
 		}
 
 		recently_changed_ptr->first = geom.offs;
 		(recently_changed_ptr++)->second = id;
 
-		std::cerr << "played one note: " << itr->first.start << std::endl;
+		io::mlog << "played one note: " << itr->first.start << io::endl;
 
 		++itr;
 	}

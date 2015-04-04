@@ -19,12 +19,13 @@
 
 #include <cstdlib>
 #include <cassert>
-#include <iostream>
 #include <unistd.h>
 #include <termios.h>
+
 #include "loaded_project.h"
 #include "plugin.h"
 #include "lo_port.h"
+#include "io.h"
 
 using namespace mini;
 
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
 
 	//	sleep(5);
 	} catch(const char* msg) {
-		std::cout << "Aborting on error thrown: " << std::endl
+		io::mlog_no_rt << "Aborting on error thrown: " << std::endl
 			<< msg << std::endl;
 	}
 

@@ -24,6 +24,7 @@
 #include <limits>
 #include "effect.h"
 #include "ports.h"
+#include "io.h"
 
 namespace mini
 {
@@ -59,7 +60,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 
 	float _proceed(float time)
 	{
-		std::cerr << "proceeding with lfo... " << std::endl;
+		io::mlog << "proceeding with lfo... " << io::endl;
 		if(time < start) {
 			freq_lfo_out<OutType>::set(outside, time);
 			return start;
@@ -68,7 +69,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		{
 			freq_lfo_out<OutType>::set(middle + cosf((time-start) * premult) * mm2, time);
 			// TODO: repeat etc.
-			std::cerr << "lfo value: " << middle + cosf((time-start) * premult) * mm2 << std::endl;
+			io::mlog << "lfo value: " << middle + cosf((time-start) * premult) * mm2 << io::endl;
 
 			return time + step;
 		}

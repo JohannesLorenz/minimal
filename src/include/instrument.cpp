@@ -18,9 +18,9 @@
 /*************************************************************************/
 
 #include <sys/wait.h>
-#include <iostream> // TODO
 #include "lo_port.h"
 #include "instrument.h"
+#include "io.h"
 
 namespace mini {
 
@@ -39,7 +39,7 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	pid_t childs_pid;
 
 	if (pipe(pipefd) == -1) {
-		std::cerr << "pipe() failed -> no zyn" << std::endl;
+		io::mlog_no_rt << "pipe() failed -> no zyn" << std::endl;
 		return false;
 	}
 
@@ -48,7 +48,7 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	// fork sh
 	childs_pid=fork();
 	if(childs_pid < 0) {
-		std::cerr << "fork() failed -> no zyn" << std::endl;
+		io::mlog_no_rt << "fork() failed -> no zyn" << std::endl;
 		return false;
 	}
 	else if(childs_pid == 0) {
@@ -108,7 +108,7 @@ void instrument_t::clean_up()
 		delete close_command;
 	}
 
-	std::cerr << "zasf should be closed now... " << std::endl;
+	io::mlog_no_rt << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
 
 	int status;
@@ -117,7 +117,7 @@ void instrument_t::clean_up()
 		usleep(10000); // TODO: what is a good value here?
 	}
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
+		io::mlog_no_rt << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
 	}
 
@@ -139,7 +139,7 @@ float instrument_t::_proceed(float time)
 	for(std::size_t i = 0; i < cp->size(); ++i)
 	if((*cp)[i])
 	{
-		std::cerr << "in port: " << i << std::endl;
+		//std::cerr << "in port: " << i << std::endl;
 		if(in_ports[i]->update())
 		{
 			in_ports[i]->on_recv(time);

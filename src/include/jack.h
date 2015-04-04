@@ -22,7 +22,6 @@
 
 #include <atomic>
 #include <cstddef>
-#include <iostream> // TODO
 
 //#include <sys/types.h> // for size_t
 

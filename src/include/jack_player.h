@@ -17,36 +17,27 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "recorder.h"
+#ifndef JACK_PLAYER_H
+#define JACK_PLAYER_H
 
-namespace mini {
+#include "audio.h"
+#include "jack.h" // TODO: filename...
+#include "effect.h"
 
-recorder_t::recorder_t(const char* filename, int format) :
-	audio_in((effect_t&)*this, rb_size, rb_size),
-	fp(SndfileHandle(filename, SFM_WRITE, format
-		, 2 // channels
-		, 48000 // srate
-	)),
-	rb(/*ringbuffer_t::sample_size() **/ 16384), // TODO: size...
-	framebuf(new float[/*rb.bytes_per_frame() /*/ sizeof(float)])
+namespace mini
 {
-}
 
-float recorder_t::_proceed(float time)
-{ // TODO: separate IO thread?
-	// TODO: read multiple at a time
-#if 0
-	while(rb.can_read()) // TODO: & snd file can capture
-	{
-		rb.read(reinterpret_cast<char*>(framebuf),
-			rb.bytes_per_frame());
-		if(fp.writef(framebuf, 1) != 1)
-		{
-			throw "soundfile write error";
-		}
-	}
-#endif
-	return time + 0.1f; // TODO!!
-}
+class jack_player_t : public effect_t, public audio_in
+{
+	client_t client;
+	multiplex<jack_port_t*> ports;
+public:
+	jack_player_t();
+	void instantiate();
+	void clean_up() {} // TODO??
+	float _proceed(float);
+};
 
 }
+
+#endif // JACK_PLAYER_H

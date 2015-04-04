@@ -18,9 +18,9 @@
 /*************************************************************************/
 
 #include <dlfcn.h>
-#include <iostream>
 
 #include "project.h"
+#include "io.h"
 
 #include "plugin.h"
 
@@ -44,7 +44,7 @@ bool plugin_t::load_project(project_t &pro)
 	*(void**) (&init_project) = dlsym(handle, "init");
 
 	if ((error = dlerror()))  {
-		std::cerr << "Error calling init() from plugin: "
+		io::mlog_no_rt << "Error calling init() from plugin: "
 			  << error << std::endl;
 		pro.invalidate();
 		return false; // TODO: throw?

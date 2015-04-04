@@ -17,9 +17,9 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream>
 #include <cstdlib>
 
+#include "io.h"
 #include "loaded_project.h"
 
 namespace mini
@@ -55,7 +55,7 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 	//_ins(std::move(make_ins()))
 //	_global(daw_visit::visit(project.global()))
 {
-	std::cerr << "Loading project: " << this->project.title() << std::endl;
+	io::mlog_no_rt << "Loading project: " << this->project.title() << std::endl;
 	// instantiate and connect all fx
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
@@ -188,15 +188,15 @@ player_t::player_t(loaded_project_t &_project) : project(_project)
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	std::cerr << "Player for " << _project.project.title() << std::endl;
+	io::mlog_no_rt << "Player for " << _project.project.title() << std::endl;
 
 	_project.project.emplace<sentinel_effect>();
 
 
-	std::cerr << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
+	io::mlog_no_rt << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
 	for(effect_t*& e : _project.project.get_effects_noconst())
 	{
-		std::cerr << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
+		io::mlog_no_rt << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
 	}
@@ -212,7 +212,13 @@ player_t::player_t(loaded_project_t &_project) : project(_project)
 
 }
 
-void player_t::play_until(float dest)
+#ifdef __clang__
+	#define REALTIME __attribute__((annotate("realtime")))
+#else
+	#define REALTIME // replace with "nothing"
+#endif
+
+void REALTIME player_t::play_until(float dest)
 {
 	for(; pos < dest; pos += step)
 	{

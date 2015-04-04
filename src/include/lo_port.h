@@ -22,7 +22,6 @@
 
 #include <lo/lo_types.h>
 #include <cstddef>
-#include <iostream>
 #include "utils.h"
 
 namespace mini {

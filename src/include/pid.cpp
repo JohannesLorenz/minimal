@@ -17,36 +17,50 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "recorder.h"
+#include <unistd.h>
+#include <fstream>
 
-namespace mini {
+#include "pid.h"
 
-recorder_t::recorder_t(const char* filename, int format) :
-	audio_in((effect_t&)*this, rb_size, rb_size),
-	fp(SndfileHandle(filename, SFM_WRITE, format
-		, 2 // channels
-		, 48000 // srate
-	)),
-	rb(/*ringbuffer_t::sample_size() **/ 16384), // TODO: size...
-	framebuf(new float[/*rb.bytes_per_frame() /*/ sizeof(float)])
+//!< maximum lenght a pid has on any POSIX system
+//!< this is an estimation, but more than 12 looks insane
+constexpr std::size_t max_pid_len = 12;
+
+//!< safe pid lenght guess, posix conform
+std::size_t os_guess_pid_length()
 {
-}
-
-float recorder_t::_proceed(float time)
-{ // TODO: separate IO thread?
-	// TODO: read multiple at a time
-#if 0
-	while(rb.can_read()) // TODO: & snd file can capture
-	{
-		rb.read(reinterpret_cast<char*>(framebuf),
-			rb.bytes_per_frame());
-		if(fp.writef(framebuf, 1) != 1)
-		{
-			throw "soundfile write error";
-		}
+    const char* pid_max_file = "/proc/sys/kernel/pid_max";
+    if(-1 == access(pid_max_file, R_OK)) {
+	return max_pid_len;
+    }
+    else {
+	std::ifstream is(pid_max_file);
+	if(!is.good())
+	    return max_pid_len;
+	else {
+	    std::string s;
+	    is >> s;
+	    for(const auto& c : s)
+		if(c < '0' || c > '9')
+		    return max_pid_len;
+	    return std::min(s.length(), max_pid_len);
 	}
-#endif
-	return time + 0.1f; // TODO!!
+    }
 }
 
+//!< returns pid padded, posix conform
+std::string os_pid_as_padded_string(pid_t pid)
+{
+    char result_str[max_pid_len << 1];
+    std::fill_n(result_str, max_pid_len, '0');
+    std::size_t written = snprintf(result_str + max_pid_len, max_pid_len,
+	"%d", (int)pid);
+    // the below pointer should never cause segfaults:
+    return result_str + max_pid_len + written - os_guess_pid_length();
 }
+
+std::string os_pid_as_padded_string()
+{
+    return os_pid_as_padded_string(getpid());
+}
+

@@ -21,8 +21,13 @@ elseif(COMPILER STREQUAL "clang")
 
 	SET( CMAKE_CXX_COMPILER "clang++" )
 	SET( CMAKE_C_COMPILER "clang" )
+elseif(COMPILER STREQUAL "stoat")
+	set(FLTO_FLAGS "") # not supported
+
+	SET( CMAKE_CXX_COMPILER "/usr/local/bin/stoat-compile++" )
+	SET( CMAKE_CC_COMPILER "/usr/local/bin/stoat-compile" )
 else()
-	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang]")
+	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang|stoat]")
 endif()
 
 SET(COMPILER_SET "1")
@@ -49,7 +54,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 # MESSAGE("Options: (-D...=..., cmake -L for details)")
 # MESSAGE(" * COMPILER: ${COMPILER} (allowed: [gcc|clang])")
 
-SET(COMPILER "" CACHE STRING "Compiler to use (allowed: [gcc|clang])")
+SET(COMPILER "" CACHE STRING "Compiler to use (allowed: [gcc|clang|stoat])")
 SET(ZYN_BINARY "" CACHE STRING "/usr/bin/zynaddsubfx")
 
 # testing
@@ -146,6 +151,7 @@ MESSAGE("READING SUB-DIRECTORIES...")
 add_subdirectory(src)
 add_subdirectory(doc)
 
+add_custom_target(stoat2 stoat -c -w /usr/local/share/stoat/whitelist.txt -b /usr/local/share/stoat/blacklist.txt -w ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ringbuffer/data/stoat_suppression_list.txt -r ${CMAKE_CURRENT_BINARY_DIR}/src/)
 
 #
 # CPack Stuff

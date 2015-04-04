@@ -28,6 +28,7 @@
 #include <limits>
 
 #include "jack.h"
+#include "io.h"
 
 
 namespace mini {
@@ -79,11 +80,11 @@ int client_t::connect(const char *source_port, const char *destination_port)
 }
 
 void error_cb(const char* err) {
-	std::cerr << "Jack Error: " << err << std::endl;
+	io::mlog << "Jack Error: " << err << io::endl;
 }
 
 void info_cb(const char* info) {
-	std::cerr << "Jack Info: " << info << std::endl;
+	io::mlog << "Jack Info: " << info << io::endl;
 }
 
 client_t::client_t(const char* clientname) :
@@ -98,7 +99,10 @@ client_t::client_t(const char* clientname) :
 void client_t::init(const char *clientname)
 {
 	client = jack_client_open (clientname, JackNullOption, nullptr);
-	jack_activate(client);
+	if(!client)
+	 throw "Could not open jack client";
+	if( jack_activate(client) )
+	 throw "Could not activate jack client";
 }
 
 client_t::~client_t()

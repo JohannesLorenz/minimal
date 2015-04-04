@@ -20,11 +20,11 @@
 #include <cstdarg>
 #include <cstring>
 #include <lo/lo.h>
-#include <iostream>
 
 #include "osc_string.h"
 //#include "rtosc/rtosc.h"
 #include "lo_port.h"
+#include "io.h"
 
 namespace mini {
 
@@ -124,20 +124,20 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 {
 	std::vector<char> v(buffer, buffer + len);
 	osc_string rt(v);
-	std::cerr << "sending raw: " << std::endl;
+	io::mlog << "sending raw: " << io::endl;
 	rt.inspect();
 
 	int result;
 	lo_message msg = lo_message_deserialise((void*)buffer, len, &result);
 	if(!msg)
 	{
-		std::cerr << "lo error: " << result << std::endl;
+		io::mlog << "lo error: " << result << io::endl;
 		throw "lo_message_deserialise";
 	}
 	if(dest)
 	{
 		int res = lo_send_message(dest, buffer, msg);
-		std::cerr << "lo_send: " << res << std::endl;
+		io::mlog << "lo_send: " << res << io::endl;
 	}
 	else
 	 throw "dest";

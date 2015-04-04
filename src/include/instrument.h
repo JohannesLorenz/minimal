@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <iostream> // TODO
 #include <map>
 #include <set>
 #include <initializer_list>
@@ -37,6 +36,7 @@
 #include "effect.h"
 #include "work_queue.h"
 #include "lo_port.h"
+#include "io.h" // TODO?
 
 
 namespace mini
@@ -106,7 +106,7 @@ protected:
 	using named_t::named_t;
 
 public:
-	void print_all_used(std::ostream& os = std::cerr) const
+	void print_all_used(std::ostream& os = io::mlog_no_rt) const
 	{
 		os << name() << std::endl;
 		for(const auto& pr : used_ch) {
@@ -155,7 +155,6 @@ protected:
 
 	template<class NodeT>
 	NodeT& spawn(const std::string& ext) {
-		std::cerr << "ADDING? " << ext << (used_ch.find(ext) == used_ch.end()) << std::endl;
 		return add_if_new<NodeT>(ext);
 	}
 
