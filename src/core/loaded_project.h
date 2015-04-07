@@ -30,6 +30,9 @@
 #include "lfo.h"
 #include "daw_visit.h"
 #include "work_queue.h"
+#include "sample.h"
+
+#include "jack_engine.h"
 
 namespace mini {
 
@@ -46,44 +49,6 @@ public:
 	}
 };*/
 
-using tick_t = std::size_t;
-
-class m_time_t
-{
-	constexpr static double time_per_tick = 1000000 / 1024.0; // in useconds
-public:
-	tick_t pos; // represents 1/1024 seconds // suggested by fundamental
-	void tick() { usleep(time_per_tick); }
-	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
-};
-
-class bars_t
-{
-	tick_t n, c;
-public:
-	constexpr bars_t(tick_t n, tick_t c) : n(n), c(c) {}
-	const bars_t operator+(const bars_t& rhs) const {
-		return bars_t(n * rhs.c + rhs.n * c, c * rhs.c);
-	}
-};
-
-namespace bars
-{
-
-constexpr bars_t _1(1, 1),
-	_2(1, 2),
-	_3(1, 3),
-	_4(1, 4),
-	_6(1, 6),
-	_8(1, 8),
-	_12(1, 12),
-	_16(1, 16),
-	_24(1, 24),
-	_32(1, 32),
-	_48(1, 18),
-	_64(1, 64);
-
-}
 
 class loaded_project_t;
 
@@ -103,19 +68,20 @@ public:
 	std::size_t size() const { return data.size(); }
 };
 
-class player_t : public work_queue_t // TODO: own header
+class _player_t : public work_queue_t // TODO: own header
 {
 	// TODO: class handle_work_queue_t?
 	std::map<const effect_t*, handle_type> handles;
 
 	array_stack<effect_t*> ready_fx;
 
-	//!< maximum seconds to sleep until wakeup forced
+/*	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
 	static constexpr const float max_sleep_time = 0.1;
 
 	float step = 0.001f; //0.001seconds;
-	float pos = 0.0f;
+	float pos = 0.0f;*/
+	sample_t pos = 0; //!< number of samples played until now
 	loaded_project_t& project; // TODO! must be const
 
 //	std::set<float> end_set = { std::numeric_limits<float>::max() };
@@ -158,7 +124,7 @@ class player_t : public work_queue_t // TODO: own header
 		{
 		}
 
-		void proceed(float time) {
+		void proceed(sample_t time) {
 			update_next_time(effect->proceed(time));
 		}
 
@@ -174,23 +140,40 @@ class player_t : public work_queue_t // TODO: own header
 
 	std::vector<std::vector<bool>> changed_ports;
 
-public:
-	player_t(loaded_project_t& _project);
+	//! will be asking for the next nframes frames (i.e. samples for us)
+	//! and announce the following callback at @a pos + @a nframes samples
+	void callback(std::size_t nframes) { play_until(nframes, 5.0f); }
 
-	void play_until(float dest);
+	engine_t* engine;
+
+public:
+	_player_t(loaded_project_t& _project);
+private:
+	void play_until(sample_t work, sample_t);
 };
+
+//! template type of @a _player_t
+template<class SinkType>
+class player_t : public _player_t
+{
+	const SinkType* sink;
+public:
+	using _player_t::_player_t;
+};
+
+// TODO: class audio_stereo_project will set sink to mult<ringbuffer_t>
 
 class effect_root_t : public effect_t
 {
 	void instantiate() {}
 	void clean_up() {}
-	float _proceed(float ) { return 0.0f; }
+	sample_t _proceed(sample_t ) { return 0; }
 };
 
 //! this class takes a project and then does some things to handle it
 class loaded_project_t : util::non_copyable_t
 {
-	friend class player_t;
+	friend class _player_t;
 
 	// project
 	project_t project;
@@ -211,6 +194,7 @@ class loaded_project_t : util::non_copyable_t
 
 	// player
 	// player_t player;
+
 public:
 //	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 	effect_root_t& effect_root() { return _effect_root; }

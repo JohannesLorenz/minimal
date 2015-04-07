@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal osc sequencer                                     */
+/* test.cpp - test files for minimal                                     */
 /* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -17,41 +17,40 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <dlfcn.h>
-
-#include "project.h"
+#include "bars.h"
 #include "io.h"
 
-#include "plugin.h"
+using namespace mini;
 
-namespace mini {
-
-plugin_t::plugin_t(const char *path)
+template<class T1, class T2>
+void throw_if_neq(const T1& x, const T2& y)
 {
-	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
-	if(!handle)
-	 throw dlerror();
+	if(!(x == y))
+	{
+		no_rt::mlog << "Error - not equal: " << x << " != " << y
+			<< std::endl;
+		throw "Elements not equal as expected";
+	}
 }
 
-plugin_t::~plugin_t() { dlclose(handle); }
-
-bool plugin_t::load_project(project_t &pro)
+int main()
 {
-	void (*init_project)(project_t&);
-	const char *error;
+	try {
+		throw_if_neq(lcm(42, 105), 210u);
+		throw_if_neq(gcd(42, 105), 21u);
 
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
+		throw_if_neq(bars_t(42,105), bars_t(2,5));
+		throw_if_neq(bars_t(1,2) + bars_t(1, 3), bars_t(5,6));
 
-	if ((error = dlerror()))  {
-		no_rt::mlog << "Error calling init() from plugin: "
-			  << error << std::endl;
-		pro.invalidate();
-		return false; // TODO: throw?
+
+	} catch (const char* s)
+	{
+		no_rt::mlog << s << std::endl;
+		return 1;
 	}
 
-	init_project(pro);
-	return true;
+	no_rt::mlog << "SUCCESS" << std::endl;
+	return 0;
 }
 
-}
+

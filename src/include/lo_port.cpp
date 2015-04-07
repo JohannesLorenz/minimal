@@ -19,6 +19,7 @@
 
 #include <cstdarg>
 #include <cstring>
+#include <string>
 #include <lo/lo.h>
 
 #include "osc_string.h"

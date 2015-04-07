@@ -29,13 +29,13 @@ namespace mini
 
 class jack_player_t : public effect_t, public audio_in
 {
-	client_t client;
-	multiplex<jack_port_t*> ports;
+	jack::client_t client;
+	multiplex<jack::port_t> ports;
 public:
 	jack_player_t();
 	void instantiate();
 	void clean_up() {} // TODO??
-	float _proceed(float);
+	sample_t _proceed(sample_t);
 };
 
 }

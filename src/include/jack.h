@@ -36,7 +36,7 @@ typedef struct {
 } jack_ringbuffer_t ;
 */
 
-#include <jack/jack.h>
+#include <jack/jack.h> // TODO: types.h?
 //#include <jack/ringbuffer.h>
 
 namespace mini {
@@ -66,7 +66,31 @@ public:
 	~ringbuffer_t();
 };*/
 
+namespace jack
+{
 
+class port_t
+{
+	jack_port_t* port = nullptr;
+	port_t(jack_port_t* port) : port(port) {}
+	friend class client_t;
+	void* _get_buffer(jack_nframes_t nframes);
+	const void* _get_buffer(jack_nframes_t nframes) const;
+public:
+	port_t() {}
+	port_t(const port_t& ) = default;
+	bool operator!() const { return port; }
+	const char* name() const;
+
+	template<class T>
+	T* get_buffer(jack_nframes_t nframes) {
+		return static_cast<T*>(_get_buffer(nframes));
+	}
+	template<class T>
+	const T* get_buffer(jack_nframes_t nframes) const {
+		return static_cast<const T*>(_get_buffer(nframes));
+	}
+};
 
 
 class client_t
@@ -86,7 +110,7 @@ private:
 public:
 	std::size_t sample_rate() const;
 
-	jack_port_t* register_port(const char *port_name,
+	port_t register_port(const char *port_name,
 		const char *port_type, unsigned long flags,
 		unsigned long buffer_size);
 
@@ -96,6 +120,7 @@ public:
 	client_t(const char *clientname);
 	client_t() {}
 	void init(const char* clientname);
+	void activate();
 	virtual ~client_t();
 
 /*	virtual int process(jack_nframes_t) = 0;
@@ -113,6 +138,8 @@ struct jack_in : in_port_templ<jack_port_data>
 {
 
 };*/
+
+}
 
 }
 

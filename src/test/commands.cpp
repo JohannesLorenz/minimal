@@ -23,6 +23,7 @@
 #include "lfo.h"
 #include "osc_string.h"
 #include "zynaddsubfx.h"
+#include "io.h"
 
 using namespace mini;
 

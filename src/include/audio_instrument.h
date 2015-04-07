@@ -31,8 +31,8 @@ namespace mini
 
 class audio_instrument_t : public instrument_t, public audio_out
 {
-	multiplex<jack_port_t*> ports;
-	client_t client;
+	multiplex<jack::port_t> ports;
+	jack::client_t client;
 public:
 	audio_instrument_t(const char* name);
 private: // TODO

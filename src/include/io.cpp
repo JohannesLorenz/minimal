@@ -19,14 +19,25 @@
 
 #include "io.h"
 
-#ifndef ENABLE_IO
-#include <iostream>
-
 namespace mini {
+#ifdef ENABLE_IO
 namespace io {
-mlog_t mlog;
-std::ostream& mlog_no_rt = std::clog;
+mlog_t& mlog = std::clog;
+mlog_t& endl(mlog_t &os) {
+	return std::endl(os);
 }
+}
+namespace no_rt {
+std::ostream& mlog = std::clog;
+}
+#else
+//#include <iostream>
+namespace io {
+	mlog_t mlog;
+}
+namespace no_rt {
+	std::ostream& mlog = std::clog;
 }
 #endif
+}
 

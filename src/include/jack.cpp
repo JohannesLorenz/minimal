@@ -32,6 +32,7 @@
 
 
 namespace mini {
+namespace jack {
 
 #if 0
 std::size_t ringbuffer_t::can_read_size() const {
@@ -66,7 +67,7 @@ std::size_t client_t::sample_rate() const
 	return jack_get_sample_rate(client);
 }
 
-jack_port_t *client_t::register_port(const char* port_name,
+port_t client_t::register_port(const char* port_name,
 	const char* port_type, unsigned long flags,
 	unsigned long buffer_size)
 {
@@ -98,11 +99,19 @@ client_t::client_t(const char* clientname) :
 
 void client_t::init(const char *clientname)
 {
+	if(client)
+	 throw "Client already open";
 	client = jack_client_open (clientname, JackNullOption, nullptr);
 	if(!client)
 	 throw "Could not open jack client";
+}
+
+void client_t::activate()
+{
+	if(! client)
+		throw "Can not activate non-opened client";
 	if( jack_activate(client) )
-	 throw "Could not activate jack client";
+		throw "Could not activate jack client";
 }
 
 client_t::~client_t()
@@ -111,5 +120,18 @@ client_t::~client_t()
 	 jack_client_close(client);
 }
 
+const char *port_t::name() const { return jack_port_name(port); }
+
+void* port_t::_get_buffer(jack_nframes_t nframes)
+{
+	return jack_port_get_buffer(port, nframes);
+}
+
+const void* port_t::_get_buffer(jack_nframes_t nframes) const
+{
+	return jack_port_get_buffer(port, nframes);
+}
+
+}
 }
 

@@ -37,7 +37,11 @@ HEADERS += src/core/plugin.h \
 	src/include/audio_instrument.h \
 	src/include/pid.h \
 	src/include/io.h \
-	src/include/jack_player.h
+	src/include/jack_player.h \
+	src/include/sample.h \
+	src/include/bars.h \
+	src/core/engine.h \
+	src/core/jack_engine.h
 
 SOURCES += src/core/main.cpp \
 	src/core/plugin.cpp \
@@ -60,7 +64,12 @@ SOURCES += src/core/main.cpp \
 	src/include/pid.cpp \
 	src/include/io.cpp \
 	src/include/effect.cpp \
-	src/include/jack_player.cpp
+	src/include/jack_player.cpp \
+	src/test/commands.cpp \
+	src/test/maths.cpp \
+	src/include/bars.cpp \
+	src/core/engine.cpp \
+	src/core/jack_engine.cpp
 
 OTHER_FILES += INSTALL.txt \
 	README.txt \

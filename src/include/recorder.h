@@ -48,7 +48,7 @@ public:
 		int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16);
 	~recorder_t() { delete[] framebuf; }
 
-	float _proceed(float time);
+	sample_t _proceed(sample_t time);
 };
 
 }

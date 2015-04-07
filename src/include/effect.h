@@ -31,7 +31,7 @@
 #include "simple.h"
 #include "io.h"
 
-const float default_step = 0.1f; //0.001seconds; // suggested by fundamental
+//const sample_t default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
 namespace mini
 {
@@ -66,7 +66,7 @@ protected:
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports; // TODO: not public
 private:
-	float next_time;
+	sample_t next_time;
 	template<class T, class Tpl, int ...Is>
 	//! helper
 	static std::vector<T> make_vector(const Tpl& tpl, util::seq<Is...> ) {
@@ -78,7 +78,7 @@ private:
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
 	}
 protected:
-	virtual float _proceed(float time) = 0;
+	virtual sample_t _proceed(sample_t time) = 0;
 public:
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
@@ -92,16 +92,16 @@ public:
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
-	float proceed(float time) {
+	sample_t proceed(sample_t time) {
 		io::mlog << "proceeding with effect " << id() << io::endl;
 		return next_time = _proceed(time);
 	}
 
-	float get_next_time() const { return next_time; }
-	void set_next_time(float next) { next_time = next; }
+	sample_t get_next_time() const { return next_time; }
+	void set_next_time(sample_t next) { next_time = next; }
 
-	float get_childrens_next_time() const {
-		float result = std::numeric_limits<float>::max();
+	sample_t get_childrens_next_time() const {
+		sample_t result = std::numeric_limits<sample_t>::max();
 		for(const effect_t* e : writers)
 		 result = std::min(result, e->get_next_time());
 		return result;
@@ -130,9 +130,9 @@ class sentinel_effect : public effect_t
 public:
 	sentinel_effect() {
 		//set_id(std::numeric_limits<std::size_t>::max());
-		set_next_time(std::numeric_limits<float>::max());
+		set_next_time(std::numeric_limits<sample_t>::max());
 	}
-	float _proceed(float ) { throw "impossible"; }
+	sample_t _proceed(sample_t ) { throw "impossible"; }
 	void instantiate() {}
 	void clean_up() {}
 };
@@ -182,9 +182,9 @@ public:
 
 struct _test : effect_t
 {
-	port_chain<lfo_in<float>, lfo_out<float>> ch;
+	port_chain<lfo_in<sample_t>, lfo_out<sample_t>> ch;
 	_test() : ch(*this) {
-		auto p = ch.lfo_in<float>::port;
+		auto p = ch.lfo_in<sample_t>::port;
 		(void)p;
 	}
 };

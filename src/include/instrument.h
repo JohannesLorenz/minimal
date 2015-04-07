@@ -106,7 +106,7 @@ protected:
 	using named_t::named_t;
 
 public:
-	void print_all_used(std::ostream& os = io::mlog_no_rt) const
+	void print_all_used(std::ostream& os = no_rt::mlog) const
 	{
 		os << name() << std::endl;
 		for(const auto& pr : used_ch) {
@@ -227,7 +227,7 @@ public:
 
 	void clean_up();
 
-	float _proceed(float time);
+	sample_t _proceed(sample_t time);
 };
 
 
@@ -239,8 +239,8 @@ struct prioritized_command_base : public work_queue_t::task_base
 {
 	std::size_t priority;
 	work_queue_t::handle_type handle;
-	prioritized_command_base(std::size_t priority, float ) : // TODO: float
-		task_base(std::numeric_limits<float>::max()),
+	prioritized_command_base(std::size_t priority, sample_t ) :
+		task_base(std::numeric_limits<sample_t>::max()),
 		priority(priority)
 	{
 
@@ -257,7 +257,7 @@ class prioritized_command : public prioritized_command_base
 protected:
 	lo_port_t* lo_port;
 public:
-	prioritized_command(std::size_t priority, float next_time,
+	prioritized_command(std::size_t priority, sample_t next_time,
 		lo_port_t* lo_port) :
 		prioritized_command_base(priority, next_time),
 		lo_port(lo_port)
@@ -265,7 +265,7 @@ public:
 
 	}
 
-	void proceed_base(float) { // TODO: call virtual from here?
+	void proceed_base(sample_t) { // TODO: call virtual from here?
 	//	std::cerr << "PROCEEDING: " << this << std::endl;
 		if(!changed)
 		 throw "proceeding with unchanged command...";
@@ -287,20 +287,20 @@ class prioritized_command_cmd : public prioritized_command
 public:
 	command_base* cmd; // TODO: does command_base suffice?
 	prioritized_command_cmd(work_queue_t* w,
-		std::size_t priority, float next_time, lo_port_t* lo_port,
+		std::size_t priority, sample_t next_time, lo_port_t* lo_port,
 		command_base* cmd) :
 		prioritized_command(priority, next_time, lo_port),
 		w(w),
 		cmd(cmd)
 		{}
 
-	void proceed(float time)
+	void proceed(sample_t time)
 	{
 		proceed_base(time);
 		send_single_command(*lo_port, cmd->complete_buffer());
 
 		// TODO: not sure, but max sounds correct:
-		update_next_time(std::numeric_limits<float>::max());
+		update_next_time(std::numeric_limits<sample_t>::max());
 		w->update(handle);
 	}
 };
@@ -317,7 +317,7 @@ struct rtosc_in_port_t : PortType
 	{
 	}
 
-	void on_recv(float time); // see below
+	void on_recv(sample_t time); // see below
 //	rtosc_in_port_t(effect_t& ef) : PortType(ef) {}
 };
 
@@ -436,7 +436,7 @@ template <char ...Letters> class fixed_str {
 };
 
 template<class T>
-void rtosc_in_port_t<T>::on_recv(float time)
+void rtosc_in_port_t<T>::on_recv(sample_t time)
 {
 	// mark as changed
 	if(cmd->set_changed())

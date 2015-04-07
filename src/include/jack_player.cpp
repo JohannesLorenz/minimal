@@ -26,7 +26,7 @@ jack_player_t::jack_player_t() :
 	audio_in((effect_t&)*this, rb_size, rb_size)
 {
 	// TODO: error prone that programmer can forget this:
-	set_next_time(std::numeric_limits<float>::max());
+	set_next_time(std::numeric_limits<sample_t>::max());
 }
 
 void jack_player_t::instantiate()
@@ -41,17 +41,17 @@ void jack_player_t::instantiate()
 	 throw "can not register port";
 
 
-	io::mlog_no_rt << "available jack ports: " << std::endl;
+	no_rt::mlog << "available jack ports: " << std::endl;
 	system("jack_lsp");
 
-	io::mlog_no_rt << "system:playback_1" << " <- " << jack_port_name(ports[0]) << std::endl;
-	io::mlog_no_rt << "system:playback_2" << " <- " << jack_port_name(ports[1]) << std::endl;
+	no_rt::mlog << "system:playback_1" << " <- " << ports[0].name() << std::endl;
+	no_rt::mlog << "system:playback_2" << " <- " << ports[1].name() << std::endl;
 
-	if (client.connect(jack_port_name(ports[0]), "system:playback_1") // TODO: out_1 from where?
-		|| client.connect (jack_port_name(ports[1]), "system:playback_2")) {
+	if (client.connect(ports[0].name(), "system:playback_1") // TODO: out_1 from where?
+		|| client.connect (ports[1].name(), "system:playback_2")) {
 
-		int prob = client.connect("system:playback_1", jack_port_name(ports[0]));
-		io::mlog_no_rt << "PROBLEM: " << prob << std::endl;
+		int prob = client.connect("system:playback_1", ports[0].name());
+		no_rt::mlog << "PROBLEM: " << prob << std::endl;
 		perror("???");
 
 		throw "cannot connect input port TODO to TODO";
@@ -61,7 +61,7 @@ void jack_player_t::instantiate()
 	//jack_on_shutdown (client.client, _shutdown, this);
 }
 
-float jack_player_t::_proceed(float /*time*/)
+sample_t jack_player_t::_proceed(sample_t /*time*/)
 {
 	io::mlog << "JACKPLAYER" << io::endl;
 
@@ -70,9 +70,9 @@ float jack_player_t::_proceed(float /*time*/)
 		audio_in::data[0].read_space(),
 		audio_in::data[1].read_space());
 
-	using jsample_t = jack_default_audio_sample_t;
-	jsample_t* buf0 = (jsample_t *)jack_port_get_buffer(ports[0], read_space);
-	jsample_t* buf1 = (jsample_t *)jack_port_get_buffer(ports[1], read_space);
+	using jsample_t = jack_default_audio_sample_t; // TODO: incompatible?
+	jsample_t* buf0 = ports[0].get_buffer<jsample_t>(read_space);
+	jsample_t* buf1 = ports[1].get_buffer<jsample_t>(read_space);
 
 	{
 		auto rs = audio_in::data[0].read(read_space);
@@ -94,7 +94,7 @@ float jack_player_t::_proceed(float /*time*/)
 	//multiplex<ringbuffer_t> rbs(rb_size, rb_size);
 	//multiplex<ringbuffer_reader_t> rds(rb_size, rb_size);
 
-	return std::numeric_limits<float>::max();
+	return std::numeric_limits<sample_t>::max();
 }
 
 }

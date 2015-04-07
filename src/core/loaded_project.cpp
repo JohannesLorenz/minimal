@@ -55,7 +55,7 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 	//_ins(std::move(make_ins()))
 //	_global(daw_visit::visit(project.global()))
 {
-	io::mlog_no_rt << "Loading project: " << this->project.title() << std::endl;
+	no_rt::mlog << "Loading project: " << this->project.title() << std::endl;
 	// instantiate and connect all fx
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
@@ -143,7 +143,7 @@ loaded_project_t::~loaded_project_t()
 #endif
 }
 
-void player_t::update_effects()
+void _player_t::update_effects()
 {
 	// TODO: use player's copies
 
@@ -160,7 +160,7 @@ void player_t::update_effects()
 	} while(ready_fx.size());
 }
 
-void player_t::fill_commands()
+void _player_t::fill_commands()
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -169,12 +169,14 @@ void player_t::fill_commands()
 	}*/
 }
 
-void player_t::send_commands()
+void _player_t::send_commands()
 {
 
 }
 
-player_t::player_t(loaded_project_t &_project) : project(_project)
+_player_t::_player_t(loaded_project_t &_project) :
+	project(_project),
+	engine(new jack_engine_t) // TODO: choice for engine
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -188,15 +190,15 @@ player_t::player_t(loaded_project_t &_project) : project(_project)
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	io::mlog_no_rt << "Player for " << _project.project.title() << std::endl;
+	no_rt::mlog << "Player for " << _project.project.title() << std::endl;
 
 	_project.project.emplace<sentinel_effect>();
 
 
-	io::mlog_no_rt << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
+	no_rt::mlog << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
 	for(effect_t*& e : _project.project.get_effects_noconst())
 	{
-		io::mlog_no_rt << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
+		no_rt::mlog << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
 	}
@@ -218,9 +220,10 @@ player_t::player_t(loaded_project_t &_project) : project(_project)
 	#define REALTIME // replace with "nothing"
 #endif
 
-void REALTIME player_t::play_until(float dest)
+void REALTIME _player_t::play_until(sample_t work, sample_t /*dest*/)
 {
-	for(; pos < dest; pos += step)
+	sample_t final_pos = pos + work;
+	for(; next_task_time() <= final_pos; pos = next_task_time())
 	{
 //		update_effects();
 //		fill_commands();
@@ -234,7 +237,7 @@ void REALTIME player_t::play_until(float dest)
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
 			 pq.push(top);*/
-			const float cur_next_time = top->next_time();
+			const sample_t cur_next_time = top->next_time();
 			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
 			top->proceed(pos); // will update the next-time event
 
@@ -288,8 +291,11 @@ void REALTIME player_t::play_until(float dest)
 			pq.pop();*/
 		}
 //		std::cerr << "done: " << pos << std::endl;
-		usleep(1000000 * step);
+//		usleep(1000000 * step);
 	}
+
+	// no more tasks possible, so:
+	pos = final_pos;
 }
 
 }

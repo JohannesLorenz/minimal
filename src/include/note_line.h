@@ -38,7 +38,7 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 {
 	friend class note_line_t;
 
-	float last_time = -1.0f;
+	sample_t last_time = -1.0f;
 	//std::map<int, std::map<float, note_t>> note_lines;
 	/*float last_time = -1.0f;
 	struct notes_impl_t
@@ -79,12 +79,12 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 		std::map<note_geom_t, m_note_event>::const_iterator itr;
 
 
-		void proceed(float time);
+		void proceed(sample_t time);
 
 		note_task_t(note_line_impl& nl_ref,
 			const int& note_height,
-			const std::map<float, note_t>& values,
-			float first_event = 0.0f) :
+			const std::map<sample_t, note_t>& values,
+			sample_t first_event = 0.0f) :
 			task_base(first_event),
 			nl_ref(&nl_ref),
 			//last_key(nl_ref.notes_pressed.get()),
@@ -123,7 +123,7 @@ public:
 
 	note_line_impl(note_line_t *nl);
 
-	float _proceed(float time); /* {
+	sample_t _proceed(sample_t time); /* {
 		return run_tasks(time);
 	}*/
 };
@@ -157,10 +157,10 @@ public:
 	}
 
 
-	float _proceed(float time)
+	sample_t _proceed(sample_t time)
 	{
 		io::mlog << "proceeding with note line... " << io::endl;
-		float next = impl->_proceed(time);
+		sample_t next = impl->_proceed(time);
 		return next;
 	}
 };

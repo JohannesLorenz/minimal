@@ -17,41 +17,86 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <dlfcn.h>
+#ifndef BARS_H
+#define BARS_H
 
-#include "project.h"
-#include "io.h"
+#include "sample.h"
+#include <iosfwd>
 
-#include "plugin.h"
-
-namespace mini {
-
-plugin_t::plugin_t(const char *path)
+namespace mini
 {
-	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
-	if(!handle)
-	 throw dlerror();
+
+/*class m_time_t
+{
+	constexpr static double time_per_tick = 1000000 / 1024.0; // in useconds
+public:
+	tick_t pos; // represents 1/1024 seconds // suggested by fundamental
+	void tick() { usleep(time_per_tick); }
+	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
+};*/
+
+constexpr std::size_t gcd(std::size_t a, std::size_t b) {
+	return b == 0 ? a : gcd(b, a % b);
 }
 
-plugin_t::~plugin_t() { dlclose(handle); }
-
-bool plugin_t::load_project(project_t &pro)
+/*std::size_t gcd(std::size_t a, std::size_t b)
 {
-	void (*init_project)(project_t&);
-	const char *error;
+	for (;;)
+	{
+		if (a == 0) return b;
+		b %= a;
+		if (b == 0) return a;
+		a %= b;
+	}
+}*/
 
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
+std::size_t lcm(int a, int b)
+{
+	std::size_t temp = gcd(a, b);
 
-	if ((error = dlerror()))  {
-		no_rt::mlog << "Error calling init() from plugin: "
-			  << error << std::endl;
-		pro.invalidate();
-		return false; // TODO: throw?
+	return temp ? (a / temp * b) : 0;
+}
+
+class bars_t
+{
+	sample_t n, c;
+public:
+	bars_t(sample_t _n, sample_t _c) :
+		n(_n/gcd(_c,_n)), c(_c*n/_n)
+		{}
+	const bars_t operator+(const bars_t& rhs) const {
+		std::size_t _lcm = lcm(c, rhs.c);
+		return bars_t(n * _lcm / c + rhs.n * _lcm / rhs.c, _lcm);
 	}
 
-	init_project(pro);
-	return true;
+	bool operator==(const bars_t& other) const {
+		return other.n == n && other.c == c;
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const bars_t& b);
+};
+
+std::ostream& operator<<(std::ostream& os,
+		const bars_t& b);
+
+namespace bars
+{
+
+const bars_t _1(1, 1),
+	_2(1, 2),
+	_3(1, 3),
+	_4(1, 4),
+	_6(1, 6),
+	_8(1, 8),
+	_12(1, 12),
+	_16(1, 16),
+	_24(1, 24),
+	_32(1, 32),
+	_48(1, 18),
+	_64(1, 64);
+
 }
 
 }
+
+#endif // BARS_H

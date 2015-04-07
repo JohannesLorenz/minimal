@@ -284,7 +284,7 @@ private:
 			set_trigger(); // TODO: here?
 		}
 
-		void on_recv(float pos)
+		void on_recv(sample_t pos)
 		{
 			io::mlog << "zyn notes port::on_recv" << io::endl;
 			for(const std::pair<int, int>& p : notes_in::data->recently_changed)

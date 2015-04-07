@@ -17,41 +17,23 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <dlfcn.h>
-
-#include "project.h"
-#include "io.h"
-
-#include "plugin.h"
+#ifndef ENGINE_H
+#define ENGINE_H
 
 namespace mini {
 
-plugin_t::plugin_t(const char *path)
+class engine_t
 {
-	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
-	if(!handle)
-	 throw dlerror();
-}
-
-plugin_t::~plugin_t() { dlclose(handle); }
-
-bool plugin_t::load_project(project_t &pro)
-{
-	void (*init_project)(project_t&);
-	const char *error;
-
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
-
-	if ((error = dlerror()))  {
-		no_rt::mlog << "Error calling init() from plugin: "
-			  << error << std::endl;
-		pro.invalidate();
-		return false; // TODO: throw?
-	}
-
-	init_project(pro);
-	return true;
-}
+public:
+	engine_t();
+	virtual ~engine_t() {}
+	//! should start the engine, such that it will repeatedly call
+	//! the processing callback
+	virtual void run() = 0;
+	//! should return a description like "audio", "video" or "data"
+	virtual const char* type_hint() = 0;
+};
 
 }
+
+#endif // ENGINE_H

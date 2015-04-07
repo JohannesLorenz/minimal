@@ -22,21 +22,27 @@
 
 //#define ENABLE_IO
 
-//#ifdef ENABLE_IO
+#ifdef ENABLE_IO
 #include <iostream>
-//#endif
+#else
+#include <iostream>
+//#include <iosfwd> // TODO?
+#endif
 
 namespace mini {
-namespace io {
 
 #ifdef ENABLE_IO
+namespace io {
 using mlog_t = std::ostream;
-mlog_t& mlog = std::clog;
-mlog_t& endl(mlog_t& os) {
-	return std::endl(os);
+extern mlog_t& mlog;
+mlog_t& endl(mlog_t& os);
 }
-mlog_t& mlog_no_rt = std::clog;
+namespace no_rt {
+extern std::ostream& mlog;
+}
 #else
+
+namespace io {
 
 struct mlog_t
 {
@@ -53,6 +59,8 @@ inline mlog_t& endl(mlog_t& os) {
 	return os;
 }
 
+}
+
 /*namespace std
 {
 template<typename _CharT, typename _Traits>
@@ -62,10 +70,16 @@ typedef basic_ostream<char> 		ostream;
 
 // TODO: fwd declare ostream
 
-extern std::ostream& mlog_no_rt;
-#endif
+namespace no_rt {
+
+extern std::ostream& mlog;
+
+std::ostream& endl(std::ostream& os);
 
 }
+
+#endif
+
 }
 
 #endif // IO_H

@@ -57,7 +57,7 @@ public:
 		return itr;
 	}
 
-	std::ostream& inspect(std::ostream& stream = io::mlog_no_rt) const {
+	std::ostream& inspect(std::ostream& stream = no_rt::mlog) const {
 		return stream << *this << std::endl;
 	}
 

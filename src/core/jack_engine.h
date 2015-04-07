@@ -17,41 +17,23 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <dlfcn.h>
+#ifndef JACK_ENGINE_H
+#define JACK_ENGINE_H
 
-#include "project.h"
-#include "io.h"
-
-#include "plugin.h"
+#include "jack.h"
+#include "engine.h"
 
 namespace mini {
 
-plugin_t::plugin_t(const char *path)
+class jack_engine_t : public engine_t, public jack::client_t
 {
-	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
-	if(!handle)
-	 throw dlerror();
-}
 
-plugin_t::~plugin_t() { dlclose(handle); }
-
-bool plugin_t::load_project(project_t &pro)
-{
-	void (*init_project)(project_t&);
-	const char *error;
-
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
-
-	if ((error = dlerror()))  {
-		no_rt::mlog << "Error calling init() from plugin: "
-			  << error << std::endl;
-		pro.invalidate();
-		return false; // TODO: throw?
-	}
-
-	init_project(pro);
-	return true;
-}
+public:
+	jack_engine_t();
+	const char* type_hint() { return "audio"; }
+	void run() { activate(); }
+};
 
 }
+
+#endif // JACK_ENGINE_H

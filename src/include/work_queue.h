@@ -21,6 +21,7 @@
 #define WORK_QUEUE_H
 
 #include <boost/heap/fibonacci_heap.hpp>
+#include "sample.h"
 
 namespace mini {
 
@@ -38,14 +39,14 @@ public:
 	class task_base // TODO: make this crtp when possible?
 	{
 //		const command_base* cmd;
-		float _next_time;
+		sample_t _next_time;
 	public:
-		void update_next_time(float new_value) {
+		void update_next_time(sample_t new_value) {
 			_next_time = new_value;
 		}
-		virtual void proceed(float time) = 0;
-		float next_time() const { return _next_time; }
-		task_base(float next_time) : _next_time(next_time) {}
+		virtual void proceed(sample_t time) = 0;
+		sample_t next_time() const { return _next_time; }
+		task_base(sample_t next_time) : _next_time(next_time) {}
 		virtual bool cmp(const task_base& other) const { return this < &other; }
 		virtual handle_type& get_handle() { throw "not implemented"; }
 
@@ -54,7 +55,7 @@ public:
 private:
 	pq_type pq;
 public:
-	float run_tasks(float pos)
+	sample_t run_tasks(sample_t pos)
 	{
 		while(pq.top()->next_time() <= pos)
 		{
@@ -73,7 +74,7 @@ public:
 		return pq.top()->next_time();
 	}
 
-	float run_tasks_keep(float pos)
+	sample_t run_tasks_keep(sample_t pos)
 	{
 		while(pq.top()->next_time() <= pos)
 		{
@@ -87,6 +88,10 @@ public:
 			 pq.push(top);*/
 
 		}
+		return pq.top()->next_time();
+	}
+
+	sample_t next_task_time() const {
 		return pq.top()->next_time();
 	}
 
@@ -104,7 +109,7 @@ public:
 		return ret_val;
 	}
 
-	bool has_active_tasks(float at_time) {
+	bool has_active_tasks(sample_t at_time) {
 		//std::cerr << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << std::endl;
 		return pq.top()->next_time() <= at_time;
 	}

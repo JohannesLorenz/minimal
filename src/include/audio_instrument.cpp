@@ -28,8 +28,8 @@ namespace mini
 int audio_instrument_t::process (jack_nframes_t nframes)
 {
 	// copy nframes samples to a memory area and set pointer
-	float* mem0 = (float*)jack_port_get_buffer (ports[0], nframes);
-	float* mem1 = (float*)jack_port_get_buffer (ports[1], nframes);
+	float* mem0 = ports[0].get_buffer<float>(nframes);
+	float* mem1 = ports[1].get_buffer<float>(nframes);
 
 #if 0
 	/* Sndfile requires interleaved data. It is simpler here to
@@ -89,9 +89,11 @@ void test(out_port_templ<T>&) {}
 
 void audio_instrument_t::init(/*jack_client_t &client*/)
 {
-	io::mlog_no_rt << "initing with pid: " << pid << std::endl;
+	no_rt::mlog << "initing with pid: " << pid << std::endl;
 	client.init(("jack_client_" + os_pid_as_padded_string(pid)).c_str());
-	io::mlog_no_rt << "init" << std::endl;
+	no_rt::mlog << "init" << std::endl;
+
+	client.activate(); // TODO: call this at end of init() ?
 
 	// load ringbuffers into cache
 	audio_out::data[0].touch();
@@ -108,21 +110,19 @@ void audio_instrument_t::init(/*jack_client_t &client*/)
 	std::string z_port_names[2] = { z_client_name + ":out_" + std::to_string(1),
 		z_client_name + ":out_" + std::to_string(2) };
 
-	io::mlog_no_rt << "available jack ports: " << std::endl;
+	no_rt::mlog << "available jack ports: " << std::endl;
 	system("jack_lsp");
-	io::mlog_no_rt << z_port_names[0] << " -> " << jack_port_name(ports[0]) << std::endl;
-	io::mlog_no_rt << z_port_names[1] << " -> " << jack_port_name(ports[1]) << std::endl;
+	no_rt::mlog << z_port_names[0] << " -> " << ports[0].name() << std::endl;
+	no_rt::mlog << z_port_names[1] << " -> " << ports[1].name() << std::endl;
 
 	if(!client.client)
 	 throw "CLIENT";
 
+	if (client.connect(z_port_names[0].c_str(), ports[0].name()) // TODO: out_1 from where?
+		|| client.connect (z_port_names[1].c_str(), ports[1].name())) {
 
-
-	if (client.connect(z_port_names[0].c_str(), jack_port_name(ports[0])) // TODO: out_1 from where?
-		|| client.connect (z_port_names[1].c_str(), jack_port_name(ports[1]))) {
-
-		int prob = client.connect(z_port_names[0].c_str(), jack_port_name(ports[0]));
-		io::mlog_no_rt << "PROBLEM: " << prob << std::endl;
+		int prob = client.connect(z_port_names[0].c_str(), ports[0].name());
+		no_rt::mlog << "PROBLEM: " << prob << std::endl;
 		perror("???");
 
 		throw "cannot connect input port TODO to TODO";

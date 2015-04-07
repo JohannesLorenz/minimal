@@ -39,7 +39,7 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	pid_t childs_pid;
 
 	if (pipe(pipefd) == -1) {
-		io::mlog_no_rt << "pipe() failed -> no zyn" << std::endl;
+		no_rt::mlog << "pipe() failed -> no zyn" << std::endl;
 		return false;
 	}
 
@@ -48,7 +48,7 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	// fork sh
 	childs_pid=fork();
 	if(childs_pid < 0) {
-		io::mlog_no_rt << "fork() failed -> no zyn" << std::endl;
+		no_rt::mlog << "fork() failed -> no zyn" << std::endl;
 		return false;
 	}
 	else if(childs_pid == 0) {
@@ -86,7 +86,7 @@ void instrument_t::instantiate()
 	lo_port.init(get_port(pid, 0 /*TODO*/));
 
 	// TODO: init in effect ctor? (probably not doable in every case)
-	set_next_time(std::numeric_limits<float>::max());
+	set_next_time(std::numeric_limits<sample_t>::max());
 
 	for(const command_base* cmd : const_commands)
 	 send_single_command(lo_port, cmd->buffer());
@@ -108,7 +108,7 @@ void instrument_t::clean_up()
 		delete close_command;
 	}
 
-	io::mlog_no_rt << "zasf should be closed now... " << std::endl;
+	no_rt::mlog << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
 
 	int status;
@@ -117,7 +117,7 @@ void instrument_t::clean_up()
 		usleep(10000); // TODO: what is a good value here?
 	}
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		io::mlog_no_rt << "Process (pid " << pid << ") failed" << std::endl;
+		no_rt::mlog << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
 	}
 
@@ -130,7 +130,7 @@ void instrument_t::clean_up()
 	}
 }
 
-float instrument_t::_proceed(float time)
+sample_t instrument_t::_proceed(sample_t time)
 {
 	if(work_queue_t::has_active_tasks(time))
 	 throw "should not have active tasks yet";
@@ -150,7 +150,7 @@ float instrument_t::_proceed(float time)
 	work_queue_t::run_tasks_keep(time);
 
 	// all ports are triggers, so sleep
-	return std::numeric_limits<float>::max();
+	return std::numeric_limits<sample_t>::max();
 
 	//return time + 0.1f; // TODO??????????????????????????????
 //	return work_queue_t::run_tasks(time);
@@ -165,7 +165,7 @@ float instrument_t::_proceed(float time)
 			ipb->unread_changes = false;
 		}
 	}
-	return std::numeric_limits<float>::max();
+	return std::numeric_limits<sample_t>::max();
 	//return work_queue_t::run_tasks(time);*/
 }
 
