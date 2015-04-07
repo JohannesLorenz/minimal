@@ -1,0 +1,8 @@
+Q: Why do you offer multiple engines, but only jack is allowed for connecting
+   to zynaddsubfx?
+A: For those reasons:
+    1 - For the engines, you might need different choices, depending on what
+        you like to do with the output - forwarding, connecting, ...
+    2 - You could interpret data in different ways: a sine wave can be a sound
+        or a math function or ...
+    3 - It was easier to code

@@ -81,6 +81,7 @@ protected:
 	using base = out_port_templ<T>;
 public:
 	T data;
+protected:
 	bool start = true;
 
 	//operator const T&() { return data; }
@@ -126,9 +127,9 @@ public: // TODO!! protected
 private:
 	bool _is_trigger = false;
 	bool _is_precomputable;
-protected:
+//protected:
 public: // TODO
-	sample_t change_stamp = -1.0f;
+	sample_t change_stamp = -1;
 	std::size_t id;
 
 	//bool unread_changes = false; // initally send values - TODO??
