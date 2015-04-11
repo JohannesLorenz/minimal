@@ -133,9 +133,14 @@ link_directories(${AUDIO_LIBRARY_DIRS})
 # Compile
 #
 
+# TODO: move this up, test it
+if(COMPILER STREQUAL "stoat") # for stoat, it does not matter
+	SET(CMAKE_BUILD_TYPE "Release")
+else()
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 	message(FATAL_ERROR "Please set -DCMAKE_BUILD_TYPE=[Debug|Release]")
+endif()
 endif()
 endif()
 
@@ -188,6 +193,7 @@ INCLUDE(CPack)
 # Summary
 #
 
+# TODO: make this like in zyn
 MESSAGE("")
 MESSAGE("SUMMARY:")
 MESSAGE(" * Project: ${PROJECT_NAME} ${VERSION}")
@@ -199,18 +205,6 @@ else()
 endif()
 MESSAGE(" * Build Type: ${CMAKE_BUILD_TYPE} (${MSG_BUILD_TYPE_FLAG})")
 MESSAGE(" * Zyn binary (-DZYN_BINARY): ${ZYN_BINARY}")
-#if(BUILD_QT_GUI)
-#	set(MSG_QT_FOUND "Yes")
-#else(BUILD_QT_GUI)
-#	set(MSG_QT_FOUND "No - install Qt if you want")
-#endif(BUILD_QT_GUI)
-#MESSAGE(" * Build Qt GUI: ${MSG_QT_FOUND}")
-#if(BUILD_USR_DIR)
-#	set(MSG_USR_FOUND "Yes - Found source files")
-#else(BUILD_USR_DIR)
-#	set(MSG_USR_FOUND "No - No usr dir in /src")
-#endif(BUILD_USR_DIR)
-#MESSAGE(" * Build USR DIR: ${MSG_USR_FOUND}")
 MESSAGE(" * Building Doc: No - Type make doc if you want")
 MESSAGE(" * Executing Tests: No - Type make test if you want")
 MESSAGE("")

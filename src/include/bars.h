@@ -60,10 +60,15 @@ std::size_t lcm(int a, int b)
 class bars_t
 {
 	sample_t n, c;
+
+	static sample_t samples_per_bar;
 public:
 	bars_t(sample_t _n, sample_t _c) :
 		n(_n/gcd(_c,_n)), c(_c*n/_n)
-		{}
+	{
+		if(!c)
+		 throw("c can not be zero in n/c");	
+	}
 	const bars_t operator+(const bars_t& rhs) const {
 		std::size_t _lcm = lcm(c, rhs.c);
 		return bars_t(n * _lcm / c + rhs.n * _lcm / rhs.c, _lcm);
@@ -72,8 +77,20 @@ public:
 	bool operator==(const bars_t& other) const {
 		return other.n == n && other.c == c;
 	}
-
+	
 	friend std::ostream& operator<<(std::ostream& os, const bars_t& b);
+
+	static void set_samples_per_bar(sample_t n) {
+		samples_per_bar = n;
+	}
+	
+	sample_t floor() const { return n/c; }
+	bars_t rest() const { return bars_t(n%c, c); }
+	//sample_t ceil() const { r } TODO: this is not just n/c + 1
+
+	sample_t as_samples_floor() const {
+		return bars_t(n * samples_per_bar, c).floor();
+	}
 };
 
 std::ostream& operator<<(std::ostream& os,

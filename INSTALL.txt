@@ -7,8 +7,9 @@ CONTENTS
 
 0 Requirements
 1 Installation
-2 Running
-3 Debugging
+2 Realtime check with stoat
+3 Running
+4 Debugging
 
 0 Requirements
 ::::::::::::::
@@ -18,10 +19,15 @@ You will need the following libraries, headers and tools:
   * at least g++ 4.8 or clang 3.3
   * boost
   * cmake
-  * zynaddsubfx, a version from at least April 2015 (TODO: make optional)
+  * jack (TODO: jack2 in the future?)
 
-1 Installation of the commandline interface
-:::::::::::::::::::::::::::::::::::::::::::
+There are plugins that might require: # TODO: this is a core requirement yet
+
+  * zynaddsubfx, a version from at least April 2015 (TODO: make optional)
+  * sndfile
+
+1 Installation
+::::::::::::::
 
 The initial installation and updating are different processes.
 
@@ -43,7 +49,22 @@ In order to update the code, go to the main directory and type
 
   ./update
 
-2 Running
+2 Realtime check with stoat
+:::::::::::::::::::::::::::
+
+Make sure stoat is (root-)installed on your disk.
+
+Instead of using the cmake code from above, use
+
+  cmake -DCOMPILER=stoat ..
+
+Then, run
+
+  make stoat.
+
+The output should prompt a total of 0 errors.
+
+3 Running
 :::::::::
 
 You can try playing a song now. Be careful to set the volume to as loud as it
@@ -51,7 +72,7 @@ usually is when you use zynaddsubfx.
 
   ./src/core/minimal ./src/songs/libdemo.so
 
-3 Debugging
+4 Debugging
 :::::::::::
 
 TODO

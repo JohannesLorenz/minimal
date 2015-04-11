@@ -42,7 +42,7 @@ struct multiplex
 	T data[N];
 
 	template<class ...Args>
-	multiplex(Args&&... args) : data{std::forward<Args>(args)...} {} // TODO: std forward
+	multiplex(Args&&... args) : data{std::forward<Args>(args)...} {}
 
 	/*template<class T2>
 	multiplex(const multiplex<T2, N>& other) :
@@ -67,7 +67,8 @@ public:
 		//return assign(other, util::gen_seq<N>());
 		data = other.data;
 	}
-
+	
+	// TODO: should be like std::get<I> ?
 	const T& operator[](std::size_t i) const { return data[i]; }
 	T& operator[](std::size_t i) { return data[i]; }
 };

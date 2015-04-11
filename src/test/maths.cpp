@@ -38,10 +38,13 @@ int main()
 	try {
 		throw_if_neq(lcm(42, 105), 210u);
 		throw_if_neq(gcd(42, 105), 21u);
-
+		
 		throw_if_neq(bars_t(42,105), bars_t(2,5));
 		throw_if_neq(bars_t(1,2) + bars_t(1, 3), bars_t(5,6));
-
+		
+		throw_if_neq(bars_t(42,105).floor(), 0);
+		throw_if_neq(bars_t(21,4).floor(), 5);
+		throw_if_neq(bars_t(23,4).rest(), return bars_t(3,4));
 
 	} catch (const char* s)
 	{

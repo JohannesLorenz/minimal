@@ -3,6 +3,8 @@
 
 #include <sndfile.h> // TODO?
 
+// TODO: needed? sndfile has an own class...
+
 class soundfile_t
 {
 //	SNDFILE *sf;
