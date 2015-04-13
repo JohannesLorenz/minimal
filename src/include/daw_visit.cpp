@@ -160,7 +160,7 @@ namespace daw_visit {
 			cmd_vectors note_commands =
 					t.instrument()->make_note_commands(mm);
 			for(auto& pr : note_commands) {
-				pr.second.insert(std::numeric_limits<float>::max()); // sentinel
+				pr.second.insert(std::numeric_limits<sample_t>::max()); // sentinel
 			}
 			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
 
@@ -182,7 +182,7 @@ namespace daw_visit {
 
 		for(const auto& pr : t.get<command_base>())
 		{
-			result.emplace(pr.second, std::set<float>{});
+			result.emplace(pr.second, std::set<sample_t>{});
 		}
 
 		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
@@ -202,7 +202,7 @@ namespace daw_visit {
 			//cmd_vectors v = std::make_pair(&t, visit(t));
 			cmd_vectors _v = visit(t);
 
-			using cmd_pair = std::pair<const command_base*, std::set<float>>;
+			using cmd_pair = std::pair<const command_base*, std::set<sample_t>>;
 
 			res.emplace/*_hint*/(/*res.end(),*/ *ins, _v);
 
@@ -226,7 +226,7 @@ namespace daw_visit {
 					//for(const cmd_vectors::value_type vt : v)
 					{
 						const command_base& cmd = *vt.first;
-						std::set<float> & vals = vt.second;
+						std::set<sample_t> & vals = vt.second;
 
 						// if instrument *and* command are equal,
 						// add the set to the known command
@@ -238,7 +238,7 @@ namespace daw_visit {
 							}
 						else
 							{
-								std::set<float>& vals_existing = ins_cmd->second;
+								std::set<sample_t>& vals_existing = ins_cmd->second;
 								vals_existing.insert(vals.begin(), vals.end());
 								/*	activator_events* vals_existing = dynamic_cast<activator_events*>(ins_cmd->second);
 					//vals_existing.insert(vals.begin(), vals.end());
@@ -263,7 +263,7 @@ namespace daw_visit {
 			for(const auto& pr2 : pr.second)
 			{
 				std::cerr << " - track: " << pr2.first->buffer() << std::endl;
-				for(const float& f : pr2.second)
+				for(const sample_t& f : pr2.second)
 				 std::cerr << "  * note at: " << f << std::endl;
 			}
 		}*/
@@ -292,7 +292,7 @@ namespace daw_visit {
 			cmd_vectors note_commands =
 					t.instrument()->make_note_commands(mm);
 			for(auto& pr : note_commands) {
-				pr.second.insert(std::numeric_limits<float>::max()); // sentinel
+				pr.second.insert(std::numeric_limits<sample_t>::max()); // sentinel
 			}
 			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
 
@@ -310,7 +310,7 @@ namespace daw_visit {
 
 	/*	for(const auto& pr : t.get<command_base>())
 		{
-			result.emplace(pr.second, std::set<float>{});
+			result.emplace(pr.second, std::set<sample_t>{});
 		}
 */
 		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
@@ -330,7 +330,7 @@ namespace daw_visit {
 			//cmd_vectors v = std::make_pair(&t, visit(t));
 			cmd_vectors _v = visit(t);
 
-			using cmd_pair = std::pair<const command_base*, std::set<float>>;
+			using cmd_pair = std::pair<const command_base*, std::set<sample_t>>;
 
 			// creation of loaded_istrument_t
 			res.emplace/*_hint*/(/*res.end(),*/ *ins, _v);

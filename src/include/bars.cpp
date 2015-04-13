@@ -23,9 +23,11 @@
 namespace mini
 {
 
+sample_t bars_t::samples_per_bar;
+
 std::ostream &operator<<(std::ostream &os, const mini::bars_t &b)
 {
-	return os << b.c << '/' << b.n;
+	return os << b.d << '/' << b.n;
 }
 
 }

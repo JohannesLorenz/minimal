@@ -86,16 +86,16 @@ public:
 		{
 		}
 
-		void proceed(float ) {
+		void proceed(sample_t ) {
 			if(cmd->update()) // TODO: only fetch values if they changed?
 			 ins->con.send_osc_str(cmd->buffer());
-			float next_time = cmd->get_next_time();
+			sample_t next_time = cmd->get_next_time();
 			update_next_time(next_time);
 		}
 	};
 
 
-	virtual float _proceed(float time)
+	virtual sample_t _proceed(sample_t time)
 	{
 		return run_tasks(time);
 	}

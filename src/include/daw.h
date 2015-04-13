@@ -25,6 +25,7 @@
 #include "utils.h"
 #include "tuple_helpers.h"
 #include "command.h" // TODO: forward declare?
+#include "bars.h"
 
 namespace mini {
 
@@ -36,9 +37,9 @@ namespace daw
 	class geom_t
 	{
 	public:
-		float start;
-		geom_t(float start) noexcept : start(start) {}
-		static geom_t zero() noexcept { return geom_t(0.0f); }
+		bars_t start;
+		geom_t(bars_t start) noexcept : start(start) {}
+		static geom_t zero() noexcept { return geom_t(bars_t(0, 1)); }
 		bool operator<(const geom_t& rhs) const
 		{
 			return start < rhs.start;
@@ -48,10 +49,10 @@ namespace daw
 	class note_geom_t
 	{
 	public:
-		float start;
+		bars_t start;
 		int offs;
-		note_geom_t(float start, int offs) : start(start), offs(offs) {}
-		static note_geom_t zero() noexcept { return note_geom_t(0.0f, 0); }
+		note_geom_t(bars_t start, int offs) : start(start), offs(offs) {}
+		static note_geom_t zero() noexcept { return note_geom_t(bars_t(0, 1), 0); }
 		bool operator<(const note_geom_t& rhs) const
 		{
 			return start == rhs.start
@@ -110,29 +111,25 @@ namespace daw
 		}
 	};
 
-
-	/*template<class Self, class ...Children>
-	class daw_base
-	{
-	};*/
-
+#if 0
 	struct note_event_t {
-		int inst_id; float pos;
+		int inst_id; sample_t pos;
 	public:
-		note_event_t(int inst_id, float pos) : inst_id(inst_id), pos(pos) {}
+		note_event_t(int inst_id, sample_t pos) : inst_id(inst_id), pos(pos) {}
 	};
+#endif
 
 	class note_t
 	{
 		char _velocity = 64;
-		float _length = 0.25;
+		bars_t _length = bars::_8;
 	public:
 		char velocity() const { return _velocity; }
-		float length() const { return _length; }
+		bars_t length() const { return _length; }
 	};
 
 	/*class note_t : public seg_base<note_geom_t> {
-		float propagate() const { return geom.start; } // TODO: also propagate end?
+		sample_t propagate() const { return geom.start; } // TODO: also propagate end?
 	public:
 		note_data_t n;
 		using seg_base::seg_base;
@@ -141,7 +138,7 @@ namespace daw
 	//! just notes, not corresponding to any instrument
 	class notes_t : public seg_base<note_geom_t, notes_t, note_t>
 	{
-		float propagate(float /*note*/) const { return geom.start; /*TODO: note*/ }
+		bars_t propagate(bars_t /*note*/) const { return geom.start; /*TODO: note*/ }
 	public:
 		void add_notes(const notes_t& notes, geom_t other_geom)
 		{
@@ -153,7 +150,7 @@ namespace daw
 
 		void add_note(const note_t& n, geom_t geom = geom_t::zero()) { add<note_t>(n, geom); }
 		/*notes_t(const note_geom_t& geom) : seg_base(geom) {
-			add_note(note_t(), note_geom_t(std::numeric_limits<float>::max(), 0));
+			add_note(note_t(), note_geom_t(std::numeric_limits<bars_t>::max(), 0));
 		}*/
 		using seg_base::seg_base;
 //		note_t& note(note_geom_t geom) { return make<note_t>(geom); }

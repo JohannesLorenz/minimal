@@ -39,8 +39,8 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 	friend class note_line_t;
 
 	sample_t last_time = -1.0f;
-	//std::map<int, std::map<float, note_t>> note_lines;
-	/*float last_time = -1.0f;
+	//std::map<int, std::map<sample_t, note_t>> note_lines;
+	/*sample_t last_time = -1.0f;
 	struct notes_impl_t
 	{
 		std::map<note_geom_t, note_t>::const_iterator itr;

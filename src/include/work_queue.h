@@ -50,7 +50,7 @@ public:
 		virtual bool cmp(const task_base& other) const { return this < &other; }
 		virtual handle_type& get_handle() { throw "not implemented"; }
 
-//		virtual float next() = 0;
+//		virtual sample_t next() = 0;
 	};
 private:
 	pq_type pq;

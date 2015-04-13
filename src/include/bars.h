@@ -59,23 +59,24 @@ std::size_t lcm(int a, int b)
 
 class bars_t
 {
-	sample_t n, c;
+	sample_t n, d;
 
 	static sample_t samples_per_bar;
 public:
-	bars_t(sample_t _n, sample_t _c) :
-		n(_n/gcd(_c,_n)), c(_c*n/_n)
+	bars_t(sample_t _n, sample_t _d) :
+		n(_n/gcd(_d,_n)), d(_d*n/_n)
 	{
-		if(!c)
-		 throw("c can not be zero in n/c");	
+		if(!d)
+		 throw("d can not be zero in n/d");
 	}
+
 	const bars_t operator+(const bars_t& rhs) const {
-		std::size_t _lcm = lcm(c, rhs.c);
-		return bars_t(n * _lcm / c + rhs.n * _lcm / rhs.c, _lcm);
+		std::size_t l = lcm(d, rhs.d);
+		return bars_t(n * l / d + rhs.n * l / rhs.d, l);
 	}
 
 	bool operator==(const bars_t& other) const {
-		return other.n == n && other.c == c;
+		return other.n == n && other.d == d;
 	}
 	
 	friend std::ostream& operator<<(std::ostream& os, const bars_t& b);
@@ -84,14 +85,40 @@ public:
 		samples_per_bar = n;
 	}
 	
-	sample_t floor() const { return n/c; }
-	bars_t rest() const { return bars_t(n%c, c); }
-	//sample_t ceil() const { r } TODO: this is not just n/c + 1
+	sample_t floor() const { return n/d; }
+	bars_t rest() const { return bars_t(n%d, d); }
+	//sample_t ceil() const { r } TODO: this is not just n/d + 1
 
 	sample_t as_samples_floor() const {
-		return bars_t(n * samples_per_bar, c).floor();
+		return bars_t(n * samples_per_bar, d).floor();
+	}
+
+	sample_t numerator() const { return n; }
+	sample_t denominator() const { return d; }
+
+	bool operator<(const bars_t& other) const {
+		sample_t l = lcm(d, other.d);
+		// TODO: shortening for if d>o.d && n<o.n and the opposite?
+		return n * (l/d) < other.n * (l/other.d);
+	}
+
+	bars_t operator-() const { return bars_t(-n, d); }
+
+	const bars_t operator-(const bars_t& rhs) const {
+		return operator+(-rhs);
 	}
 };
+
+bars_t operator+(int val, const bars_t& bar)
+{
+	sample_t d = bar.denominator();
+	return bars_t(val * d + bar.numerator(), d);
+}
+
+bars_t operator*(int val, const bars_t& bar)
+{
+	return bars_t(val * bar.numerator(), bar.denominator());
+}
 
 std::ostream& operator<<(std::ostream& os,
 		const bars_t& b);

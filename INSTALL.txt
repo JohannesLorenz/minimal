@@ -60,7 +60,7 @@ Instead of using the cmake code from above, use
 
 Then, run
 
-  make stoat.
+  make stoat2
 
 The output should prompt a total of 0 errors.
 

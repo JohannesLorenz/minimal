@@ -45,7 +45,6 @@ public:
 //	virtual std::string type_str() const = 0;
 //	virtual bool update() = 0;
 	virtual const osc_string& complete_buffer() const = 0;
-//	virtual float get_next_time() const = 0;
 
 //	virtual void execute(functor_base<>& ftor) const = 0;
 
@@ -478,20 +477,6 @@ public:
 		{
 		}
 
-#if 0
-	bool update()
-	{
-		bool changes = command_detail::_update<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
-		if(changes)
-		 complete_buffer();
-		return changes;
-	}
-
-	float get_next_time() const {
-		//float result = std::numeric_limits<float>::max();
-		return command_detail::_next_time<sizeof...(Args), 0>::template exec<Args...>(base_t::args);
-	}
-#endif
 	const osc_string& complete_buffer() const
 	{
 		auto itr = _buffer.get_itr_type_str();

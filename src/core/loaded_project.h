@@ -77,30 +77,30 @@ class _player_t : public work_queue_t // TODO: own header
 
 /*	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
-	static constexpr const float max_sleep_time = 0.1;
+	static constexpr const sample_t max_sleep_time = 0.1;
 
-	float step = 0.001f; //0.001seconds;
-	float pos = 0.0f;*/
+	sample_t step = 0.001f; //0.001seconds;
+	sample_t pos = 0.0f;*/
 	sample_t pos = 0; //!< number of samples played until now
 	loaded_project_t& project; // TODO! must be const
 
-//	std::set<float> end_set = { std::numeric_limits<float>::max() };
+//	std::set<sample_t> end_set = { std::numeric_limits<sample_t>::max() };
 
 /*	class task_events : public task_base
 	{
 	//	const loaded_project_t& project;
 		const loaded_instrument_t* ins;
 		const command_base* cmd;
-		std::set<float>::const_iterator itr;
+		std::set<sample_t>::const_iterator itr;
 	public:
-		void proceed(float); // TODO: really cpp?
+		void proceed(sample_t); // TODO: really cpp?
 
-		//float next() { return *itr; }
+		//sample_t next() { return *itr; }
 		// TODO: no idea why I can not use initializer lists
 		task_events(//const loaded_project_t& project,
 			const loaded_instrument_t* ins,
 			const command_base* cmd,
-			const std::set<float>::const_iterator& itr) :
+			const std::set<sample_t>::const_iterator& itr) :
 			task_base(*itr),
 			//project(project),
 			ins(ins),

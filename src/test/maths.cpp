@@ -33,6 +33,8 @@ void throw_if_neq(const T1& x, const T2& y)
 	}
 }
 
+using namespace bars;
+
 int main()
 {
 	try {
@@ -44,7 +46,12 @@ int main()
 		
 		throw_if_neq(bars_t(42,105).floor(), 0);
 		throw_if_neq(bars_t(21,4).floor(), 5);
-		throw_if_neq(bars_t(23,4).rest(), return bars_t(3,4));
+		throw_if_neq(bars_t(23,4).rest(), bars_t(3,4));
+
+		bars_t::set_samples_per_bar(1024);
+		throw_if_neq(bars_t(1, 128).as_samples_floor(), 8);
+
+		throw_if_neq(1 + _3, bars_t(4, 3));
 
 	} catch (const char* s)
 	{
