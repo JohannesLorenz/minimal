@@ -61,14 +61,22 @@ class bars_t
 {
 	sample_t n, d;
 
-	static sample_t samples_per_bar;
-public:
-	bars_t(sample_t _n, sample_t _d) :
-		n(_n/gcd(_d,_n)), d(_d*n/_n)
+	bars_t(sample_t _n, sample_t _d, sample_t _m, sample_t tmp = 0) :
+		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
 	{
 		if(!d)
-		 throw("d can not be zero in n/d");
+		 throw("d must not be zero in n/d");
 	}
+
+public:
+	bars_t(sample_t _n, sample_t _d) :
+		//n(_n/gcd(_d,_n)), d(_d*n/_n)
+		bars_t(1, _d, _n)
+	{
+	}
+
+
+	bars_t(const bars_t& ) = default;
 
 	const bars_t operator+(const bars_t& rhs) const {
 		std::size_t l = lcm(d, rhs.d);
@@ -81,16 +89,12 @@ public:
 	
 	friend std::ostream& operator<<(std::ostream& os, const bars_t& b);
 
-	static void set_samples_per_bar(sample_t n) {
-		samples_per_bar = n;
-	}
-	
 	sample_t floor() const { return n/d; }
 	bars_t rest() const { return bars_t(n%d, d); }
 	//sample_t ceil() const { r } TODO: this is not just n/d + 1
 
-	sample_t as_samples_floor() const {
-		return bars_t(n * samples_per_bar, d).floor();
+	sample_t as_samples_floor(const sample_t& samples_per_bar) const {
+		return bars_t(n, d, samples_per_bar).floor();
 	}
 
 	sample_t numerator() const { return n; }
@@ -103,6 +107,8 @@ public:
 	}
 
 	bars_t operator-() const { return bars_t(-n, d); }
+	friend bars_t operator+(int val, const bars_t& bar);
+	friend bars_t operator*(int val, const bars_t& bar);
 
 	const bars_t operator-(const bars_t& rhs) const {
 		return operator+(-rhs);
@@ -117,7 +123,7 @@ bars_t operator+(int val, const bars_t& bar)
 
 bars_t operator*(int val, const bars_t& bar)
 {
-	return bars_t(val * bar.numerator(), bar.denominator());
+	return bars_t(bar.numerator(), bar.denominator(), val);
 }
 
 std::ostream& operator<<(std::ostream& os,
@@ -138,6 +144,8 @@ const bars_t _1(1, 1),
 	_32(1, 32),
 	_48(1, 18),
 	_64(1, 64);
+
+bars_t operator""_2(unsigned long n) { return bars_t(n, 2); }
 
 }
 
