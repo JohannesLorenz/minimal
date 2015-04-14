@@ -53,6 +53,8 @@ int main()
 
 		throw_if_neq(1 + _3, bars_t(4, 3));
 
+		throw_if_neq(1 + 1_2, bars_t(3, 2));
+
 	} catch (const char* s)
 	{
 		no_rt::mlog << s << std::endl;

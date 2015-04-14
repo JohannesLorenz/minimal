@@ -132,7 +132,7 @@ std::ostream& operator<<(std::ostream& os,
 namespace bars
 {
 
-const bars_t _1(1, 1),
+/*const bars_t _1(1, 1),
 	_2(1, 2),
 	_3(1, 3),
 	_4(1, 4),
@@ -143,9 +143,12 @@ const bars_t _1(1, 1),
 	_24(1, 24),
 	_32(1, 32),
 	_48(1, 18),
-	_64(1, 64);
+	_64(1, 64);*/
 
-bars_t operator""_2(unsigned long n) { return bars_t(n, 2); }
+bars_t operator"" _2(unsigned long long int n) { return bars_t(n, 2); }
+bars_t operator"" _3(unsigned long long int n) { return bars_t(n, 3); }
+bars_t operator"" _4(unsigned long long int n) { return bars_t(n, 4); }
+bars_t operator"" _8(unsigned long long int n) { return bars_t(n, 8); }
 
 }
 

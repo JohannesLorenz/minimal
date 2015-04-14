@@ -122,7 +122,7 @@ namespace daw
 	class note_t
 	{
 		char _velocity = 64;
-		bars_t _length = bars::_8;
+		bars_t _length = bars_t(1, 8); // TODO: //(1 bars::_8);
 	public:
 		char velocity() const { return _velocity; }
 		bars_t length() const { return _length; }
