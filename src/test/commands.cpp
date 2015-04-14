@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* test.cpp - test files for minimal                                     */
+/* test files for minimal                                                */
 /* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */

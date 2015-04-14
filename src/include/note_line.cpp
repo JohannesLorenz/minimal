@@ -26,9 +26,9 @@ namespace mini
 note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 {
 	// insert notes
-	visit(ref->notes, note_geom_t(0, 0));
+	visit(ref->notes, note_geom_t(bars_t(0, 1), 0));
 	// insert sentinel
-	note_events.emplace(note_geom_t(std::numeric_limits<sample_t>::max(), 1),
+	note_events.emplace(note_geom_t(bars_t(std::numeric_limits<sample_t>::max(), 1), 1),
 		m_note_event{true, 0, std::numeric_limits<int>::max()});
 
 	itr = note_events.begin();
@@ -39,7 +39,7 @@ sample_t note_line_impl::_proceed(sample_t time)
 	note_signal_t& notes_out = ref->notes_out::data;
 	std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
 
-	while(itr->first.start <= time)
+	while(itr->first.start.floor() <= time) // TODO! 0.1f 0.1f 0.1f
 	{
 		const note_geom_t& geom = itr->first;
 		const m_note_event& event = itr->second;
@@ -82,7 +82,7 @@ sample_t note_line_impl::_proceed(sample_t time)
 	ref->notes_out::change_stamp = time;
 
 	last_time = time;
-	return itr->first.start;
+	return itr->first.start.floor(); // TODO! 0.1f 0.1f 0.1f
 }
 
 }

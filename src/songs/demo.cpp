@@ -24,6 +24,7 @@
 #include "note_line.h"
 
 using namespace mini;
+using namespace bars;using namespace bars;
 
 extern "C"
 {
@@ -53,21 +54,21 @@ void init(project_t& p)
 
 	using namespace daw;
 
-	notes_t maj(note_geom_t(0, 0));
-	maj.add_note(note_t(), note_geom_t(0, 0));
-	maj.add_note(note_t(), note_geom_t(0.33, 1));
-	maj.add_note(note_t(), note_geom_t(0.67, 2));
+	notes_t maj(note_geom_t(0_1, 0));
+	maj.add_note(note_t(), note_geom_t(0_1, 0));
+	maj.add_note(note_t(), note_geom_t(1_3, 1));
+	maj.add_note(note_t(), note_geom_t(2_3, 2));
 
 	// 8 major chords
 	note_line_t& nl = p.emplace<note_line_t>();
-	nl.add_notes(maj, note_geom_t(0, 62));
-	nl.add_notes(maj, note_geom_t(1, 63));
-	nl.add_notes(maj, note_geom_t(2, 64));
-	nl.add_notes(maj, note_geom_t(3, 65));
-	nl.add_notes(maj, note_geom_t(4, 66));
-	nl.add_notes(maj, note_geom_t(5, 67));
-	nl.add_notes(maj, note_geom_t(6, 68));
-	nl.add_notes(maj, note_geom_t(7, 69));
+	nl.add_notes(maj, note_geom_t(0_1, 62));
+	nl.add_notes(maj, note_geom_t(1_1, 63));
+	nl.add_notes(maj, note_geom_t(2_1, 64));
+	nl.add_notes(maj, note_geom_t(3_1, 65));
+	nl.add_notes(maj, note_geom_t(4_1, 66));
+	nl.add_notes(maj, note_geom_t(5_1, 67));
+	nl.add_notes(maj, note_geom_t(6_1, 68));
+	nl.add_notes(maj, note_geom_t(7_1, 69));
 
 //	lfo_t<int>& m_lfo = p.emplace<lfo_t<int>>(0.0, 64.0, 0.0, 8.);
 

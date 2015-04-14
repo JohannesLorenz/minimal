@@ -35,7 +35,7 @@ public:
 	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
 };*/
 
-constexpr std::size_t gcd(std::size_t a, std::size_t b) {
+inline constexpr std::size_t gcd(std::size_t a, std::size_t b) {
 	return b == 0 ? a : gcd(b, a % b);
 }
 
@@ -50,7 +50,7 @@ constexpr std::size_t gcd(std::size_t a, std::size_t b) {
 	}
 }*/
 
-std::size_t lcm(int a, int b)
+inline std::size_t lcm(int a, int b)
 {
 	std::size_t temp = gcd(a, b);
 
@@ -115,13 +115,13 @@ public:
 	}
 };
 
-bars_t operator+(int val, const bars_t& bar)
+inline bars_t operator+(int val, const bars_t& bar)
 {
 	sample_t d = bar.denominator();
 	return bars_t(val * d + bar.numerator(), d);
 }
 
-bars_t operator*(int val, const bars_t& bar)
+inline bars_t operator*(int val, const bars_t& bar)
 {
 	return bars_t(bar.numerator(), bar.denominator(), val);
 }
@@ -132,23 +132,12 @@ std::ostream& operator<<(std::ostream& os,
 namespace bars
 {
 
-/*const bars_t _1(1, 1),
-	_2(1, 2),
-	_3(1, 3),
-	_4(1, 4),
-	_6(1, 6),
-	_8(1, 8),
-	_12(1, 12),
-	_16(1, 16),
-	_24(1, 24),
-	_32(1, 32),
-	_48(1, 18),
-	_64(1, 64);*/
-
-bars_t operator"" _2(unsigned long long int n) { return bars_t(n, 2); }
-bars_t operator"" _3(unsigned long long int n) { return bars_t(n, 3); }
-bars_t operator"" _4(unsigned long long int n) { return bars_t(n, 4); }
-bars_t operator"" _8(unsigned long long int n) { return bars_t(n, 8); }
+using num_t = unsigned long long int;
+inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
+inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
+inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
+inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
+inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
 
 }
 

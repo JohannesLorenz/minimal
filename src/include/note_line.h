@@ -146,7 +146,7 @@ public:
 
 	void instantiate() {
 		impl_t::instantiate();
-		set_next_time(impl->note_events.begin()->first.start);
+		set_next_time(impl->note_events.begin()->first.start.floor()); // TODO! 0.1f 0.1f 0.1f
 	}
 
 	void clean_up() {}
