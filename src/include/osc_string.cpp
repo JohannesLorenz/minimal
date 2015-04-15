@@ -20,6 +20,7 @@
 #include <cstring>
 #include <climits>
 
+#include "io.h"
 #include "osc_string.h"
 
 template <typename T>

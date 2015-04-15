@@ -292,6 +292,7 @@ void REALTIME _player_t::play_until(sample_t work, sample_t /*dest*/)
 		}
 //		std::cerr << "done: " << pos << std::endl;
 //		usleep(1000000 * step);
+		usleep(work);
 	}
 
 	// no more tasks possible, so:

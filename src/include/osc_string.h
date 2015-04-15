@@ -22,7 +22,8 @@
 
 #include <vector>
 #include <cstring>
-#include "io.h"
+//#include "io.h"
+#include <iosfwd>
 
 namespace mini {
 
@@ -58,7 +59,7 @@ public:
 	}
 
 	std::ostream& inspect(std::ostream& stream = no_rt::mlog) const {
-		return stream << *this << std::endl;
+		return stream << *this << std::endl; // TODO: cpp file
 	}
 
 	friend std::ostream& operator<<(std::ostream& stream, const osc_string&);

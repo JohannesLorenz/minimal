@@ -141,6 +141,13 @@ inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
 
 }
 
+// TODO: not here:
+constexpr sample_t samples_per_bar = 1000000;
+
+// enough samples for one day
+static_assert(sizeof(sample_t) >= 8,
+	"need 64 bit ints");
+
 }
 
 #endif // BARS_H

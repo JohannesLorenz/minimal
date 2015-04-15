@@ -25,8 +25,9 @@
 namespace mini
 {
 
-int audio_instrument_t::process (jack_nframes_t nframes)
+int audio_instrument_t::process (jack_nframes_t /*nframes*/)
 {
+#if 0
 	// copy nframes samples to a memory area and set pointer
 	float* mem0 = ports[0].get_buffer<float>(nframes);
 	float* mem1 = ports[1].get_buffer<float>(nframes);
@@ -56,6 +57,8 @@ int audio_instrument_t::process (jack_nframes_t nframes)
 		data[1].write((char*)mem1, to_write);
 	}
 
+	return 0;
+#endif
 	return 0;
 }
 
@@ -89,6 +92,7 @@ void test(out_port_templ<T>&) {}
 
 void audio_instrument_t::init(/*jack_client_t &client*/)
 {
+#if 0
 	no_rt::mlog << "initing with pid: " << pid << std::endl;
 	client.init(("jack_client_" + os_pid_as_padded_string(pid)).c_str());
 	no_rt::mlog << "init" << std::endl;
@@ -130,6 +134,7 @@ void audio_instrument_t::init(/*jack_client_t &client*/)
 
 	jack_set_process_callback(client.client, _process, this);
 	jack_on_shutdown (client.client, _shutdown, this);
+#endif
 }
 
 }

@@ -24,7 +24,7 @@
 #include <map>
 #include "utils.h"
 #include "tuple_helpers.h"
-#include "command.h" // TODO: forward declare?
+//#include "command.h" // TODO: forward declare?
 #include "bars.h"
 
 namespace mini {
