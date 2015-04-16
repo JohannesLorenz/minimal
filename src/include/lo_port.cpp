@@ -123,10 +123,12 @@ void lo_port_t::clean_up()
 
 bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 {
+#if 1
 	std::vector<char> v(buffer, buffer + len);
 	osc_string rt(v);
 	io::mlog << "sending raw: " << io::endl;
 	rt.inspect();
+#endif
 
 	int result;
 	lo_message msg = lo_message_deserialise((void*)buffer, len, &result);

@@ -22,8 +22,7 @@
 
 #include <vector>
 #include <cstring>
-//#include "io.h"
-#include <iosfwd>
+#include "io.h"
 
 namespace mini {
 
