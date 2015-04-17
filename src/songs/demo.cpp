@@ -38,7 +38,7 @@ void init(project_t& p)
 	// instruments
 	// TODO: disallow "zynaddsubfx sine_base ...."
 	zyn_tree_t& sine_bass = p.emplace<zynaddsubfx_t>("sine bass");
-	jack_player_t& player = p.emplace<jack_player_t>();
+//	jack_player_t& player = p.emplace<jack_player_t>();
 
 	//sine_bass.add_param_fixed("/bla", 1, std::string("zwei"));
 
@@ -96,7 +96,7 @@ void init(project_t& p)
 
 	sine_bass.print_all_used();
 
-	player << sine_bass;
+//	player << sine_bass;
 
 	// PEnable
 	// "part0/kit0/adpars/voice0/AmpEnvelope/Penvsustain:i"
