@@ -4,3 +4,6 @@
 [submodule "src/include/ringbuffer"]
 	path = src/include/ringbuffer
 	url = git@github.com:JohannesLorenz/ringbuffer.git
+[submodule "src/core/threadpool"]
+	path = src/core/threadpool
+	url = git@github.com:JohannesLorenz/threadpool.git
