@@ -220,14 +220,31 @@ _player_t::_player_t(loaded_project_t &_project) :
 	#define REALTIME // replace with "nothing"
 #endif
 
-void REALTIME _player_t::play_until(sample_t work, sample_t /*dest*/)
+void _player_t::play_until(sample_t dest)
 {
-	sample_t final_pos = pos + work;
+	sample_t final_pos = dest; //pos + work;
 	for(; next_task_time() <= final_pos; pos = next_task_time())
 	{
+
+//		std::cerr << "done: " << pos << std::endl;
+//		usleep(1000000 * step);
+		process(0); // TODO: not 0
+		usleep(1000);
+	}
+
+	// no more tasks possible, so:
+	pos = final_pos;
+}
+
+
+void REALTIME _player_t::process(sample_t work)
+{
 //		update_effects();
 //		fill_commands();
 	//	send_commands();
+	//
+		(void)work; // TODO
+
 		while(has_active_tasks(pos))
 		{
 			// TODO: simple reinsert??
@@ -289,14 +306,7 @@ void REALTIME _player_t::play_until(sample_t work, sample_t /*dest*/)
 			/*if(top().itr == top().vals.end())
 			 pq.insert
 			pq.pop();*/
-		}
-//		std::cerr << "done: " << pos << std::endl;
-//		usleep(1000000 * step);
-		usleep(work);
-	}
-
-	// no more tasks possible, so:
-	pos = final_pos;
+		} // while has active tasks at this time
 }
 
 }

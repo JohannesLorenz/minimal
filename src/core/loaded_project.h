@@ -142,14 +142,18 @@ class _player_t : public work_queue_t // TODO: own header
 
 	//! will be asking for the next nframes frames (i.e. samples for us)
 	//! and announce the following callback at @a pos + @a nframes samples
-	void callback(std::size_t nframes) { play_until(nframes, 5.0f); }
+	void callback(std::size_t nframes) {
+		if(next_task_time() <= pos + (sample_t)nframes)
+		 process(nframes);
+	}
 
 	engine_t* engine;
 
 public:
 	_player_t(loaded_project_t& _project);
 private:
-	void play_until(sample_t work, sample_t);
+	void play_until(sample_t dest);
+	void process(sample_t work);
 };
 
 //! template type of @a _player_t

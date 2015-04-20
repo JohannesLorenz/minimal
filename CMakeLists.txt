@@ -1,11 +1,6 @@
-#
-# General
-#
-
-#Specify the version being used aswell as the language
 cmake_minimum_required(VERSION 2.8)
 
-#Compiler
+# compiler - must be set before the project initialisation
 set(WARN_EXC "")
 
 if(COMPILER STREQUAL "gcc")
@@ -30,9 +25,11 @@ else()
 	message(FATAL_ERROR "Please specify -DCOMPILER=[gcc|clang|stoat]")
 endif()
 
+# inform libraries to not to reset the compiler
+# this would not be clean and also cause a cmake bug
 SET(COMPILER_SET "1")
 
-#Name your project here
+# general things
 project(minimal)
 
 SET(VERSION_MAJOR "1")
@@ -54,34 +51,36 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 # MESSAGE("Options: (-D...=..., cmake -L for details)")
 # MESSAGE(" * COMPILER: ${COMPILER} (allowed: [gcc|clang])")
 
+# TODO: move a lot of stuff to src directory
+
+# variables
 SET(COMPILER "" CACHE STRING "Compiler to use (allowed: [gcc|clang|stoat])")
 SET(ZYN_BINARY "" CACHE STRING "/usr/bin/zynaddsubfx")
 
 # testing
 enable_testing ()
 
+# directories
 SET(src_base "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/src/") # for config.h
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
 
+# functions
 function(cp_script script_name)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${script_name}
 		${CMAKE_CURRENT_BINARY_DIR}/${script_name} COPYONLY)
 endfunction()
 
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/src/") # for config.h
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
-
-#
 # special headers
-#
-
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/version.h)
 
+# libraries
 MESSAGE("CHECKING FOR LIBRARIES...")
 
-#TODO!!!
+# TODO?!?
 find_package(PkgConfig REQUIRED)
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -115,26 +114,9 @@ list(APPEND AUDIO_LIBRARIES ${SNDFILE_LIBRARIES})
 list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
 
 link_directories(${AUDIO_LIBRARY_DIRS})
-#target_link_libraries(minimal ${AUDIO_LIBRARIES})
 
-#if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/usr/CMakeLists.txt")
-#	set(BUILD_USR_DIR true)
-#else()
-#	set(BUILD_USR_DIR false)
-#endif()
-
-#if(Boost_FOUND)
-#	include_directories(${Boost_INCLUDE_DIRS})
-#	add_executable(progname file1.cxx file2.cxx)
-#	target_link_libraries(progname ${Boost_LIBRARIES})
-#endif()
-
-#
-# Compile
-#
-
-# TODO: move this up, test it
-if(COMPILER STREQUAL "stoat") # for stoat, it does not matter
+# compiler details
+if(COMPILER STREQUAL "stoat") # for stoat, it does not matter - TODO?
 	SET(CMAKE_BUILD_TYPE "Release")
 else()
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -144,24 +126,22 @@ endif()
 endif()
 endif()
 
-# FLAGS
-# the order of -Wall -Wno-unknown-pragmas is important
+# note: the order of -Wall -Wno-unknown-pragmas is important
 # TODO: -Werror
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall ${WARN_EXC} -std=c++11 -pipe")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
 
+# subdirectories
 MESSAGE("READING SUB-DIRECTORIES...")
 #add_subdirectory(rtosc)
 add_subdirectory(src)
 add_subdirectory(doc)
 
+# custom targets
 add_custom_target(stoat2 stoat -c -w /usr/local/share/stoat/whitelist.txt -b /usr/local/share/stoat/blacklist.txt -w ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ringbuffer/data/stoat_suppression_list.txt -r ${CMAKE_CURRENT_BINARY_DIR}/src/)
 
-#
-# CPack Stuff
-#
-
+# CPack
 SET(MY_NAME_CAP ${PROJECT_NAME})
 #SET(MY_NAME_LOW ${PROJECT_NAME}) # (TODO: tolower)
 STRING(TOLOWER ${MY_NAME_CAP} MY_NAME_LOW)
@@ -189,10 +169,7 @@ SET(CPACK_SOURCE_GENERATOR "TBZ2")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${MY_SRC_PACKAGE_FILE_NAME}")
 INCLUDE(CPack)
 
-#
-# Summary
-#
-
+# summary
 # TODO: make this like in zyn
 MESSAGE("")
 MESSAGE("SUMMARY:")
