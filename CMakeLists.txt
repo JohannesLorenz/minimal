@@ -141,7 +141,23 @@ add_subdirectory(doc)
 # custom targets
 add_custom_target(stoat2 stoat -c -w /usr/local/share/stoat/whitelist.txt -b /usr/local/share/stoat/blacklist.txt -w ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ringbuffer/data/stoat_suppression_list.txt -r ${CMAKE_CURRENT_BINARY_DIR}/src/)
 
+<<<<<<< Updated upstream
 # CPack
+=======
+#
+# special headers
+#
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
+	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
+	${CMAKE_CURRENT_BINARY_DIR}/src/version.h)
+
+#
+# CPack Stuff
+#
+
+>>>>>>> Stashed changes
 SET(MY_NAME_CAP ${PROJECT_NAME})
 #SET(MY_NAME_LOW ${PROJECT_NAME}) # (TODO: tolower)
 STRING(TOLOWER ${MY_NAME_CAP} MY_NAME_LOW)

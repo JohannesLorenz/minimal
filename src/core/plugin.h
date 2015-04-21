@@ -20,6 +20,8 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
+#include "config.h"
+
 namespace mini
 {
 
@@ -44,6 +46,32 @@ public:
 	bool load_project(project_t& pro);
 //	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
 };
+
+#ifdef HAVE_RTLD_PRIVATE
+#error "TEST"
+#endif
+
+#if 0
+/**
+ * @brief A class to keep multiply dynamically loaded libraries.
+ *
+ * @note The plugin must be opened as long as the plugins stuff is needed.
+ */
+class multi_plugin_t
+{
+	void* handle;
+public:
+	/**
+	 * @brief plugin_t
+	 * @param path full path to the .so file
+	 */
+	multi_plugin_t(const char* path);
+	~multi_plugin_t();
+
+	bool load_project(project_t& pro);
+//	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
+};
+#endif
 
 }
 

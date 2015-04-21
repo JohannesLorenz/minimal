@@ -28,7 +28,8 @@ namespace mini {
 
 plugin_t::plugin_t(const char *path)
 {
-	handle = dlopen(path, RTLD_LAZY); // ok, but valgrind memory leak
+	// valgrind memory leak is not our fault:
+	handle = dlopen(path, RTLD_LAZY);
 	if(!handle)
 	 throw dlerror();
 }
