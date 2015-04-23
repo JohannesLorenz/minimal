@@ -18,6 +18,10 @@
 /*************************************************************************/
 
 #include <dlfcn.h>
+#include <cassert>
+#include <cstdio>
+#include <iostream>
+#include <fstream>
 
 #include "project.h"
 #include "io.h"
@@ -53,6 +57,41 @@ bool plugin_t::load_project(project_t &pro)
 
 	init_project(pro);
 	return true;
+}
+
+void cp_file(const char* dst_name, const char* src_name)
+{
+	std::ifstream src(src_name, std::ios::binary);
+	std::ofstream dst(dst_name, std::ios::binary);
+	if(!src.good())
+	 throw "cp: Could not open source file";
+	else if(!dst.good())
+	 throw "cp: Could not open dest file";
+	dst << src.rdbuf();
+}
+
+// TODO: check for rtld_private
+
+void* run(const char* fname)
+{
+	typedef int (*hello_t)(void);
+
+	static int plugin_id = 0;
+
+	const std::string tmp_file_name = "/tmp/minimal_" + fname + "_" + std::to_string(plugin_id) + ".so";
+	cp_file(tmp_file_name.c_str(), fname);
+
+	void* handle = dlopen(tmp_file_name.c_str(), RTLD_NOW | RTLD_LOCAL);
+	assert(handle);
+	remove(tmp_file_name.c_str());
+
+	hello_t hello = (hello_t) dlsym(handle, "hello");
+	assert(hello);
+
+	std::cerr << hello() << std::endl;
+
+	++plugin_id;
+	return handle;
 }
 
 }
