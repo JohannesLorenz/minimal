@@ -73,11 +73,15 @@ int main(int argc, char** argv)
 		project_t pro;
 
 		plugin.load_project(pro);
+		
+		engine eng;
+		eng.load_project(pro);
+		eng.play_until(4.0f);
 
-		loaded_project_t lpro(std::move(pro));
-
+		/*loaded_project_t lpro(std::move(pro));
+		
 		player_t<int> pl(lpro);
-		pl.play_until(4.0f);
+		pl.play_until(4.0f);*/
 
 	//	sleep(5);
 	} catch(const char* msg) {

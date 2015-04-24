@@ -24,14 +24,16 @@ namespace mini {
 
 class engine_t
 {
+	threadpool tp;
+	std::vector<thread_t> threads;
 public:
 	engine_t();
 	virtual ~engine_t() {}
 	//! should start the engine, such that it will repeatedly call
 	//! the processing callback
 	virtual void run() = 0;
-	//! should return a description like "audio", "video" or "data"
-	virtual const char* type_hint() = 0;
+/*	//! should return a description like "audio", "video" or "data"
+	virtual const char* type_hint() = 0;*/
 };
 
 }

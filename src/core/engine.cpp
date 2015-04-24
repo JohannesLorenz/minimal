@@ -22,7 +22,12 @@
 namespace mini {
 
 engine_t::engine_t()
+	: threads(4) // TODO: get number
 {
+	for(const thread_t& t : thread)
+	{
+		t.???(threadpool);
+	}
 }
 
 }
