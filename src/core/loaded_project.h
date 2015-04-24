@@ -140,20 +140,19 @@ class _player_t : public work_queue_t // TODO: own header
 
 	std::vector<std::vector<bool>> changed_ports;
 
+	engine_t* engine;
+
+	void process(sample_t work);
+public:
+	_player_t(loaded_project_t& _project);
+	void play_until(sample_t dest);
+
 	//! will be asking for the next nframes frames (i.e. samples for us)
 	//! and announce the following callback at @a pos + @a nframes samples
 	void callback(std::size_t nframes) {
 		if(next_task_time() <= pos + (sample_t)nframes)
 		 process(nframes);
 	}
-
-	engine_t* engine;
-
-public:
-	_player_t(loaded_project_t& _project);
-private:
-	void play_until(sample_t dest);
-	void process(sample_t work);
 };
 
 //! template type of @a _player_t
@@ -189,20 +188,16 @@ class loaded_project_t : util::non_copyable_t
 	/*const*/ std::vector<loaded_instrument_t> _ins;
 	std::vector<loaded_instrument_t> make_ins() const;
 #endif
-	effect_root_t _effect_root, _new_effect_root;
+	effect_root_t _effect_root;
 
 //	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
 
 	// commands
 //	command_table commands;
 
-	// player
-	// player_t player;
-
 public:
 //	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 	effect_root_t& effect_root() { return _effect_root; }
-	effect_root_t& new_effect_root() { return _new_effect_root; }
 	loaded_project_t(project_t&& _project);
 	~loaded_project_t();
 };

@@ -20,8 +20,6 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-#include "config.h"
-
 namespace mini
 {
 
@@ -44,14 +42,8 @@ public:
 	~plugin_t();
 
 	bool load_project(project_t& pro);
-//	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
 };
 
-#ifdef HAVE_RTLD_PRIVATE
-#error "TEST"
-#endif
-
-#if 0
 /**
  * @brief A class to keep multiply dynamically loaded libraries.
  *
@@ -59,7 +51,10 @@ public:
  */
 class multi_plugin_t
 {
-	void* handle;
+	std::string path;
+	void* get_funcptr(const char* funcname);
+
+	int plugin_id = 0;
 public:
 	/**
 	 * @brief plugin_t
@@ -68,10 +63,18 @@ public:
 	multi_plugin_t(const char* path);
 	~multi_plugin_t();
 
-	bool load_project(project_t& pro);
-//	bool send_rtosc_msg(const char* path, const char* msg_args, ...);
+	template<class Ret, class ...Args>
+	Ret call(const char* function, Args&&... args)
+	{
+		Ret (*funcptr)(Args...);
+		*(void**) (&funcptr) = get_funcptr(function);
+		if(funcptr)
+		 return funcptr(args...);
+		else
+		 throw "function not found in dynamic library";
+	}
 };
-#endif
+
 
 }
 

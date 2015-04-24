@@ -98,19 +98,6 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 		cb(cur_effect->deps);
 
 	} while(ready_fx.size());
-
-
-#if 0
-	for(effect_t* e : project.effects()) // TODO: -> initializer list
-	{
-		e->instantiate();
-		/*if(e->writers.empty())
-		{
-			_effect_root.readers.push_back(e);
-			e->writers.push_back(&_effect_root);
-		}*/
-	}
-#endif
 }
 
 

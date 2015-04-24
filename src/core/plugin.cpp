@@ -25,6 +25,7 @@
 
 #include "project.h"
 #include "io.h"
+#include "config.h"
 
 #include "plugin.h"
 
@@ -72,26 +73,46 @@ void cp_file(const char* dst_name, const char* src_name)
 
 // TODO: check for rtld_private
 
-void* run(const char* fname)
+
+#ifdef HAVE_RTLD_PRIVATE
+#error "to be implemented"
+#endif
+
+void* multi_plugin_t::get_funcptr(const char* funcname)
 {
 	typedef int (*hello_t)(void);
 
-	static int plugin_id = 0;
-
-	const std::string tmp_file_name = "/tmp/minimal_" + fname + "_" + std::to_string(plugin_id) + ".so";
-	cp_file(tmp_file_name.c_str(), fname);
-
-	void* handle = dlopen(tmp_file_name.c_str(), RTLD_NOW | RTLD_LOCAL);
+	int dlopen_mode = RTLD_NOW | RTLD_LOCAL;
+	const char* tmp_name;
+#ifdef HAVE_RTLD_PRIVATE
+	dlopen_mode |= RTLD_PRIVATE; // TODO: please someone test this...
+	tmp_name = path.c_str();
+#else
+	const std::string tmp_file_name = "/tmp/minimal_"
+		+ std::string(funcname) + "_"
+		+ std::to_string(plugin_id) + ".so";
+	cp_file(tmp_file_name.c_str(), path.c_str());
+	tmp_name = tmp_file_name.c_str();
+#endif
+	void* handle = dlopen(tmp_name, dlopen_mode);
 	assert(handle);
+#ifndef HAVE_RTLD_PRIVATE
 	remove(tmp_file_name.c_str());
+#endif
+	void* fptr = dlsym(handle, funcname);
 
-	hello_t hello = (hello_t) dlsym(handle, "hello");
-	assert(hello);
+	const char* error;
+	if ((error = dlerror()))  {
+		no_rt::mlog << "Error calling function from plugin: "
+			  << error << std::endl;
+		return nullptr; // TODO: throw?
+	}
+	else return fptr;
+}
 
-	std::cerr << hello() << std::endl;
-
-	++plugin_id;
-	return handle;
+multi_plugin_t::multi_plugin_t(const char *path)
+	: path(path)
+{
 }
 
 }

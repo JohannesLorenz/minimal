@@ -27,6 +27,8 @@
 #include "lo_port.h"
 #include "io.h"
 
+#include "threadpool/src/include/thread.h"
+
 using namespace mini;
 
 void main_init()
