@@ -37,13 +37,13 @@ A few benefits from using minimal:
   * minimal forbids code that runs only on Windows. It supports open souce.
 
 # 3 License
-Please see the LICENSE.md file.
+Please see the [LICENSE](LICENSE.txt) file.
 
 # 4 Documentation
 Type make doc for doxygen. TODO: more stuff here...
 
 # 5 Installation & Debugging
-Please see the INSTALL.txt file.
+Please see the [INSTALL](INSTALL.md) file.
 
 # 6 Examples
 
