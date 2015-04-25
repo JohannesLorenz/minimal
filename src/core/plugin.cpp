@@ -80,10 +80,10 @@ void cp_file(const char* dst_name, const char* src_name)
 
 void* multi_plugin_t::get_funcptr(const char* funcname)
 {
-	typedef int (*hello_t)(void);
-
 	int dlopen_mode = RTLD_NOW | RTLD_LOCAL;
 	const char* tmp_name;
+
+	// use RTLD_PRIVATE or copy the library
 #ifdef HAVE_RTLD_PRIVATE
 	dlopen_mode |= RTLD_PRIVATE; // TODO: please someone test this...
 	tmp_name = path.c_str();
@@ -94,11 +94,17 @@ void* multi_plugin_t::get_funcptr(const char* funcname)
 	cp_file(tmp_file_name.c_str(), path.c_str());
 	tmp_name = tmp_file_name.c_str();
 #endif
+
+	// load the library
 	void* handle = dlopen(tmp_name, dlopen_mode);
 	assert(handle);
+
+	// remove the temporary library
 #ifndef HAVE_RTLD_PRIVATE
 	remove(tmp_file_name.c_str());
 #endif
+
+	// retrieve function pointer as void*
 	void* fptr = dlsym(handle, funcname);
 
 	const char* error;

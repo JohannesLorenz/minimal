@@ -130,6 +130,16 @@ public:
 	~project_t();
 
 	project_t(project_t&& ) noexcept = default;
+	project_t& operator=(project_t&& p) noexcept
+	{
+		// this is a punishment...
+		valid = p.valid;
+		_tempo = p._tempo;
+		_title = std::move(p._title);
+		_effects = std::move(_effects);
+		return *this;
+	}
+	project_t& operator=(const project_t& p) = delete;
 
 #if 0
 	project_t(project_t&& other):

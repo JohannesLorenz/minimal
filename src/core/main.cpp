@@ -22,12 +22,11 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include "loaded_project.h"
 #include "plugin.h"
 #include "lo_port.h"
 #include "io.h"
-
-#include "threadpool/src/include/thread.h"
+#include "project.h"
+#include "jack_engine.h"
 
 using namespace mini;
 
@@ -74,8 +73,8 @@ int main(int argc, char** argv)
 
 		plugin.load_project(pro);
 		
-		engine eng;
-		eng.load_project(pro);
+		jack_engine_t eng;
+		eng.load_project(std::move(pro));
 		eng.play_until(4.0f);
 
 		/*loaded_project_t lpro(std::move(pro));

@@ -32,7 +32,7 @@
 #include "work_queue.h"
 #include "sample.h"
 
-#include "jack_engine.h"
+//#include "jack_engine.h"
 
 namespace mini {
 
@@ -140,7 +140,7 @@ class _player_t : public work_queue_t // TODO: own header
 
 	std::vector<std::vector<bool>> changed_ports;
 
-	engine_t* engine;
+	//engine_t* engine;
 
 	void process(sample_t work);
 public:
@@ -194,11 +194,14 @@ class loaded_project_t : util::non_copyable_t
 
 	// commands
 //	command_table commands;
+	void init();
 
 public:
 //	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
 	effect_root_t& effect_root() { return _effect_root; }
-	loaded_project_t(project_t&& _project);
+	loaded_project_t() = default;
+	loaded_project_t& operator=(project_t&& _project) noexcept;
+	loaded_project_t(project_t&& _project) noexcept;
 	~loaded_project_t();
 };
 

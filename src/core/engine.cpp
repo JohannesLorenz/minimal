@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include "threadpool/src/include/thread.h"
 #include "engine.h"
 
 namespace mini {
@@ -24,10 +25,25 @@ namespace mini {
 engine_t::engine_t()
 	: threads(4) // TODO: get number
 {
-	for(const thread_t& t : thread)
+	for(threadpool::thread_t& t : threads)
 	{
-		t.???(threadpool);
+		t = threadpool::thread_t(tp);
 	}
+}
+
+engine_t::~engine_t()
+{
+}
+
+void engine_t::load_project(project_t&& pro)
+{
+	lpro = std::move(pro);
+}
+
+void engine_t::play_until(float end)
+{
+	player_t<int> pl(lpro);
+	pl.play_until(end);
 }
 
 }

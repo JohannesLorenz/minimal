@@ -50,10 +50,7 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 }
 #endif
 
-loaded_project_t::loaded_project_t(project_t&& _project) :
-	project(std::move(_project))
-	//_ins(std::move(make_ins()))
-//	_global(daw_visit::visit(project.global()))
+void loaded_project_t::init()
 {
 	no_rt::mlog << "Loading project: " << this->project.title() << std::endl;
 	// instantiate and connect all fx
@@ -97,7 +94,22 @@ loaded_project_t::loaded_project_t(project_t&& _project) :
 		cb(cur_effect->readers);
 		cb(cur_effect->deps);
 
-	} while(ready_fx.size());
+		} while(ready_fx.size());
+}
+
+loaded_project_t& loaded_project_t::operator=(project_t&& _project) noexcept // not sure if this is really noexcept...
+{
+	project = std::move(_project);
+	init();
+	return *this;
+}
+
+loaded_project_t::loaded_project_t(project_t&& _project) noexcept :
+	project(std::move(_project))
+	//_ins(std::move(make_ins()))
+//	_global(daw_visit::visit(project.global()))
+{
+	init();
 }
 
 
@@ -162,8 +174,8 @@ void _player_t::send_commands()
 }
 
 _player_t::_player_t(loaded_project_t &_project) :
-	project(_project),
-	engine(new jack_engine_t) // TODO: choice for engine
+	project(_project)//,
+//	engine(new jack_engine_t) // TODO: choice for engine
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)

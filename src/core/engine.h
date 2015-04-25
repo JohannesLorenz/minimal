@@ -20,18 +20,30 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "threadpool/src/include/threadpool.h"
+//#include "threadpool/src/include/thread.h" // TODO: get rid of this?
+
+#include "loaded_project.h"
+
 namespace mini {
 
 class engine_t
 {
-	threadpool tp;
-	std::vector<thread_t> threads;
+	threadpool::threadpool_t tp;
+	std::vector<threadpool::thread_t> threads;
+
+	mini::loaded_project_t lpro;
 public:
 	engine_t();
-	virtual ~engine_t() {}
+	virtual ~engine_t();
 	//! should start the engine, such that it will repeatedly call
 	//! the processing callback
 	virtual void run() = 0;
+
+	void load_project(project_t &&pro);
+
+	void play_until(float end);
+
 /*	//! should return a description like "audio", "video" or "data"
 	virtual const char* type_hint() = 0;*/
 };
