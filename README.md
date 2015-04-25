@@ -37,7 +37,7 @@ A few benefits from using minimal:
   * minimal forbids code that runs only on Windows. It supports open souce.
 
 # 3 License
-Please see the LICENSE.txt file.
+Please see the LICENSE.md file.
 
 # 4 Documentation
 Type make doc for doxygen. TODO: more stuff here...
@@ -60,6 +60,6 @@ In alphabetical order, I thank:
 Feel free to give feedback. My e-mail address is shown if you execute this in
 a shell:
 ```sh
-  printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f
-  \x72\x65\x6e\x7a\x2d\x68\x6f\x2e\x6d\x65\x0a"
+printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f
+\x72\x65\x6e\x7a\x2d\x68\x6f\x2e\x6d\x65\x0a"
 ```
