@@ -72,13 +72,13 @@ SOURCES += src/core/main.cpp \
 	src/core/jack_engine.cpp
 
 OTHER_FILES += INSTALL.txt \
-	README.txt \
 	CMakeLists.txt \
 	src/CMakeLists.txt \
 	src/core/CMakeLists.txt \
 	src/songs/CMakeLists.txt \
 	src/include/CMakeLists.txt \
 	src/test/CMakeLists.txt \
-	src/config.h.in
+	src/config.h.in \
+    README.md
 
 
