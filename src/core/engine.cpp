@@ -17,13 +17,15 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <thread>
+
 #include "threadpool/src/include/thread.h"
 #include "engine.h"
 
 namespace mini {
 
 engine_t::engine_t()
-	: threads(4) // TODO: get number
+	: threads(std::thread::hardware_concurrency()) // TODO: allow custom
 {
 	for(threadpool::thread_t& t : threads)
 	{

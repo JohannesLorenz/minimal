@@ -173,9 +173,7 @@ void _player_t::send_commands()
 
 }
 
-_player_t::_player_t(loaded_project_t &_project) :
-	project(_project)//,
-//	engine(new jack_engine_t) // TODO: choice for engine
+void _player_t::init()
 {
 /*	for(const auto& pr : project.global())
 	for(const auto& pr2 : pr.second)
@@ -189,28 +187,34 @@ _player_t::_player_t(loaded_project_t &_project) :
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	no_rt::mlog << "Player for " << _project.project.title() << std::endl;
+	no_rt::mlog << "Player for " << project.project.title() << std::endl;
 
-	_project.project.emplace<sentinel_effect>();
+	project.project.emplace<sentinel_effect>();
 
 
-	no_rt::mlog << "FOUND " << _project.project.effects().size() << " FX..." << std::endl;
-	for(effect_t*& e : _project.project.get_effects_noconst())
+	no_rt::mlog << "FOUND " << project.project.effects().size() << " FX..." << std::endl;
+	for(effect_t*& e : project.project.get_effects_noconst())
 	{
 		no_rt::mlog << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
 	}
 
-	ready_fx.reserve(_project.project.effects().size());
+	ready_fx.reserve(project.project.effects().size());
 
-	changed_ports.resize(_project.project.effects().size());
+	changed_ports.resize(project.project.effects().size());
 
-	for(std::size_t i = 0; i < _project.project.effects().size(); ++i)
+	for(std::size_t i = 0; i < project.project.effects().size(); ++i)
 	{
-		changed_ports[i].resize(_project.project.effects()[i]->get_in_ports().size());
+		changed_ports[i].resize(project.project.effects()[i]->get_in_ports().size());
 	}
+}
 
+_player_t::_player_t(loaded_project_t &_project) :
+	project(_project)//,
+//	engine(new jack_engine_t) // TODO: choice for engine
+{
+	init();
 }
 
 #ifdef __clang__

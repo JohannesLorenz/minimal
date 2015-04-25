@@ -143,7 +143,11 @@ class _player_t : public work_queue_t // TODO: own header
 	//engine_t* engine;
 
 	void process(sample_t work);
+
+	void init();
 public:
+	_player_t() = default;
+	_player_t& operator=(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
 	void play_until(sample_t dest);
 

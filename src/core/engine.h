@@ -33,6 +33,7 @@ class engine_t
 	std::vector<threadpool::thread_t> threads;
 
 	mini::loaded_project_t lpro;
+	//player_t<int> pl(lpro);
 public:
 	engine_t();
 	virtual ~engine_t();
@@ -43,6 +44,8 @@ public:
 	void load_project(project_t &&pro);
 
 	void play_until(float end);
+
+
 
 /*	//! should return a description like "audio", "video" or "data"
 	virtual const char* type_hint() = 0;*/
