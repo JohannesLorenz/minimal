@@ -2,15 +2,15 @@
 Welcome! Thank you for considering the README file.
 
 **Contents**
-  1 What is minimal?
-  2 Why using minimal?
-  3 License
-  4 Documentation
-  5 Installation & Debugging
-  6 Examples
-  7 Thanks to
-  8 Links
-  9 Contact
+  1. What is minimal?
+  2. Why using minimal?
+  3. License
+  4. Documentation
+  5. Installation & Debugging
+  6. Examples
+  7. Thanks to
+  8. Links
+  9. Contact
 
 # 1 What is minimal?
 It is basically an RT compatible, text based sequencer. It supports OSC.
