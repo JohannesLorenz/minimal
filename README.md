@@ -33,7 +33,7 @@ A few benefits from using minimal:
   * minimal can be used **without any X server**.
   * minimal lets you **easily write plugins**, e.g. for any **OSC** plugin.
   * In minimal, coders can use **C++11**.
-  * minimal supports **open souce** and has *no windows only plugins**.
+  * minimal supports **open souce** and has **no windows only plugins**.
 
 # 3 License
 Please see the [LICENSE](LICENSE.txt) file.
