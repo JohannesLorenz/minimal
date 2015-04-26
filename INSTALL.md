@@ -14,7 +14,7 @@ You will need the following libraries, headers and tools:
   * at least g++ 4.8 or clang 3.3
   * boost
   * cmake
-  * jack (TODO: jack2 in the future?)
+  * [jack](https://github.com/jackaudio) (TODO: jack2 in the future?)
 
 There are plugins that might require: # TODO: this is a core requirement yet
   * zynaddsubfx, a version from at least April 2015 (TODO: make optional)
@@ -44,7 +44,7 @@ In order to update the code, go to the main directory and type
 ```
 
 # 3 Realtime check with stoat
-Make sure stoat is (root-)installed on your disk.
+Make sure [stoat](https://github.com/fundamental/stoat) is (root-)installed on your disk.
 
 Instead of using the cmake code from above, use
 ```sh
