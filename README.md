@@ -13,7 +13,7 @@ Welcome! Thank you for considering the README file.
   9. Contact
 
 # 1 What is minimal?
-It is basically an RT compatible, text based sequencer. It supports OSC.
+It is basically an **RT compatible, text based sequencer**. It supports **OSC**.
 
 The project files are C++ code, which is very easy to generate with a suited
 C++ editor.
@@ -23,18 +23,17 @@ mathematical graphics etc.
 
 # 2 Why using minimal?
 A few benefits from using minimal:
-  * Fast support times for developping issues.
-  * You can easily add a license to your projects, since they are in plain
-    text.
+  * **Good support** for developping issues.
+  * You can easily **license your projects**, since they are in plain text.
   * In minimal, you have a clear overview on your effects. You can even dump
-    an effect graph.
-  * minimal is designed for instant compiling and startup.
-  * the project files in minimal have minimal size.
-  * minimal is (hopefully) RT compatible.
-  * minimal can be used without any x server.
-  * minimal lets you easily write plugins for any OSC plugin.
-  * In minimal, coders can use new versions of C++.
-  * minimal forbids code that runs only on Windows. It supports open souce.
+    an **effect graph**.
+  * minimal is designed for **instant compiling and startup**.
+  * **short and human readable project files**
+  * minimal is (hopefully) **RT compatible**.
+  * minimal can be used **without any X server**.
+  * minimal lets you **easily write plugins**, e.g. for any **OSC** plugin.
+  * In minimal, coders can use **C++11**.
+  * minimal supports **open souce** and has **no windows only plugins**.
 
 # 3 License
 Please see the [LICENSE](LICENSE.txt) file.
