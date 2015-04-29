@@ -24,12 +24,13 @@
 
 namespace mini {
 
-engine_t::engine_t()
-	: threads(std::thread::hardware_concurrency()) // TODO: allow custom
+other_tp::other_tp()
+	: threads(std::thread::hardware_concurrency() - 1)
+	 // TODO: allow custom number of threads
 {
 	for(threadpool::thread_t& t : threads)
 	{
-		t = threadpool::thread_t(tp);
+		t = threadpool::thread_t(*this);
 	}
 }
 

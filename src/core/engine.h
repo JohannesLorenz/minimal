@@ -21,21 +21,36 @@
 #define ENGINE_H
 
 #include "threadpool/src/include/threadpool.h"
-//#include "threadpool/src/include/thread.h" // TODO: get rid of this?
+#include "threadpool/src/include/thread.h"
+// ^ TODO: get rid of this? use new instead of vector?
 
 #include "loaded_project.h"
 
 namespace mini {
 
+class main_tp : public threadpool::threadpool_t
+{
+};
+
+class other_tp : public threadpool::threadpool_t
+{
+	std::vector<threadpool::thread_t> threads;
+public:
+	other_tp();
+};
+
+class multi_tp : public main_tp, other_tp
+{
+
+};
+
 class engine_t
 {
-	threadpool::threadpool_t tp;
-	std::vector<threadpool::thread_t> threads;
+	multi_tp tp;
 
 	mini::loaded_project_t lpro;
 	//player_t<int> pl(lpro);
 public:
-	engine_t();
 	virtual ~engine_t();
 	//! should start the engine, such that it will repeatedly call
 	//! the processing callback
