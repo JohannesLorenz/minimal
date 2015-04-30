@@ -78,7 +78,7 @@ private:
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
 	}
 protected:
-	virtual sample_t _proceed(sample_t time) = 0;
+	virtual bool _proceed(sample_t time) = 0;
 public:
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
