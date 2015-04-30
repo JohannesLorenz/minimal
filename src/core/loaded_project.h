@@ -31,6 +31,7 @@
 #include "daw_visit.h"
 #include "work_queue.h"
 #include "sample.h"
+#include "bars.h"
 
 //#include "jack_engine.h"
 
@@ -125,12 +126,27 @@ class _player_t : public work_queue_t // TODO: own header
 		}
 
 		void proceed(sample_t time) {
-			update_next_time(effect->proceed(time));
+			if(effect->proceed(time))
+			{
+				update_next_time(effect->get_next_time());
+			}
+			
+			// the effect might have been finished or not
+			// depending on which thread exits
+
+			
+
+			//update_next_time(effect->proceed(time));
 		}
 
 		bool cmp(const task_base& other) const {
 			// ugly cast, but probably not avoidable?
-			return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
+			//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
+			const effect* const o_effect = dynamic_cast<const task_effect&>(other).effect;
+
+			return bars_t(effect->cur_threads, effect->max_threads)
+				< bars_t(o_effect->cur_threads, o_effect->max_threads)
+			
 		}
 	};
 

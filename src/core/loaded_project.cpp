@@ -259,7 +259,8 @@ void REALTIME _player_t::process(sample_t work)
 			 pq.push(top);*/
 			const sample_t cur_next_time = top->next_time();
 			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
-			top->proceed(pos); // will update the next-time event
+			++this_ef->cur_threads;
+			top->proceed(pos); // will also update the next-time event
 
 			handles.at(this_ef) = add_task(top);
 

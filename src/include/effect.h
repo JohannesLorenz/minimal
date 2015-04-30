@@ -80,6 +80,11 @@ private:
 protected:
 	virtual sample_t _proceed(sample_t time) = 0;
 public:
+	// TODO: private, access functions
+	// TODO: into separate struct: "loaded effect"?
+	std::atomic<int> max_threads; // TODO: uint16_t
+	std::atomic<int> cur_threads;
+
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
 
