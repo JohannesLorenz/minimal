@@ -61,7 +61,7 @@ void jack_player_t::instantiate()
 	//jack_on_shutdown (client.client, _shutdown, this);
 }
 
-sample_t jack_player_t::_proceed(sample_t /*time*/)
+bool jack_player_t::_proceed(sample_t /*time*/)
 {
 	io::mlog << "JACKPLAYER" << io::endl;
 
@@ -94,7 +94,8 @@ sample_t jack_player_t::_proceed(sample_t /*time*/)
 	//multiplex<ringbuffer_t> rbs(rb_size, rb_size);
 	//multiplex<ringbuffer_reader_t> rds(rb_size, rb_size);
 
-	return std::numeric_limits<sample_t>::max();
+	set_next_time(std::numeric_limits<sample_t>::max());
+	return true;
 }
 
 }

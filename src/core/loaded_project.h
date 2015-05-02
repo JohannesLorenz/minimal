@@ -130,6 +130,7 @@ class _player_t : public work_queue_t // TODO: own header
 			{
 				update_next_time(effect->get_next_time());
 			}
+			//else
 			
 			// the effect might have been finished or not
 			// depending on which thread exits
@@ -142,10 +143,10 @@ class _player_t : public work_queue_t // TODO: own header
 		bool cmp(const task_base& other) const {
 			// ugly cast, but probably not avoidable?
 			//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
-			const effect* const o_effect = dynamic_cast<const task_effect&>(other).effect;
+			const effect_t* const o_effect = dynamic_cast<const task_effect&>(other).effect;
 
 			return bars_t(effect->cur_threads, effect->max_threads)
-				< bars_t(o_effect->cur_threads, o_effect->max_threads)
+				< bars_t(o_effect->cur_threads, o_effect->max_threads);
 			
 		}
 	};
@@ -190,7 +191,7 @@ class effect_root_t : public effect_t
 {
 	void instantiate() {}
 	void clean_up() {}
-	sample_t _proceed(sample_t ) { return 0; }
+	bool _proceed(sample_t ) { return true; }
 };
 
 //! this class takes a project and then does some things to handle it

@@ -239,7 +239,7 @@ void _player_t::play_until(sample_t dest)
 	pos = final_pos;
 }
 
-
+//! the "heart" of minimal
 void REALTIME _player_t::process(sample_t work)
 {
 //		update_effects();

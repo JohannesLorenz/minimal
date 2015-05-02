@@ -17,40 +17,49 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef RECORDER_H
-#define RECORDER_H
+#ifndef ATOMIC_H
+#define ATOMIC_H
 
-#include <sndfile.hh>
-
-#include "ringbuffer/src/lib/ringbuffer.h"
-#include "audio.h"
-#include "jack.h"
-#include "effect.h"
+#include <atomic>
 
 namespace mini
 {
 
-
-/*class recorder_client_t : client_t
+//! minimal atomic: an std atomic with relaxed memory order
+template<class T>
+class atomic
 {
-	jack_thread_info_t* info;
-	void process(jack_nframes_t frames);
-	void shutdown();
-};*/
-
-class recorder_t : public effect_t, public audio_in
-{
-	SndfileHandle fp;
-	ringbuffer_t rb;
-	float* framebuf;
+	std::atomic<T> at;
 public:
-	recorder_t(const char *filename,
-		int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16);
-	~recorder_t() { delete[] framebuf; }
+	T load() const { return at.load(std::memory_order_relaxed); }
+	T load() const volatile { return at.load(std::memory_order_relaxed); }
 
-	bool _proceed(sample_t time);
+	void store(T x) { at.store(x, std::memory_order_relaxed); }
+	void store(T x) volatile { at.store(x, std::memory_order_relaxed); }
+
+	operator T() const { return at.operator T(); }
+	operator T() const volatile { return at.operator T(); }
+
+	T operator++() { return ++at; }
+	T operator++() volatile { return ++at; }
+
+	atomic() = default;
+	constexpr atomic(T desired) : at(desired) {}
+	atomic(const atomic&) = delete;
+
+	std::atomic<T>& impl() { return at; }
+	const std::atomic<T>& impl() const { return at; }
+};
+
+//! minimal atomic with default construction value
+template<class T, T DefaultValue>
+class atomic_def : public atomic<T>
+{
+public:
+	atomic_def() : atomic<T>(DefaultValue) {}
+	atomic_def(const atomic_def&) = delete;
 };
 
 }
 
-#endif // RECORDER_H
+#endif // ATOMIC_H

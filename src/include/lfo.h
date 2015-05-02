@@ -120,9 +120,10 @@ struct constant : effect_t, freq_lfo_out<OutType>
 	void clean_up() {}
 
 	// this will be only called on startup
-	sample_t _proceed(sample_t ) {
+	bool _proceed(sample_t ) {
 		//freq_lfo_out<OutType>::set(Value, time);
-		return std::numeric_limits<sample_t>::max();
+		set_next_time(std::numeric_limits<sample_t>::max());
+		return true;
 	}
 };
 

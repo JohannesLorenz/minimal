@@ -25,6 +25,7 @@
 #include <vector>
 #include <array>
 
+#include "atomic.h"
 #include "daw.h"
 #include "types.h"
 #include "work_queue.h"
@@ -83,8 +84,8 @@ protected:
 public:
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
-	std::atomic<int> max_threads; // TODO: uint16_t
-	std::atomic<int> cur_threads;
+	atomic_def<int, 1> max_threads; // TODO: uint16_t
+	atomic_def<int, 0> cur_threads;
 
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
