@@ -20,6 +20,7 @@
 #ifndef EFFECT_H
 #define EFFECT_H
 
+#include <atomic>
 #include <set>
 #include <vector>
 #include <array>
@@ -137,7 +138,7 @@ public:
 		//set_id(std::numeric_limits<std::size_t>::max());
 		set_next_time(std::numeric_limits<sample_t>::max());
 	}
-	sample_t _proceed(sample_t ) { throw "impossible"; }
+	bool _proceed(sample_t ) { throw "impossible"; return true; }
 	void instantiate() {}
 	void clean_up() {}
 };

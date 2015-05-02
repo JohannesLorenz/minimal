@@ -63,12 +63,12 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	void instantiate() {}
 	void clean_up() {}
 
-	sample_t _proceed(sample_t time)
+	bool _proceed(sample_t time)
 	{
 		io::mlog << "proceeding with lfo... " << io::endl;
 		if(time < start) {
 			freq_lfo_out<OutType>::set(outside, time);
-			return start;
+			set_next_time(start);
 		}
 		else if(time < end)
 		{
@@ -76,13 +76,14 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 			// TODO: repeat etc.
 			io::mlog << "lfo value: " << middle + cosf((time-start) * premult) * mm2 << io::endl;
 
-			return time + step;
+			set_next_time(time + step);
 		}
 		else
 		{
 			freq_lfo_out<OutType>::set(outside, time);
-			return std::numeric_limits<sample_t>::max();
+			set_next_time(std::numeric_limits<sample_t>::max());
 		}
+		return true; // LFO is always single threaded
 	//	return 0.0f; // TODO
 	}
 

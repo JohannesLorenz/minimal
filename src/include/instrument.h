@@ -227,7 +227,7 @@ public:
 
 	void clean_up();
 
-	sample_t _proceed(sample_t time);
+	bool _proceed(sample_t time);
 };
 
 

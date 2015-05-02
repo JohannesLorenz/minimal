@@ -130,7 +130,7 @@ void instrument_t::clean_up()
 	}
 }
 
-sample_t instrument_t::_proceed(sample_t time)
+bool instrument_t::_proceed(sample_t time)
 {
 	if(work_queue_t::has_active_tasks(time))
 	 throw "should not have active tasks yet";
