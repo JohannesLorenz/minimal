@@ -29,6 +29,7 @@
 // ...
 // when is it going to end?
 
+#include "../core/plugin.h" // TODO: move to include directory
 #include "types.h"
 #include "utils.h"
 #include "daw.h"
@@ -189,6 +190,11 @@ public:
 
 class instrument_t : public effect_t, public work_queue_t
 {
+	multi_plugin_t plugin;
+
+	virtual const char* library_path() const = 0;
+	virtual const std::vector<const char *> start_args() const = 0;
+	std::vector<const char *> build_start_args() const;
 public:
 	lo_port_t lo_port; // TODO: private?
 protected:

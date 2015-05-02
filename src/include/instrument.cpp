@@ -29,6 +29,16 @@ void send_single_command(lo_port_t& lo_port, const osc_string &str)
 	lo_port.send_raw(str.raw(), str.size());
 }
 
+std::vector<const char *> instrument_t::build_start_args() const
+{
+	const std::vector<const char *> _start_args = start_args();
+	std::vector<const char*> cmd_args(1 + _start_args.size());
+	cmd_args[0] = library_path();
+	for(std::size_t i = 1; i < _start_args.size(); ++i)
+	 cmd_args[1+i] = _start_args[i];
+	return cmd_args;
+}
+
 instrument_t::~instrument_t()
 {
 }
@@ -73,9 +83,15 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 
 pid_t instrument_t::make_fork()
 {
-	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
+/*	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
 	_get_input(make_start_command().c_str(), &pid);
-	return pid;
+	return pid;*/
+#if 0
+	const std::vector<const char*> cmds = build_start_args();
+	typedef char* argv_t[];
+	plugin.call<int, int, argv_t>("main()", cmds.size(), cmds.data());
+#endif
+	return 0;
 }
 
 void instrument_t::instantiate()

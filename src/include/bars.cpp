@@ -23,9 +23,9 @@
 namespace mini
 {
 
-std::ostream &operator<<(std::ostream &os, const mini::bars_t &b)
+void print_fraction(std::ostream &os, unsigned long long n, unsigned long long d)
 {
-	return os << b.d << '/' << b.n;
+	return os << n << '/' << d;
 }
 
 }

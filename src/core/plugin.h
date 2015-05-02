@@ -63,7 +63,9 @@ public:
 	 * @param path full path to the .so file
 	 */
 	multi_plugin_t(const char* path);
-	~multi_plugin_t();
+	multi_plugin_t() = default;
+
+	void set_path(const char* _path) { path = _path; }
 
 	template<class Ret, class ...Args>
 	Ret call(const char* function, Args&&... args)

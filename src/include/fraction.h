@@ -20,7 +20,6 @@
 #ifndef BARS_H
 #define BARS_H
 
-#include "sample.h"
 #include <iosfwd>
 
 namespace mini
@@ -35,7 +34,8 @@ public:
 	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
 };*/
 
-inline constexpr std::size_t gcd(std::size_t a, std::size_t b) {
+template<class T1, class T2>
+inline constexpr T1 gcd(T1 a, T2 b) {
 	return b == 0 ? a : gcd(b, a % b);
 }
 
@@ -50,18 +50,29 @@ inline constexpr std::size_t gcd(std::size_t a, std::size_t b) {
 	}
 }*/
 
-inline std::size_t lcm(int a, int b)
+template<class T1, class T2>
+inline T1 lcm(T1 a, T2 b)
 {
-	std::size_t temp = gcd(a, b);
-
+	T1 temp = gcd(a, b);
 	return temp ? (a / temp * b) : 0;
 }
 
-class bars_t
-{
-	sample_t n, d;
+/**
+	class for fast and simple fractions
 
-	bars_t(sample_t _n, sample_t _d, sample_t _m, sample_t tmp = 0) :
+	For restrictions for @a Nominator and @a Denominator, simply try out
+	something and see whether you get compiler warnings :P
+*/
+template<class Numerator, class Denominator>
+class fraction_t
+{
+	using num_t = Numerator;
+	using denom_t = Denominator;
+
+	num_t n;
+	denom_t d;
+
+	fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
 		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
 	{
 		if(!d)
@@ -69,84 +80,68 @@ class bars_t
 	}
 
 public:
-	bars_t(sample_t _n, sample_t _d) :
+	fraction_t(num_t _n, denom_t _d) :
 		//n(_n/gcd(_d,_n)), d(_d*n/_n)
-		bars_t(1, _d, _n)
+		fraction_t(1, _d, _n)
 	{
 	}
 
 
-	bars_t(const bars_t& ) = default;
+	fraction_t(const fraction_t& ) = default;
 
-	const bars_t operator+(const bars_t& rhs) const {
+	const fraction_t operator+(const fraction_t& rhs) const {
 		std::size_t l = lcm(d, rhs.d);
-		return bars_t(n * l / d + rhs.n * l / rhs.d, l);
+		return fraction_t(n * l / d + rhs.n * l / rhs.d, l);
 	}
 
-	bool operator==(const bars_t& other) const {
+	bool operator==(const fraction_t& other) const {
 		return other.n == n && other.d == d;
 	}
 	
-	friend std::ostream& operator<<(std::ostream& os, const bars_t& b);
+	friend std::ostream& operator<<(std::ostream& os, const fraction_t& b);
 
-	sample_t floor() const { return n/d; }
-	bars_t rest() const { return bars_t(n%d, d); }
+	num_t floor() const { return n/d; }
+	fraction_t rest() const { return fraction_t(n%d, d); }
 	//sample_t ceil() const { r } TODO: this is not just n/d + 1
 
-	sample_t as_samples_floor(const sample_t& samples_per_bar) const {
-		return bars_t(n, d, samples_per_bar).floor();
-	}
+	num_t numerator() const { return n; }
+	denom_t denominator() const { return d; }
 
-	sample_t numerator() const { return n; }
-	sample_t denominator() const { return d; }
-
-	bool operator<(const bars_t& other) const {
-		sample_t l = lcm(d, other.d);
+	bool operator<(const fraction_t& other) const {
+		num_t l = lcm(d, other.d);
 		// TODO: shortening for if d>o.d && n<o.n and the opposite?
 		return n * (l/d) < other.n * (l/other.d);
 	}
 
-	bars_t operator-() const { return bars_t(-n, d); }
-	friend bars_t operator+(int val, const bars_t& bar);
-	friend bars_t operator*(int val, const bars_t& bar);
+	fraction_t operator-() const { return fraction_t(-n, d); }
+	friend fraction_t operator+(int val, const fraction_t& bar);
+	friend fraction_t operator*(int val, const fraction_t& bar);
 
-	const bars_t operator-(const bars_t& rhs) const {
+	const fraction_t operator-(const fraction_t& rhs) const {
 		return operator+(-rhs);
 	}
 };
 
-inline bars_t operator+(int val, const bars_t& bar)
+template<class N, class D>
+inline fraction_t<N, D> operator+(int val, const fraction_t<N, D>& bar)
 {
-	sample_t d = bar.denominator();
-	return bars_t(val * d + bar.numerator(), d);
+	typename fraction_t<N, D>::denom_t d = bar.denominator();
+	return fraction_t<N, D>(val * d + bar.numerator(), d);
 }
 
-inline bars_t operator*(int val, const bars_t& bar)
+template<class N, class D>
+inline fraction_t<N, D> operator*(int val, const fraction_t<N, D>& bar)
 {
-	return bars_t(bar.numerator(), bar.denominator(), val);
+	return fraction_t<N, D>(bar.numerator(), bar.denominator(), val);
 }
 
+void print_fraction(std::ostream& os, unsigned long long n, unsigned long long d);
+
+template<class N, class D>
 std::ostream& operator<<(std::ostream& os,
-		const bars_t& b);
-
-namespace bars
-{
-
-using num_t = unsigned long long int;
-inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
-inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
-inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
-inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
-inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
-
+		const fraction_t<N, D>& f) {
+	print_fraction(os, f.numerator(), f.denominator());
 }
-
-// TODO: not here:
-constexpr sample_t samples_per_bar = 1000000;
-
-// enough samples for one day
-static_assert(sizeof(sample_t) >= 8,
-	"need 64 bit ints");
 
 }
 

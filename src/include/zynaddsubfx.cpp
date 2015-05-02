@@ -40,6 +40,11 @@ std::string zynaddsubfx_t::make_start_command() const
 	return cmd;
 }
 
+const char* zynaddsubfx_t::library_path() const
+{
+	return ZYN_BINARY;
+}
+
 instrument_t::udp_port_t zynaddsubfx_t::get_port(pid_t pid, int) const
 {
 	udp_port_t port;
