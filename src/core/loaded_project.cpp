@@ -203,9 +203,9 @@ void _player_t::init()
 		handles[e] = add_task(new_task);
 	}
 
-	for(handle_type& h : project.project.get_effects_noconst())
+	for(auto& pr : handles)
 	{
-		task_effect* te = *h;
+		task_effect* te = static_cast<task_effect*>(*pr.second);
 		effect_t* e = te->effect;
 		for(const out_port_base* op  : e->get_out_ports())
 		for(in_port_base* target_ip : op->readers)
@@ -214,12 +214,12 @@ void _player_t::init()
 			changed_ports[target_ef->id()][target_ip->id] = true;
 
 			//handle_type h = handles.at(target_ef);
-			handle_type h = target_ef
-			(*h)->update_next_time(cur_next_time);
-			update(h);
+			handle_type h = handles[target_ef];
+			/*(*h)->update_next_time(cur_next_time);
+			update(h);*/
+			te->out_efcs.push_back(dynamic_cast<task_effect*>(*h)); // TODO: cast correct/needed?
 
 		}
-		handles[e] = add_task(new_task);
 	}
 
 	ready_fx.reserve(project.project.effects().size());
@@ -296,24 +296,28 @@ void REALTIME _player_t::process(sample_t work)
 			}*/
 
 
-
+			std::size_t count = 0;
 			// TODO: effect should give us this array...
 			for(const out_port_base* op  : this_ef->get_out_ports())
+			{
 			if(op->change_stamp <= pos)
 			{
-				for(in_port_base* target_ip : op->readers)
+				for(in_port_base* /*target_ip*/ : op->readers)
 				{
-					effect_t* target_ef = target_ip->e;
-					changed_ports[target_ef->id()][target_ip->id] = true;
+					// TODO: check this!!!
+			//		effect_t* target_ef = target_ip->e;
+				//	changed_ports[target_ef->id()][target_ip->id] = true;
 					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
 
 					//handle_type h = handles.at(target_ef);
-					handle_type h = target_ef
+					handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
 					(*h)->update_next_time(cur_next_time);
 					update(h);
 				}
 			}
-
+			else
+			 count +=op->readers.size();
+			}
 #if 0
 			pq_entry top = std::move(pq.top());
 			pq.pop();

@@ -111,7 +111,7 @@ class _player_t : public work_queue_t // TODO: own header
 		}
 	};*/
 
-	class task_effect : public task_base
+	class task_effect : public task_base_with_handle
 	{
 	//	const instrument_t* ins;
 	public:
@@ -121,7 +121,7 @@ class _player_t : public work_queue_t // TODO: own header
 	public:
 		task_effect(effect_t* effect) :
 			// TODO: 0 is wrong if we don't start playback at 0
-			task_base(effect->get_next_time()),
+			task_base_with_handle(effect->get_next_time()),
 			effect(effect)
 		{
 		}
@@ -152,9 +152,9 @@ class _player_t : public work_queue_t // TODO: own header
 			
 		}
 
-		handle_type& get_handle() final {
+/*		handle_type& get_handle() final {
 
-		}
+		}*/
 	};
 
 	void update_effects();
