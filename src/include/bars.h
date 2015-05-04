@@ -17,37 +17,33 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <thread>
+#ifndef BARS_H
+#define BARS_H
 
-#include "threadpool/src/include/thread.h"
-#include "engine.h"
+#include "fraction.h"
+#include "sample.h"
 
 namespace mini {
 
-other_tp::other_tp()
-	: threads(/*std::thread::hardware_concurrency() - 1*/ 0) // TODO!!!
-	 // TODO: allow custom number of threads
+using bars_t = fraction_t<sample_t, sample_t>;
+
+namespace bars
 {
-	for(threadpool::thread_t& t : threads)
-	{
-		t = threadpool::thread_t(*this);
-	}
+
+using num_t = unsigned long long int;
+inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
+inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
+inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
+inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
+inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
+
 }
 
-engine_t::~engine_t()
+inline sample_t as_samples_floor(const bars_t& b, const sample_t& samples_per_bar)
 {
-}
-
-void engine_t::load_project(project_t&& pro)
-{
-	lpro = std::move(pro);
-}
-
-void engine_t::play_until(bars_t end)
-{
-	player_t<int> pl(lpro);
-	pl.play_until(as_samples_floor(end, samples_per_bar));
+	return bars_t(b.numerator(), b.denominator(), samples_per_bar).floor();
 }
 
 }
 
+#endif // BARS_H

@@ -20,10 +20,6 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
-#include <cstddef>
-
-#include "bars.h"
-
 namespace mini {
 
 using sample_t = signed long; // TODO: will this suffice?
@@ -34,26 +30,6 @@ constexpr sample_t samples_per_bar = 1000000;
 // enough samples for one day
 static_assert(sizeof(sample_t) >= 8,
 	"need 64 bit ints");
-
-using bars_t = fraction_t<sample_t, sample_t>;
-
-namespace bars
-{
-
-using num_t = unsigned long long int;
-inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
-inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
-inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
-inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
-inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
-
-}
-
-sample_t as_samples_floor(const bars_t& f, const sample_t& samples_per_bar)
-	const
-{
-	return bars_t(f.numerator(), f.denominator(), samples_per_bar).floor();
-}
 
 }
 

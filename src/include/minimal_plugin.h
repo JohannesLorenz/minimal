@@ -17,37 +17,17 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <thread>
+#ifndef MINIMAL_PLUGIN_H
+#define MINIMAL_PLUGIN_H
 
-#include "threadpool/src/include/thread.h"
-#include "engine.h"
-
-namespace mini {
-
-other_tp::other_tp()
-	: threads(/*std::thread::hardware_concurrency() - 1*/ 0) // TODO!!!
-	 // TODO: allow custom number of threads
+class minimal_plugin
 {
-	for(threadpool::thread_t& t : threads)
-	{
-		t = threadpool::thread_t(*this);
-	}
-}
+	virtual void prepare() = 0;
+	virtual bool enter() = 0;
+protected:
+	using sample_rate_t = unsigned long;
+public:
+	virtual ~minimal_plugin();
+};
 
-engine_t::~engine_t()
-{
-}
-
-void engine_t::load_project(project_t&& pro)
-{
-	lpro = std::move(pro);
-}
-
-void engine_t::play_until(bars_t end)
-{
-	player_t<int> pl(lpro);
-	pl.play_until(as_samples_floor(end, samples_per_bar));
-}
-
-}
-
+#endif // MINIMAL_PLUGIN_H

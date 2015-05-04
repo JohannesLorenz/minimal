@@ -41,7 +41,9 @@ public:
 
 class multi_tp : public main_tp, other_tp
 {
-
+	virtual bool callback() {
+		return true;
+	}
 };
 
 class engine_t
@@ -58,7 +60,7 @@ public:
 
 	void load_project(project_t &&pro);
 
-	void play_until(float end);
+	void play_until(bars_t end);
 
 
 

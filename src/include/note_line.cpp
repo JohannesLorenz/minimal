@@ -39,7 +39,7 @@ sample_t note_line_impl::_proceed(sample_t time)
 	note_signal_t& notes_out = ref->notes_out::data;
 	std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
 
-	while(itr->first.start.as_samples_floor(samples_per_bar) <= time) // TODO! 0.1f 0.1f 0.1f
+	while(as_samples_floor(itr->first.start, samples_per_bar) <= time) // TODO! 0.1f 0.1f 0.1f
 	{
 		const note_geom_t& geom = itr->first;
 		const m_note_event& event = itr->second;
@@ -82,7 +82,7 @@ sample_t note_line_impl::_proceed(sample_t time)
 	ref->notes_out::change_stamp = time;
 
 	last_time = time;
-	return itr->first.start.as_samples_floor(samples_per_bar); // TODO! 0.1f 0.1f 0.1f
+	return as_samples_floor(itr->first.start, samples_per_bar); // TODO! 0.1f 0.1f 0.1f
 }
 
 }

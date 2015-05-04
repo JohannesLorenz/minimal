@@ -1,5 +1,5 @@
 /*************************************************************************/
-/* minimal - a minimal osc sequencer                                     */
+/* debug_proj.cpp - a small demo project for debugging minimal           */
 /* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
@@ -17,15 +17,44 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "bars.h"
-#include "io.h"
+#include "debug.h"
+/*#include "jack_player.h"*/
+#include "project.h"
+//#include "lfo.h"
+//#include "note_line.h"
 
-namespace mini
+using namespace mini;
+using namespace bars;
+
+extern "C"
 {
 
-void print_fraction(std::ostream &os, unsigned long long n, unsigned long long d)
+void init(project_t& p)
 {
-	return os << n << '/' << d;
+	// general
+	p.set_tempo(140);
+	p.set_title("debug project");
+
+	// effects
+	start_t& start = p.emplace<start_t>();
+	pipe_t& p1 = p.emplace<pipe_t>();
+	pipe_t& p2 = p.emplace<pipe_t>();
+	in2_t& sink = p.emplace<in2_t>();
+
+	// effect connections
+	p1 << start;
+	p2 << start;
+	(int_in_1&)sink << p1; // -2 is global
+	(int_in_2&)sink << p2;
+
+//	player << sine_bass;
+
+	// PEnable
+	// "part0/kit0/adpars/voice0/AmpEnvelope/Penvsustain:i"
+
+/*	const auto ftor = [](int c) { return c % 100 + 50; };
+	func<decltype(ftor), p_char, int> f(ftor);
+	zynaddsubfx_t::note_on cmd(f, 2, 3);*/
 }
 
 }

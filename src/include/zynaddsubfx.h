@@ -304,7 +304,7 @@ private:
 					if(note_offs[p.first].cmd.set_changed())
 					{
 						note_offs[p.first].cmd.update_next_time(pos); // TODO: call on recv
-						ins->update(note_offs[p.first].cmd.handle);
+						ins->update(note_offs[p.first].cmd.get_handle());
 					}
 				}
 				else
@@ -318,7 +318,7 @@ private:
 					if(note_on_cmd.cmd.set_changed())
 					{
 						note_on_cmd.cmd.update_next_time(pos); // TODO: call on recv
-						ins->update(note_on_cmd.cmd.handle);
+						ins->update(note_on_cmd.cmd.get_handle());
 					}
 
 					// TODO!!

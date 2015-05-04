@@ -116,6 +116,7 @@ class _player_t : public work_queue_t // TODO: own header
 	//	const instrument_t* ins;
 	public:
 		effect_t* effect;
+		std::vector<task_effect*> in_efcs, out_efcs;
 		//const command_base* cmd;
 	public:
 		task_effect(effect_t* effect) :
@@ -125,7 +126,8 @@ class _player_t : public work_queue_t // TODO: own header
 		{
 		}
 
-		void proceed(sample_t time) {
+		void proceed(sample_t time)
+		{
 			if(effect->proceed(time))
 			{
 				update_next_time(effect->get_next_time());
@@ -148,6 +150,10 @@ class _player_t : public work_queue_t // TODO: own header
 			return bars_t(effect->cur_threads, effect->max_threads)
 				< bars_t(o_effect->cur_threads, o_effect->max_threads);
 			
+		}
+
+		handle_type& get_handle() final {
+
 		}
 	};
 

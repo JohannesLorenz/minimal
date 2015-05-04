@@ -146,8 +146,9 @@ public:
 
 	void instantiate() {
 		impl_t::instantiate();
-		set_next_time(impl->note_events.begin()->first.start.
-			as_samples_floor(samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
+		set_next_time(
+			as_samples_floor(impl->note_events.begin()->first.start,
+				samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
 	}
 
 	void clean_up() {}

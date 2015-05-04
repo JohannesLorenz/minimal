@@ -39,8 +39,8 @@ using namespace bars;
 int main()
 {
 	try {
-		throw_if_neq(lcm(42, 105), 210u);
-		throw_if_neq(gcd(42, 105), 21u);
+		throw_if_neq(lcm(42, 105), 210);
+		throw_if_neq(gcd(42, 105), 21);
 		
 		throw_if_neq(bars_t(42,105), bars_t(2,5));
 		throw_if_neq(bars_t(1,2) + bars_t(1, 3), bars_t(5,6));
@@ -49,7 +49,7 @@ int main()
 		throw_if_neq(bars_t(21,4).floor(), 5);
 		throw_if_neq(bars_t(23,4).rest(), bars_t(3,4));
 
-		throw_if_neq(bars_t(1, 128).as_samples_floor(1024), 8);
+		throw_if_neq(as_samples_floor(bars_t(1, 128), 1024), 8);
 
 		throw_if_neq(1 + 1_3, bars_t(4, 3));
 

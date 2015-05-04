@@ -11,7 +11,7 @@ INCLUDEPATH += src/include/ \
 
 # Input
 
-HEADERS += src/core/plugin.h \
+HEADERS += src/include/plugin.h \
 	src/include/project.h \
 	src/include/instrument.h \
 	src/core/loaded_project.h \
@@ -41,10 +41,11 @@ HEADERS += src/core/plugin.h \
 	src/include/sample.h \
 	src/core/engine.h \
 	src/core/jack_engine.h \
-    src/include/fraction.h
+	src/include/fraction.h \
+	src/include/debug.h
 
 SOURCES += src/core/main.cpp \
-	src/core/plugin.cpp \
+	src/include/plugin.cpp \
 	src/include/project.cpp \
 	src/songs/demo.cpp \
 	src/include/instrument.cpp \
@@ -67,11 +68,12 @@ SOURCES += src/core/main.cpp \
 	src/include/jack_player.cpp \
 	src/test/commands.cpp \
 	src/test/maths.cpp \
-	src/include/bars.cpp \
 	src/core/engine.cpp \
-	src/core/jack_engine.cpp
+	src/core/jack_engine.cpp \
+	src/include/fraction.cpp \
+	src/songs/debug_proj.cpp
 
-OTHER_FILES += INSTALL.txt \
+OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \
 	src/CMakeLists.txt \
 	src/core/CMakeLists.txt \
@@ -79,6 +81,6 @@ OTHER_FILES += INSTALL.txt \
 	src/include/CMakeLists.txt \
 	src/test/CMakeLists.txt \
 	src/config.h.in \
-    README.md
+	README.md
 
 

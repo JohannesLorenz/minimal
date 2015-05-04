@@ -29,7 +29,7 @@
 // ...
 // when is it going to end?
 
-#include "../core/plugin.h" // TODO: move to include directory
+#include "plugin.h"
 #include "types.h"
 #include "utils.h"
 #include "daw.h"
@@ -38,7 +38,7 @@
 #include "work_queue.h"
 #include "lo_port.h"
 #include "io.h" // TODO?
-
+#include "minimal_plugin.h"
 
 namespace mini
 {
@@ -190,7 +190,7 @@ public:
 
 class instrument_t : public effect_t, public work_queue_t
 {
-	multi_plugin_t plugin;
+	multi_plugin_t plugin_creator;
 
 	virtual const char* library_path() const = 0;
 	virtual const std::vector<const char *> start_args() const = 0;
@@ -199,6 +199,7 @@ public:
 	lo_port_t lo_port; // TODO: private?
 protected:
 	pid_t pid; // TODO: private?
+	minimal_plugin* plugin;
 private:
 	std::vector<const command_base*> const_commands;
 
@@ -241,12 +242,11 @@ public:
 
 
 
-struct prioritized_command_base : public work_queue_t::task_base
+struct prioritized_command_base : public work_queue_t::task_base_with_handle
 {
 	std::size_t priority;
-	work_queue_t::handle_type handle;
 	prioritized_command_base(std::size_t priority, sample_t ) :
-		task_base(std::numeric_limits<sample_t>::max()),
+		task_base_with_handle(std::numeric_limits<sample_t>::max()),
 		priority(priority)
 	{
 
@@ -254,7 +254,6 @@ struct prioritized_command_base : public work_queue_t::task_base
 	bool cmp(const task_base& rhs) const {
 		return priority < dynamic_cast<const prioritized_command_base&>(rhs).priority;
 	}
-	work_queue_t::handle_type& get_handle() { return handle; }
 };
 
 class prioritized_command : public prioritized_command_base
@@ -307,7 +306,7 @@ public:
 
 		// TODO: not sure, but max sounds correct:
 		update_next_time(std::numeric_limits<sample_t>::max());
-		w->update(handle);
+		w->update(get_handle());
 	}
 };
 
@@ -412,7 +411,7 @@ public:
 		functor_init_ports<InstClass, cmd_type> f{ins, cmd};
 		cmd_ptr->for_all_variables(f);
 
-		cmd.handle = ins->add_task(&cmd);
+		cmd.set_handle(ins->add_task(&cmd)); // TODO: do this in cmd's ctor? possible??
 	}
 
 	//! should only be called if all args are ports
@@ -449,7 +448,7 @@ void rtosc_in_port_t<T>::on_recv(sample_t time)
 	{
 		// update in pq
 		cmd->update_next_time(time);
-		ins->update(cmd->handle);
+		ins->update(cmd->get_handle());
 	}
 //	send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
 }

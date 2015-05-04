@@ -1,0 +1,5 @@
+language: cpp
+compiler:
+  - clang
+# Compiling:
+script: mkdir build && cd build && cmake -DCOMPILER=clang -DCMAKE_BUILD_TYPE=Release .. && make && cd ..

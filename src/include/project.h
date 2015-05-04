@@ -136,7 +136,7 @@ public:
 		valid = p.valid;
 		_tempo = p._tempo;
 		_title = std::move(p._title);
-		_effects = std::move(_effects);
+		_effects = std::move(p._effects);
 		return *this;
 	}
 	project_t& operator=(const project_t& p) = delete;

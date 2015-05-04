@@ -53,6 +53,8 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 void loaded_project_t::init()
 {
 	no_rt::mlog << "Loading project: " << this->project.title() << std::endl;
+	std::cerr << "Found " << project.effects().size() << " effects." << std::endl;
+
 	// instantiate and connect all fx
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
@@ -100,6 +102,7 @@ void loaded_project_t::init()
 loaded_project_t& loaded_project_t::operator=(project_t&& _project) noexcept // not sure if this is really noexcept...
 {
 	project = std::move(_project);
+
 	init();
 	return *this;
 }
@@ -190,13 +193,32 @@ void _player_t::init()
 	no_rt::mlog << "Player for " << project.project.title() << std::endl;
 
 	project.project.emplace<sentinel_effect>();
-
+	std::map<const effect_t*, handle_type> handles;
 
 	no_rt::mlog << "FOUND " << project.project.effects().size() << " FX..." << std::endl;
 	for(effect_t*& e : project.project.get_effects_noconst())
 	{
 		no_rt::mlog << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
+		handles[e] = add_task(new_task);
+	}
+
+	for(handle_type& h : project.project.get_effects_noconst())
+	{
+		task_effect* te = *h;
+		effect_t* e = te->effect;
+		for(const out_port_base* op  : e->get_out_ports())
+		for(in_port_base* target_ip : op->readers)
+		{
+			effect_t* target_ef = target_ip->e;
+			changed_ports[target_ef->id()][target_ip->id] = true;
+
+			//handle_type h = handles.at(target_ef);
+			handle_type h = target_ef
+			(*h)->update_next_time(cur_next_time);
+			update(h);
+
+		}
 		handles[e] = add_task(new_task);
 	}
 
@@ -226,12 +248,12 @@ _player_t::_player_t(loaded_project_t &_project) :
 void _player_t::play_until(sample_t dest)
 {
 	sample_t final_pos = dest; //pos + work;
+	std::cerr << "starting playback: " << pos << std::endl;
 	for(; next_task_time() <= final_pos; pos = next_task_time())
 	{
-
-//		std::cerr << "done: " << pos << std::endl;
 //		usleep(1000000 * step);
 		process(0); // TODO: not 0
+		std::cerr << "done: " << pos << std::endl;
 		usleep(1000);
 	}
 
@@ -251,8 +273,9 @@ void REALTIME _player_t::process(sample_t work)
 		while(has_active_tasks(pos))
 		{
 			// TODO: simple reinsert??
-			task_base* top = pop_next_task();
-			effect_t* this_ef = reinterpret_cast<task_effect*>(top)->effect;
+			task_base* top = peek_next_task();
+			task_effect* task_e = reinterpret_cast<task_effect*>(top);
+			effect_t* this_ef = task_e->effect;
 
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
@@ -262,7 +285,8 @@ void REALTIME _player_t::process(sample_t work)
 			++this_ef->cur_threads;
 			top->proceed(pos); // will also update the next-time event
 
-			handles.at(this_ef) = add_task(top);
+			//handles.at(this_ef) = add_task(top);
+			update(task_e->get_handle());
 
 			/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
 			{
@@ -281,8 +305,10 @@ void REALTIME _player_t::process(sample_t work)
 				{
 					effect_t* target_ef = target_ip->e;
 					changed_ports[target_ef->id()][target_ip->id] = true;
+					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
 
-					handle_type h = handles.at(target_ef);
+					//handle_type h = handles.at(target_ef);
+					handle_type h = target_ef
 					(*h)->update_next_time(cur_next_time);
 					update(h);
 				}

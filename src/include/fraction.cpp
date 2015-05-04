@@ -17,36 +17,15 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <thread>
+#include "bars.h"
+#include "io.h"
 
-#include "threadpool/src/include/thread.h"
-#include "engine.h"
-
-namespace mini {
-
-other_tp::other_tp()
-	: threads(/*std::thread::hardware_concurrency() - 1*/ 0) // TODO!!!
-	 // TODO: allow custom number of threads
+namespace mini
 {
-	for(threadpool::thread_t& t : threads)
-	{
-		t = threadpool::thread_t(*this);
-	}
-}
 
-engine_t::~engine_t()
+std::ostream & print_fraction(std::ostream &os, unsigned long long n, unsigned long long d)
 {
-}
-
-void engine_t::load_project(project_t&& pro)
-{
-	lpro = std::move(pro);
-}
-
-void engine_t::play_until(bars_t end)
-{
-	player_t<int> pl(lpro);
-	pl.play_until(as_samples_floor(end, samples_per_bar));
+	return os << n << '/' << d;
 }
 
 }

@@ -86,17 +86,19 @@ pid_t instrument_t::make_fork()
 /*	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
 	_get_input(make_start_command().c_str(), &pid);
 	return pid;*/
-#if 0
-	const std::vector<const char*> cmds = build_start_args();
+
+/*	const std::vector<const char*> cmds = build_start_args();
 	typedef char* argv_t[];
-	plugin.call<int, int, argv_t>("main()", cmds.size(), cmds.data());
-#endif
+	plugin.call<int, int, argv_t>("main", cmds.size(), cmds.data());
+*/
+	plugin = plugin_creator.call<minimal_plugin*, unsigned long>("instantiate", 1024);
 	return 0;
 }
 
 void instrument_t::instantiate()
 {
 //	on_preinit();
+	plugin_creator.set_path(library_path());
 
 	pid = make_fork();
 	lo_port.init(get_port(pid, 0 /*TODO*/));

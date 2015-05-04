@@ -52,6 +52,16 @@ public:
 
 //		virtual sample_t next() = 0;
 	};
+
+	class task_base_with_handle : public task_base
+	{
+		handle_type handle;
+	public:
+		using task_base::task_base;
+		handle_type& get_handle() final { return handle; }
+		void set_handle(handle_type h) { handle = h; }
+	};
+
 private:
 	pq_type pq;
 public:

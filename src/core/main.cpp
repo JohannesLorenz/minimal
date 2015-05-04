@@ -59,6 +59,8 @@ void main_init()
 	return pro;
 }*/
 
+using namespace bars;
+
 int main(int argc, char** argv)
 {
 	try {
@@ -72,10 +74,10 @@ int main(int argc, char** argv)
 		project_t pro;
 
 		plugin.load_project(pro);
-		
+		std::cerr << pro.effects().size() << std::endl;
 		jack_engine_t eng;
 		eng.load_project(std::move(pro));
-		eng.play_until(4.0f);
+		eng.play_until(5_1);
 
 		/*loaded_project_t lpro(std::move(pro));
 		

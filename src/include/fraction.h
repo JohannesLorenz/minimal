@@ -17,22 +17,13 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef BARS_H
-#define BARS_H
+#ifndef FRACTION_H
+#define FRACTION_H
 
 #include <iosfwd>
 
 namespace mini
 {
-
-/*class m_time_t
-{
-	constexpr static double time_per_tick = 1000000 / 1024.0; // in useconds
-public:
-	tick_t pos; // represents 1/1024 seconds // suggested by fundamental
-	void tick() { usleep(time_per_tick); }
-	void tick(tick_t n_ticks) { usleep(time_per_tick * n_ticks); }
-};*/
 
 template<class T1, class T2>
 inline constexpr T1 gcd(T1 a, T2 b) {
@@ -72,6 +63,8 @@ class fraction_t
 	num_t n;
 	denom_t d;
 
+public:
+	//! TODO: should be private?
 	fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
 		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
 	{
@@ -98,7 +91,8 @@ public:
 		return other.n == n && other.d == d;
 	}
 	
-	friend std::ostream& operator<<(std::ostream& os, const fraction_t& b);
+	template<class N, class D>
+	friend std::ostream& operator<<(std::ostream& os, const fraction_t<N, D>& b);
 
 	num_t floor() const { return n/d; }
 	fraction_t rest() const { return fraction_t(n%d, d); }
@@ -114,8 +108,14 @@ public:
 	}
 
 	fraction_t operator-() const { return fraction_t(-n, d); }
-	friend fraction_t operator+(int val, const fraction_t& bar);
-	friend fraction_t operator*(int val, const fraction_t& bar);
+	template<class N, class D>
+	friend fraction_t<N, D> operator+(
+		typename fraction_t<N, D>::num_t val,
+		const fraction_t<N, D>& bar);
+	template<class N, class D>
+	friend fraction_t<N, D> operator*(
+		typename fraction_t<N, D>::num_t val,
+		const fraction_t<N, D>& bar);
 
 	const fraction_t operator-(const fraction_t& rhs) const {
 		return operator+(-rhs);
@@ -123,26 +123,30 @@ public:
 };
 
 template<class N, class D>
-inline fraction_t<N, D> operator+(int val, const fraction_t<N, D>& bar)
+inline fraction_t<N, D> operator+(
+	typename fraction_t<N, D>::num_t val,
+	const fraction_t<N, D>& bar)
 {
 	typename fraction_t<N, D>::denom_t d = bar.denominator();
 	return fraction_t<N, D>(val * d + bar.numerator(), d);
 }
 
 template<class N, class D>
-inline fraction_t<N, D> operator*(int val, const fraction_t<N, D>& bar)
+inline fraction_t<N, D> operator*(
+	typename fraction_t<N, D>::num_t val,
+	const fraction_t<N, D>& bar)
 {
 	return fraction_t<N, D>(bar.numerator(), bar.denominator(), val);
 }
 
-void print_fraction(std::ostream& os, unsigned long long n, unsigned long long d);
+std::ostream & print_fraction(std::ostream& os, unsigned long long n, unsigned long long d);
 
 template<class N, class D>
-std::ostream& operator<<(std::ostream& os,
+inline std::ostream& operator<<(std::ostream& os,
 		const fraction_t<N, D>& f) {
-	print_fraction(os, f.numerator(), f.denominator());
+	return print_fraction(os, f.numerator(), f.denominator());
 }
 
 }
 
-#endif // BARS_H
+#endif // FRACTION_H

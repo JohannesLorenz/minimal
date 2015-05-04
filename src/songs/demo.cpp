@@ -24,7 +24,7 @@
 #include "note_line.h"
 
 using namespace mini;
-using namespace bars;using namespace bars;
+using namespace bars;
 
 extern "C"
 {
