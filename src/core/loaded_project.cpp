@@ -201,6 +201,7 @@ void _player_t::init()
 		no_rt::mlog << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
+		new_task->set_handle(handles[e]);
 	}
 
 	for(auto& pr : handles)
@@ -211,13 +212,15 @@ void _player_t::init()
 		for(in_port_base* target_ip : op->readers)
 		{
 			effect_t* target_ef = target_ip->e;
-			changed_ports[target_ef->id()][target_ip->id] = true;
+			//changed_ports[target_ef->id()][target_ip->id] = true;
 
 			//handle_type h = handles.at(target_ef);
 			handle_type h = handles[target_ef];
 			/*(*h)->update_next_time(cur_next_time);
 			update(h);*/
 			te->out_efcs.push_back(dynamic_cast<task_effect*>(*h)); // TODO: cast correct/needed?
+
+			e->cur_threads.store(e->max_threads); // marks this task as "done"
 
 		}
 	}
@@ -245,8 +248,11 @@ _player_t::_player_t(loaded_project_t &_project) :
 	#define REALTIME // replace with "nothing"
 #endif
 
+// TODO: deprecated!?!?!?
 void _player_t::play_until(sample_t dest)
 {
+// function probably deprecated
+
 	sample_t final_pos = dest; //pos + work;
 	std::cerr << "starting playback: " << pos << std::endl;
 	for(; next_task_time() <= final_pos; pos = next_task_time())
@@ -283,6 +289,11 @@ void REALTIME _player_t::process(sample_t work)
 			const sample_t cur_next_time = top->next_time();
 			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
 			++this_ef->cur_threads;
+			
+			
+			
+			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
+			
 			top->proceed(pos); // will also update the next-time event
 
 			//handles.at(this_ef) = add_task(top);
@@ -302,16 +313,18 @@ void REALTIME _player_t::process(sample_t work)
 			{
 			if(op->change_stamp <= pos)
 			{
-				for(in_port_base* /*target_ip*/ : op->readers)
+				for(in_port_base* target_ip : op->readers)
 				{
-					// TODO: check this!!!
-			//		effect_t* target_ef = target_ip->e;
-				//	changed_ports[target_ef->id()][target_ip->id] = true;
+				//	TODO: check this!!!
+					effect_t* target_ef = target_ip->e;
+					changed_ports[target_ef->id()][target_ip->id] = true;
 					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
 
 					//handle_type h = handles.at(target_ef);
 					handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
-					(*h)->update_next_time(cur_next_time);
+					task_base* te = *h;
+				//	te->effect
+					te->update_next_time(cur_next_time);
 					update(h);
 				}
 			}

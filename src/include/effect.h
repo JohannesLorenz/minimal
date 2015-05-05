@@ -85,7 +85,7 @@ public:
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
 	atomic_def<int, 1> max_threads; // TODO: uint16_t
-	atomic_def<int, 0> cur_threads;
+	atomic<int> cur_threads;
 
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
