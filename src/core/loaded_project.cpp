@@ -198,12 +198,13 @@ void _player_t::init()
 	no_rt::mlog << "FOUND " << project.project.effects().size() << " FX..." << std::endl;
 	for(effect_t*& e : project.project.get_effects_noconst())
 	{
-		no_rt::mlog << "pushing effect " << e->id() << ", next time: " << e->get_next_time() << std::endl;
+		no_rt::mlog << "pushing effect " << e->name() << " (" << e->id() << "), next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
+		std::cerr << e << std::endl;
 		new_task->set_handle(handles[e]);
 	}
-
+	std::cerr << handles.size();
 	for(auto& pr : handles)
 	{
 		task_effect* te = static_cast<task_effect*>(*pr.second);
@@ -220,9 +221,11 @@ void _player_t::init()
 			update(h);*/
 			te->out_efcs.push_back(dynamic_cast<task_effect*>(*h)); // TODO: cast correct/needed?
 
-			e->cur_threads.store(e->max_threads); // marks this task as "done"
 
 		}
+
+		e->cur_threads.store(e->max_threads); // marks this task as "done"
+		no_rt::mlog << "Effect " << e->name() << ": threads: " << e->cur_threads << e->max_threads << std::endl;
 	}
 
 	ready_fx.reserve(project.project.effects().size());

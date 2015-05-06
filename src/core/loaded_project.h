@@ -147,8 +147,11 @@ class _player_t : public work_queue_t // TODO: own header
 			//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
 			const effect_t* const o_effect = dynamic_cast<const task_effect&>(other).effect;
 
-			return bars_t(effect->cur_threads, effect->max_threads)
-				< bars_t(o_effect->cur_threads, o_effect->max_threads);
+			bars_t b_self(effect->cur_threads, effect->max_threads),
+				b_other(o_effect->cur_threads, o_effect->max_threads);
+			
+			// strict ordering is guaranteed (!)
+			return (b_self == b_other) ? effect->id() < o_effect->id() : (b_self < b_other);
 			
 		}
 

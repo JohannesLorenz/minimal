@@ -75,6 +75,8 @@ int main(int argc, char** argv)
 
 		plugin.load_project(pro);
 		std::cerr << pro.effects().size() << std::endl;
+		pro.finalize(); // TODO: in plugin.load... ?
+
 		jack_engine_t eng;
 		eng.load_project(std::move(pro));
 		eng.play_until(5_1);

@@ -118,6 +118,8 @@ public:
 //! This class will never be instantiated in an so file
 class project_t : public util::non_copyable_t
 {
+	// note: if you add any variable here, got to operator= !
+	bool finalized = true;
 	bool valid = true;
 	float _tempo = 140.0;
 	std::string _title;
@@ -133,6 +135,7 @@ public:
 	project_t& operator=(project_t&& p) noexcept
 	{
 		// this is a punishment...
+		finalized = p.finalized;
 		valid = p.valid;
 		_tempo = p._tempo;
 		_title = std::move(p._title);
@@ -178,12 +181,12 @@ public:
 		//_instruments.emplace_back(new T(args...));
 		//return static_cast<T&>(*_instruments.back()); // TODO: correct cast?
 		effect_t* ef = new T(args...);
-		ef->set_id(_effects.size());
+//		ef->set_id(_effects.size());
 		_effects.push_back(ef);
 		return static_cast<T&>(*ef);
 	}
 
-
+	void finalize();
 
 //	track_t& add_track(const instrument_t& ins);
 

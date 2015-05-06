@@ -57,11 +57,12 @@ struct debug_effect_base : public effect_t
 {
 	void instantiate() {}
 	void clean_up() {}
+	using effect_t::effect_t;
 };
 
 struct start_t : public debug_effect_base, public int_out
 {
-	start_t() : int_out((effect_t&)*this)
+	start_t() : debug_effect_base("start"), int_out((effect_t&)*this)
 	{
 		set_next_time(0.0f);
 	}
@@ -78,7 +79,8 @@ struct start_t : public debug_effect_base, public int_out
 
 struct pipe_t : public debug_effect_base, public int_in_1, public int_out
 {
-	pipe_t() : int_in_1((effect_t&)*this),
+	pipe_t() : debug_effect_base("pipe"),
+		int_in_1((effect_t&)*this),
 		int_out((effect_t&)*this)
 	{
 		set_next_time(std::numeric_limits<sample_t>::max());
@@ -96,8 +98,9 @@ struct pipe_t : public debug_effect_base, public int_in_1, public int_out
 
 struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 {
-	in2_t() : int_in_1((effect_t&)*this),
-		 int_in_2((effect_t&)*this)
+	in2_t() : debug_effect_base("sink"),
+		int_in_1((effect_t&)*this),
+		int_in_2((effect_t&)*this)
 	{
 		set_next_time(std::numeric_limits<sample_t>::max());
 	}

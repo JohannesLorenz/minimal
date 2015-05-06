@@ -31,6 +31,12 @@ project_t::~project_t()
 //	 delete ins;
 }
 
+void project_t::finalize()
+{
+	
+	finalized = true;
+}
+
 /*track_t& project_t::add_track(const instrument_t &ins) {
 	_tracks.push_back(track_t(ins.id()));
 	return _tracks.back();
