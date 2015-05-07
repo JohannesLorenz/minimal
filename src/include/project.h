@@ -119,9 +119,9 @@ class effect_root_t : public effect_t
 	void instantiate() {}
 	void clean_up() {}
 	bool _proceed(sample_t ) { return true; }
-/*public:
+public:
 	effect_root_t(effect_root_t&& ) = default;
-	effect_root_t() = default;*/
+	effect_root_t() : effect_t("effect root") {}
 };
 
 //! Consists of all data which is needed to serialize a project.

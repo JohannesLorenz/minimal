@@ -193,7 +193,7 @@ void _player_t::init()
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 	no_rt::mlog << "Player for " << project.title() << std::endl;
 
-	project.emplace<sentinel_effect>();
+	project.emplace<sentinel_effect>(1 + project.effects().size());
 	std::map<const effect_t*, handle_type> handles;
 
 	no_rt::mlog << "FOUND " << project.effects().size() << " FX..." << std::endl;
@@ -231,15 +231,20 @@ void _player_t::init()
 
 //	ready_fx.reserve(project.effects().size());
 
-	changed_ports.resize(project.effects().size());
+	changed_ports.resize(1 + project.effects().size());
 
-	for(std::size_t i = 0; i < project.effects().size(); ++i)
+/*	for(std::size_t i = 0; i < project.effects().size(); ++i)
 	{
 		//std::cerr << project.effects()[i]->name() << " -> " << project.effects()[i]->get_in_ports().size()
 		//	<< std::endl;
 		changed_ports
 
 		changed_ports[i].resize(project.effects()[i]->get_in_ports().size());
+	}*/
+
+	for(effect_t* e : project.effects())
+	{
+		changed_ports[e->id()].resize(e->get_in_ports().size());
 	}
 }
 

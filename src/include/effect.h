@@ -135,11 +135,12 @@ public:
 };
 
 //! this is a dummy which will always be the last effect in the queue.
+// todo: loaded project.h or even cpp
 class sentinel_effect : public effect_t
 {
 public:
-	sentinel_effect() : effect_t("sentinel") {
-		//set_id(std::numeric_limits<std::size_t>::max());
+	sentinel_effect(const id_t& id) : effect_t("sentinel") {
+		set_id(id);
 		set_next_time(std::numeric_limits<sample_t>::max());
 	}
 	bool _proceed(sample_t ) { throw "impossible"; return true; }
