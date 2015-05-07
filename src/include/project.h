@@ -114,6 +114,16 @@ public:
 	track_t(const instrument_t::id_t& instr_id);
 };*/
 
+class effect_root_t : public effect_t
+{
+	void instantiate() {}
+	void clean_up() {}
+	bool _proceed(sample_t ) { return true; }
+/*public:
+	effect_root_t(effect_root_t&& ) = default;
+	effect_root_t() = default;*/
+};
+
 //! Consists of all data which is needed to serialize a project.
 //! This class will never be instantiated in an so file
 class project_t : public util::non_copyable_t
@@ -127,11 +137,16 @@ class project_t : public util::non_copyable_t
 	std::vector<effect_t*> _effects;
 //	std::vector<track_t> _tracks;
 //	daw::global_t _global;
+
+	effect_root_t _effect_root;
+
 public:
+	effect_root_t& effect_root() { return _effect_root; }
+
 	project_t();
 	~project_t();
 
-	project_t(project_t&& ) noexcept = default;
+	project_t(project_t&& ) = default;
 	project_t& operator=(project_t&& p) noexcept
 	{
 		// this is a punishment...

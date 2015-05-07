@@ -50,7 +50,8 @@ class engine_t
 {
 	multi_tp tp;
 
-	mini::loaded_project_t lpro;
+	//mini::loaded_project_t lpro;
+	mini::project_t lpro;
 	//player_t<int> pl(lpro);
 public:
 	virtual ~engine_t();

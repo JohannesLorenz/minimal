@@ -51,8 +51,9 @@ public:
 };*/
 
 
-class loaded_project_t;
+//class loaded_project_t;
 
+/*
 //! rt-safe stack, once reserved
 template<class T>
 class array_stack
@@ -67,14 +68,16 @@ public:
 		return std::move(top);
 	}
 	std::size_t size() const { return data.size(); }
-};
+};*/
+
+using loaded_project_t = project_t;
 
 class _player_t : public work_queue_t // TODO: own header
 {
 	// TODO: class handle_work_queue_t?
 	std::map<const effect_t*, handle_type> handles;
 
-	array_stack<effect_t*> ready_fx;
+	//array_stack<effect_t*> ready_fx;
 
 /*	//!< maximum seconds to sleep until wakeup forced
 	//!< @deprecated deprecated?
@@ -160,7 +163,7 @@ class _player_t : public work_queue_t // TODO: own header
 		}*/
 	};
 
-	void update_effects();
+//	void update_effects();
 	void fill_commands();
 	void send_commands();
 
@@ -196,13 +199,7 @@ public:
 
 // TODO: class audio_stereo_project will set sink to mult<ringbuffer_t>
 
-class effect_root_t : public effect_t
-{
-	void instantiate() {}
-	void clean_up() {}
-	bool _proceed(sample_t ) { return true; }
-};
-
+#if 0
 //! this class takes a project and then does some things to handle it
 class loaded_project_t : util::non_copyable_t
 {
@@ -218,7 +215,6 @@ class loaded_project_t : util::non_copyable_t
 	/*const*/ std::vector<loaded_instrument_t> _ins;
 	std::vector<loaded_instrument_t> make_ins() const;
 #endif
-	effect_root_t _effect_root;
 
 //	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
 
@@ -228,12 +224,12 @@ class loaded_project_t : util::non_copyable_t
 
 public:
 //	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
-	effect_root_t& effect_root() { return _effect_root; }
 	loaded_project_t() = default;
 	loaded_project_t& operator=(project_t&& _project) noexcept;
 	loaded_project_t(project_t&& _project) noexcept;
 	~loaded_project_t();
 };
+#endif
 
 }
 

@@ -48,7 +48,7 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 	}*/
 	return result;
 }
-#endif
+
 
 void loaded_project_t::init()
 {
@@ -96,10 +96,11 @@ void loaded_project_t::init()
 		cb(cur_effect->readers);
 		cb(cur_effect->deps);
 
-		} while(ready_fx.size());
+	} while(ready_fx.size());
+
 }
 
-loaded_project_t& loaded_project_t::operator=(project_t&& _project) noexcept // not sure if this is really noexcept...
+loaded_project_t& loaded_project_t::operator=(project_t&& ) noexcept // not sure if this is really noexcept...
 {
 	project = std::move(_project);
 
@@ -114,9 +115,6 @@ loaded_project_t::loaded_project_t(project_t&& _project) noexcept :
 {
 	init();
 }
-
-
-
 
 loaded_project_t::~loaded_project_t()
 {
@@ -144,7 +142,9 @@ loaded_project_t::~loaded_project_t()
 	}
 #endif
 }
+#endif
 
+#if 0
 void _player_t::update_effects()
 {
 	// TODO: use player's copies
@@ -161,10 +161,11 @@ void _player_t::update_effects()
 
 	} while(ready_fx.size());
 }
+#endif
 
 void _player_t::fill_commands()
 {
-/*	for(const auto& pr : project.global())
+/*	for(const auto& pr : global())
 	for(const auto& pr2 : pr.second)
 	{
 		pr2.first->complete_buffer();
@@ -178,7 +179,7 @@ void _player_t::send_commands()
 
 void _player_t::init()
 {
-/*	for(const auto& pr : project.global())
+/*	for(const auto& pr : global())
 	for(const auto& pr2 : pr.second)
 	if(pr2.second.empty()) // marks a poll
 	{
@@ -190,13 +191,13 @@ void _player_t::init()
 	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	no_rt::mlog << "Player for " << project.project.title() << std::endl;
+	no_rt::mlog << "Player for " << project.title() << std::endl;
 
-	project.project.emplace<sentinel_effect>();
+	project.emplace<sentinel_effect>();
 	std::map<const effect_t*, handle_type> handles;
 
-	no_rt::mlog << "FOUND " << project.project.effects().size() << " FX..." << std::endl;
-	for(effect_t*& e : project.project.get_effects_noconst())
+	no_rt::mlog << "FOUND " << project.effects().size() << " FX..." << std::endl;
+	for(effect_t*& e : project.get_effects_noconst())
 	{
 		no_rt::mlog << "pushing effect " << e->name() << " (" << e->id() << "), next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
@@ -228,13 +229,17 @@ void _player_t::init()
 		no_rt::mlog << "Effect " << e->name() << ": threads: " << e->cur_threads << e->max_threads << std::endl;
 	}
 
-	ready_fx.reserve(project.project.effects().size());
+//	ready_fx.reserve(project.effects().size());
 
-	changed_ports.resize(project.project.effects().size());
+	changed_ports.resize(project.effects().size());
 
-	for(std::size_t i = 0; i < project.project.effects().size(); ++i)
+	for(std::size_t i = 0; i < project.effects().size(); ++i)
 	{
-		changed_ports[i].resize(project.project.effects()[i]->get_in_ports().size());
+		//std::cerr << project.effects()[i]->name() << " -> " << project.effects()[i]->get_in_ports().size()
+		//	<< std::endl;
+		changed_ports
+
+		changed_ports[i].resize(project.effects()[i]->get_in_ports().size());
 	}
 }
 
@@ -320,6 +325,10 @@ void REALTIME _player_t::process(sample_t work)
 				{
 				//	TODO: check this!!!
 					effect_t* target_ef = target_ip->e;
+					std::cerr << "now at ef: " << target_ef->name() << std::endl;
+					std::cerr << "sz: " << changed_ports[target_ef->id()].size() << std::endl;
+
+
 					changed_ports[target_ef->id()][target_ip->id] = true;
 					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
 
@@ -360,3 +369,4 @@ void REALTIME _player_t::process(sample_t work)
 }
 
 }
+

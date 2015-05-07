@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <stack>
 #include "project.h"
 
 namespace mini {
@@ -33,7 +34,50 @@ project_t::~project_t()
 
 void project_t::finalize()
 {
-	
+	for(effect_t* e : effects()) // TODO: -> initializer list
+	{
+		e->instantiate();
+		if(e->writers.empty())
+		{
+			_effect_root.readers.push_back(e);
+			e->writers.push_back(&_effect_root);
+		}
+	}
+
+	std::stack<effect_t*> ready_fx;
+	ready_fx.push(&effect_root());
+
+	std::size_t next_id = 0;
+
+	// set an id to all effects in topological order
+	do
+	{
+		effect_t* cur_effect = ready_fx.top();
+		ready_fx.pop();
+
+		if(cur_effect->id() != has_id::no_id())
+		 throw "Id given twice";
+
+		cur_effect->set_id(next_id++);
+
+		//std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+
+		const auto cb = [&](const std::vector<effect_t*>& next_vector)
+		{
+			for(effect_t* next: next_vector)
+			{
+				bool parents_done = true;
+				for(const effect_t* par: next->writers)
+				 parents_done = parents_done && (par->id() != has_id::no_id());
+				if(parents_done)
+				 ready_fx.push(next);
+			}
+		};
+
+		cb(cur_effect->readers);
+		cb(cur_effect->deps);
+
+	} while(ready_fx.size());
 	finalized = true;
 }
 

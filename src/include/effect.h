@@ -128,6 +128,9 @@ public:
 	}
 
 	effect_t(const char* name = "unnamed") : named_t(name) {}
+
+//	effect_t(effect_t&& ) = default;
+
 	virtual ~effect_t() {}
 };
 
