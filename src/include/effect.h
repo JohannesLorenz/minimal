@@ -81,6 +81,7 @@ private:
 	}
 protected:
 	virtual bool _proceed(sample_t time) = 0;
+	void set_next_time(sample_t next) { next_time = next; }
 public:
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
@@ -101,19 +102,21 @@ public:
 	// returns the next time when the effect must be started
 	sample_t proceed(sample_t time) {
 		io::mlog << "proceeding with effect " << id() << io::endl;
-		return next_time = _proceed(time);
+		//return next_time = _proceed(time);
+		_proceed(time);
+		return get_next_time();
 	}
 
 	sample_t get_next_time() const { return next_time; }
-	void set_next_time(sample_t next) { next_time = next; }
 
+#if 0
 	sample_t get_childrens_next_time() const {
 		sample_t result = std::numeric_limits<sample_t>::max();
 		for(const effect_t* e : writers)
 		 result = std::min(result, e->get_next_time());
 		return result;
 	}
-
+#endif
 	/*template<class ...Args1, class ...Args2>
 	effect_t(const std::tuple<Args1&...>& in_ports, const std::tuple<Args2&...>& out_ports) // TODO: fwd?
 		: in_ports(in_ports), out_ports(out_ports)

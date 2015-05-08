@@ -127,7 +127,9 @@ class _player_t : public work_queue_t // TODO: own header
 			task_base_with_handle(effect->get_next_time()),
 			effect(effect)
 		{
-			std::cerr << "inited time: " << effect->get_next_time() << std::endl;
+			std::cerr << "inited time: " << effect->get_next_time() << ", aka: "<<
+				next_time()
+				<< std::endl;
 		}
 
 		void proceed(sample_t time)
@@ -155,7 +157,7 @@ class _player_t : public work_queue_t // TODO: own header
 				b_other(o_effect->cur_threads, o_effect->max_threads);
 			
 			// strict ordering is guaranteed (!)
-			return (b_self == b_other) ? effect->id() < o_effect->id() : (b_self < b_other);
+			return (b_self == b_other) ? effect->id() > o_effect->id() : (b_self < b_other);
 			
 		}
 

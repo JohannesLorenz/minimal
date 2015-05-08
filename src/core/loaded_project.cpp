@@ -225,7 +225,8 @@ void _player_t::init()
 
 		}
 
-		e->cur_threads.store(e->max_threads); // marks this task as "done"
+		// TODO: use default atomic
+		e->cur_threads.store(/*e->max_threads*/0); // marks this task as "done"
 		no_rt::mlog << "Effect " << e->name() << ": threads: " << e->cur_threads << e->max_threads << std::endl;
 	}
 
@@ -268,12 +269,20 @@ void _player_t::play_until(sample_t dest)
 
 	sample_t final_pos = dest; //pos + work;
 	std::cerr << "starting playback: " << pos << std::endl;
-	for(; next_task_time() <= final_pos; pos = next_task_time())
+	for(; next_task_time() < final_pos; pos = next_task_time()) // TODO: <= ?
 	{
 //		usleep(1000000 * step);
-		process(0); // TODO: not 0
+		process(pos); // TODO: not 0
 		std::cerr << "done: " << pos << std::endl;
-		usleep(1000);
+		std::cerr << "next: " << next_task_time() << std::endl;
+		std::cerr << "next name: " << ((task_effect*)peek_next_task())->effect->name() << std::endl;
+
+
+
+		useconds_t sleep_time = std::min(next_task_time() - pos,
+				dest - pos) * usecs_per_sample;
+		io::mlog << "Sleeping for " << sleep_time << " useconds..." << io::endl;
+		usleep(sleep_time);
 	}
 
 	// no more tasks possible, so:
@@ -293,11 +302,14 @@ void REALTIME _player_t::process(sample_t work)
 //			
 //		}
 
-		while(has_active_tasks(pos))
+		while(peek_next_task()->next_time() <= pos &&
+			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
+			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )
 		{
 			// TODO: simple reinsert??
+
 			task_base* top = peek_next_task();
-			task_effect* task_e = reinterpret_cast<task_effect*>(top);
+			task_effect* task_e = dynamic_cast<task_effect*>(top);
 			effect_t* this_ef = task_e->effect;
 
 			/*const bool reinsert = top->proceed(pos);
@@ -310,9 +322,6 @@ void REALTIME _player_t::process(sample_t work)
 			
 			
 			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
-			io::mlog << "next time: " << top->next_time()
-				<< " aka: " << this_ef->get_next_time() << io::endl;
-			io::mlog << "real time: " << pos << io::endl;
 			
 			top->proceed(pos); // will also update the next-time event
 
@@ -331,15 +340,13 @@ void REALTIME _player_t::process(sample_t work)
 			// TODO: effect should give us this array...
 			for(const out_port_base* op  : this_ef->get_out_ports())
 			{
+			// TODO! only dependencys...
 			if(op->change_stamp <= pos)
 			{
 				for(in_port_base* target_ip : op->readers)
 				{
 				//	TODO: check this!!!
 					effect_t* target_ef = target_ip->e;
-					std::cerr << "now at ef: " << target_ef->name() << std::endl;
-					std::cerr << "sz: " << changed_ports[target_ef->id()].size() << std::endl;
-
 
 					changed_ports[target_ef->id()][target_ip->id] = true;
 					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
@@ -347,8 +354,10 @@ void REALTIME _player_t::process(sample_t work)
 					//handle_type h = handles.at(target_ef);
 					handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
 					task_base* te = *h;
+
 				//	te->effect
 					te->update_next_time(cur_next_time);
+					io::mlog << "next time: " << cur_next_time << io::endl;
 					update(h);
 				}
 			}

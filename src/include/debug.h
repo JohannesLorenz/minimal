@@ -73,6 +73,7 @@ struct start_t : public debug_effect_base, public int_out
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: start_t" << io::endl;
+		set_next_time(std::numeric_limits<sample_t>::max());
 		return true;
 	}
 };
@@ -93,6 +94,7 @@ struct pipe_t : public debug_effect_base, public int_in_1, public int_out
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: pipe_t" << io::endl;
 		//set_next_time(t + 1); // TODO: assertion if next time was not updated
+		set_next_time(std::numeric_limits<sample_t>::max());
 		return true;
 	}
 };
@@ -113,6 +115,7 @@ struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: in2_t" << io::endl;
 		//set_next_time(t + 1);
+		set_next_time(std::numeric_limits<sample_t>::max());
 		return true;
 	}
 };

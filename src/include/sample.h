@@ -25,7 +25,11 @@ namespace mini {
 using sample_t = signed long; // TODO: will this suffice?
 
 // TODO: not here:
-constexpr sample_t samples_per_bar = 1000000;
+// 1 bar = 2 seconds
+// 1000 samples per second
+constexpr sample_t samples_per_sec = 1000;
+constexpr sample_t samples_per_bar = samples_per_sec * 2;
+constexpr sample_t usecs_per_sample = 1000000 / samples_per_sec;
 
 // enough samples for one day
 static_assert(sizeof(sample_t) >= 8,
