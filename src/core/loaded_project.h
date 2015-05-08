@@ -127,6 +127,7 @@ class _player_t : public work_queue_t // TODO: own header
 			task_base_with_handle(effect->get_next_time()),
 			effect(effect)
 		{
+			std::cerr << "inited time: " << effect->get_next_time() << std::endl;
 		}
 
 		void proceed(sample_t time)

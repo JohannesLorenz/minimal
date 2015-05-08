@@ -64,7 +64,7 @@ struct start_t : public debug_effect_base, public int_out
 {
 	start_t() : debug_effect_base("start"), int_out((effect_t&)*this)
 	{
-		set_next_time(0.0f);
+		set_next_time(0);
 	}
 
 	void instantiate() {}
@@ -92,6 +92,7 @@ struct pipe_t : public debug_effect_base, public int_in_1, public int_out
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: pipe_t" << io::endl;
+		//set_next_time(t + 1); // TODO: assertion if next time was not updated
 		return true;
 	}
 };
@@ -111,6 +112,7 @@ struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: in2_t" << io::endl;
+		//set_next_time(t + 1);
 		return true;
 	}
 };

@@ -288,6 +288,10 @@ void REALTIME _player_t::process(sample_t work)
 	//	send_commands();
 	//
 		(void)work; // TODO
+		
+//		const auto& has_active_tasks = []() -> bool {
+//			
+//		}
 
 		while(has_active_tasks(pos))
 		{
@@ -306,6 +310,9 @@ void REALTIME _player_t::process(sample_t work)
 			
 			
 			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
+			io::mlog << "next time: " << top->next_time()
+				<< " aka: " << this_ef->get_next_time() << io::endl;
+			io::mlog << "real time: " << pos << io::endl;
 			
 			top->proceed(pos); // will also update the next-time event
 
