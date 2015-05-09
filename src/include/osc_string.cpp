@@ -114,7 +114,7 @@ std::ostream& operator<<(std::ostream& stream,
 				stream << "(unknown type: " << *args << ")";
 		}
 		stream << " (pos: " << pos << ")" << std::endl;
-		//std::cerr << "c - str.data(): " << c - str.data() << std::endl;
+		//no_rt::mlog << "c - str.data(): " << c - str.data() << std::endl;
 	}
 
 	if(*args) // i.e. itr reached end too early

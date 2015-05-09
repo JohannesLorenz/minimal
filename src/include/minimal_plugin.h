@@ -20,14 +20,21 @@
 #ifndef MINIMAL_PLUGIN_H
 #define MINIMAL_PLUGIN_H
 
+//#include <iostream> // TODO!!
+
 class minimal_plugin
 {
-	virtual void prepare() = 0;
-	virtual bool enter() = 0;
+	virtual void _send_osc_cmd(const char*) = 0;
 protected:
 	using sample_rate_t = unsigned long;
+	using sample_t = unsigned long;
 public:
-	virtual ~minimal_plugin();
+	void send_osc_cmd(const char* msg) {
+		//std::cerr << "sending: " << msg << std::endl;
+		_send_osc_cmd(msg); }
+	virtual void prepare() = 0;
+	virtual bool proceed(sample_t sample_count) = 0;
+	virtual ~minimal_plugin() {} // dynamic lib dtors must not be pure
 };
 
 #endif // MINIMAL_PLUGIN_H

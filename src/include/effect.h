@@ -65,6 +65,7 @@ public:
 class effect_t : util::non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
+	sample_t pos = 0; //!< number of samples played yet
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports; // TODO: not public
 private:
@@ -80,13 +81,14 @@ private:
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
 	}
 protected:
-	virtual bool _proceed(sample_t time) = 0;
+	virtual bool _proceed(sample_t samples) = 0;
 	void set_next_time(sample_t next) { next_time = next; }
 public:
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
 	atomic_def<int, 1> max_threads; // TODO: uint16_t
-	atomic<int> cur_threads;
+	atomic_def<int, 0> cur_threads; // cur_threads is 0, i.e. ready
+	atomic_def<int, 0> finished_threads;
 
 	std::vector<in_port_base*>& get_in_ports() { return in_ports; }
 	std::vector<out_port_base*>& get_out_ports() { return out_ports; }
@@ -100,10 +102,11 @@ public:
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
-	sample_t proceed(sample_t time) {
+	sample_t proceed(sample_t samples) {
 		io::mlog << "proceeding with effect " << id() << io::endl;
 		//return next_time = _proceed(time);
-		_proceed(time);
+		_proceed(samples);
+		pos += samples;
 		return get_next_time();
 	}
 

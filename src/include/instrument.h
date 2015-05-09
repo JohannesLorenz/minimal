@@ -43,7 +43,7 @@
 namespace mini
 {
 
-void send_single_command(lo_port_t& lp, const osc_string& str);
+//void send_single_command(lo_port_t& lp, const osc_string& str);
 
 #if 0
 
@@ -196,10 +196,10 @@ class instrument_t : public effect_t, public work_queue_t
 	virtual const std::vector<const char *> start_args() const = 0;
 	std::vector<const char *> build_start_args() const;
 public:
-	lo_port_t lo_port; // TODO: private?
+	//lo_port_t lo_port; // TODO: private?
 protected:
 	pid_t pid; // TODO: private?
-	minimal_plugin* plugin;
+	minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
 private:
 	std::vector<const command_base*> const_commands;
 
@@ -208,6 +208,8 @@ private:
 public:
 	using udp_port_t = int;
 	using effect_t::effect_t;
+
+	minimal_plugin** get_plugin_ptr() { return &plugin; }
 
 	virtual void init_2() = 0;
 	void instantiate();
@@ -234,7 +236,7 @@ public:
 
 	void clean_up();
 
-	bool _proceed(sample_t time);
+	bool _proceed(sample_t samples);
 };
 
 
@@ -260,18 +262,18 @@ class prioritized_command : public prioritized_command_base
 {
 	bool changed = false;
 protected:
-	lo_port_t* lo_port;
+	minimal_plugin** plugin; // TODO: single pointer would be cool...
 public:
 	prioritized_command(std::size_t priority, sample_t next_time,
-		lo_port_t* lo_port) :
+		minimal_plugin** plugin) :
 		prioritized_command_base(priority, next_time),
-		lo_port(lo_port)
+		plugin(plugin)
 	{
 
 	}
 
 	void proceed_base(sample_t) { // TODO: call virtual from here?
-	//	std::cerr << "PROCEEDING: " << this << std::endl;
+	//	io::mlog << "PROCEEDING: " << this << io::endl;
 		if(!changed)
 		 throw "proceeding with unchanged command...";
 		changed = false;
@@ -279,7 +281,7 @@ public:
 
 	bool set_changed() {
 		bool had_effect = (changed == false);
-	//	std::cerr << "SETCHANGED: " << this << std::endl;
+	//	io::mlog << "SETCHANGED: " << this << io::endl;
 		changed = true;
 		return had_effect;
 	}
@@ -292,9 +294,9 @@ class prioritized_command_cmd : public prioritized_command
 public:
 	command_base* cmd; // TODO: does command_base suffice?
 	prioritized_command_cmd(work_queue_t* w,
-		std::size_t priority, sample_t next_time, lo_port_t* lo_port,
+		std::size_t priority, sample_t next_time, minimal_plugin** plugin,
 		command_base* cmd) :
-		prioritized_command(priority, next_time, lo_port),
+		prioritized_command(priority, next_time, plugin),
 		w(w),
 		cmd(cmd)
 		{}
@@ -302,7 +304,9 @@ public:
 	void proceed(sample_t time)
 	{
 		proceed_base(time);
-		send_single_command(*lo_port, cmd->complete_buffer());
+
+		//send_single_command(*lo_port, cmd->complete_buffer());
+		(*plugin)->send_osc_cmd(cmd->complete_buffer().raw());
 
 		// TODO: not sure, but max sounds correct:
 		update_next_time(std::numeric_limits<sample_t>::max());
@@ -352,12 +356,12 @@ using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), In
 template<std::size_t N, std::size_t I = 0>
 struct init_port {
 	template<class InsType, class CmdType>
-	static void exec(InsType& ins, CmdType& cmd, lo_port_t* lo_port)
+	static void exec(InsType& ins, CmdType& cmd, minimal_plugin** plugin)
 	{
 		cmd.cmd->template port_at<I>().set_trigger();
 		cmd.cmd->template port_at<I>().ins = ins;
 		cmd.cmd->template port_at<I>().cmd = &cmd;
-		cmd.cmd->template port_at<I>().lo_port = lo_port;
+		cmd.cmd->template port_at<I>().plugin = plugin; // TODO: redundant with ctor assignment?
 
 		init_port<N, I+1>(p);
 	}
@@ -366,7 +370,7 @@ struct init_port {
 template<std::size_t N>
 struct init_port<N, N> {
 	template<class InsType, class CmdType>
-	static void exec(const InsType& , const CmdType& , const lo_port_t* ) {}
+	static void exec(const InsType& , const CmdType& , const minimal_plugin** ) {}
 };
 
 template<class Ins, class Cmd>
@@ -401,7 +405,7 @@ public:
 	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
 		node_t<void>(ins, base, ext),
 		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
-		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, &ins->lo_port, cmd_ptr)
+		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins->get_plugin_ptr(), cmd_ptr)
 	{
 		/*cmd.cmd->template port_at<0>().set_trigger();
 		cmd.cmd->template port_at<0>().ins = ins;

@@ -60,7 +60,7 @@ void project_t::finalize()
 
 		cur_effect->set_id(next_id++);
 
-		//std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+		//no_rt::mlog << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
 
 		const auto cb = [&](const std::vector<effect_t*>& next_vector)
 		{

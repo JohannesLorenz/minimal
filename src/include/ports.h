@@ -152,7 +152,7 @@ public:
 		e(&ef)
 	{
 		add_in_port(ef, this);
-		//std::cerr << "NEW IN PORT AT: " << this << std::endl;
+		//no_rt::mlog << "NEW IN PORT AT: " << this << std::endl;
 	}
 /*
 	in_port_base(effect_t& ef, const out_port_base& source) :
@@ -160,7 +160,7 @@ public:
 		source(&source)
 	{
 		add_in_port(ef, this);
-		std::cerr << "NEW IN PORT AT: " << this << std::endl;
+		no_rt::mlog << "NEW IN PORT AT: " << this << std::endl;
 	}*/
 
 	template<class P>
@@ -265,7 +265,7 @@ public:
 
 	bool update() {
 		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
-	//	std::cerr << "OUT PORT CHANGED? " << out_port_changed << std::endl;
+	//	io::mlog << "OUT PORT CHANGED? " << out_port_changed << io::endl;
 		return (out_port_changed) && set(*(static_cast<const T*>(templ_base::source->get_value())));
 	}
 

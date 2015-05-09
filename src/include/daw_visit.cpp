@@ -34,7 +34,7 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 	pid_t childs_pid;
 
 	if (pipe(pipefd) == -1) {
-		std::cerr << "pipe() failed -> no zyn" << std::endl;
+		no_rt::mlog << "pipe() failed -> no zyn" << std::endl;
 		return false;
 	}
 
@@ -43,7 +43,7 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 	// fork sh
 	childs_pid=fork();
 	if(childs_pid < 0) {
-		std::cerr << "fork() failed -> no zyn" << std::endl;
+		no_rt::mlog << "fork() failed -> no zyn" << std::endl;
 		return false;
 	}
 	else if(childs_pid == 0) {
@@ -78,10 +78,10 @@ rtosc_con::~rtosc_con()
 	//sleep(2); // TODO
 //	kill(pid, SIGTERM);
 //	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
-	std::cerr << "Closing zasf now... " << std::endl;
+	no_rt::mlog << "Closing zasf now... " << std::endl;
 	lo_port.send_rtosc_msg("/close-ui", "");
 	sleep(2);
-	std::cerr << "zasf should be closed now... " << std::endl;
+	no_rt::mlog << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
 
 	int status;
@@ -90,7 +90,7 @@ rtosc_con::~rtosc_con()
 		usleep(10000); // TODO: what is a good value here?
 	}
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		std::cerr << "Process (pid " << pid << ") failed" << std::endl;
+		no_rt::mlog << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
 	}
 	sleep(3);
@@ -125,7 +125,7 @@ namespace daw_visit {
 
 	std::pair<note_geom_t, note_t> visit(note_geom_t offset, const note_t &n)
 	{
-		std::cerr << "Adding note, offset: " << offset.offs << ", start: " << offset.start << std::endl;
+		no_rt::mlog << "Adding note, offset: " << offset.offs << ", start: " << offset.start << std::endl;
 		return std::make_pair(offset, n);
 	}
 
@@ -144,7 +144,7 @@ namespace daw_visit {
 			std::multimap<note_geom_t, note_t> res2 = visit(abs_offs, *ns2.second);
 			std::move(res2.begin(), res2.end(), std::inserter(res, res.begin()));
 		}
-		std::cerr << "Added " << res.size() << " notes." << std::endl;
+		no_rt::mlog << "Added " << res.size() << " notes." << std::endl;
 		return res;
 	}
 
@@ -152,7 +152,7 @@ namespace daw_visit {
 	cmd_vectors visit(const track_t &t)
 	{
 		cmd_vectors result;
-		std::cerr << "sz: " << t.get<notes_t>().size() << std::endl;
+		no_rt::mlog << "sz: " << t.get<notes_t>().size() << std::endl;
 
 		for(const auto& pr : t.get<notes_t>())
 		{
@@ -162,7 +162,7 @@ namespace daw_visit {
 			for(auto& pr : note_commands) {
 				pr.second.insert(std::numeric_limits<sample_t>::max()); // sentinel
 			}
-			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
+			no_rt::mlog << "Added " << note_commands.size() << " note commands to track." << std::endl;
 
 			for(auto& pr : note_commands)
 			{
@@ -185,14 +185,14 @@ namespace daw_visit {
 			result.emplace(pr.second, std::set<sample_t>{});
 		}
 
-		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
+		no_rt::mlog << "Added track with " << result.size() << " note commands." << std::endl;
 		return result;
 	}
 
 	global_map visit(global_t &g)
 	{
 		global_map res;
-		std::cerr << "sz0: " << g.get<track_t>().size() << std::endl;
+		no_rt::mlog << "sz0: " << g.get<track_t>().size() << std::endl;
 
 		for(const auto& pr : g.get<track_t>())
 		{
@@ -259,12 +259,12 @@ namespace daw_visit {
 
 		/*	for(const auto& pr : res)
 		{
-			std::cerr << "Summary: contents of instrument " << pr.first->name() << ": " << std::endl;
+			no_rt::mlog << "Summary: contents of instrument " << pr.first->name() << ": " << std::endl;
 			for(const auto& pr2 : pr.second)
 			{
-				std::cerr << " - track: " << pr2.first->buffer() << std::endl;
+				no_rt::mlog << " - track: " << pr2.first->buffer() << std::endl;
 				for(const sample_t& f : pr2.second)
-				 std::cerr << "  * note at: " << f << std::endl;
+				 no_rt::mlog << "  * note at: " << f << std::endl;
 			}
 		}*/
 
@@ -278,7 +278,7 @@ namespace daw_visit {
 	cmd_vectors visit(const track_t &t)
 	{
 		cmd_vectors result;
-		std::cerr << "sz: " << t.get<notes_t>().size() << std::endl;
+		no_rt::mlog << "sz: " << t.get<notes_t>().size() << std::endl;
 
 		if(t.get<notes_t>().size() > 1)
 		 throw "depreceated: 2 notes_t in one track. add them to 1 notes_t.";
@@ -294,7 +294,7 @@ namespace daw_visit {
 			for(auto& pr : note_commands) {
 				pr.second.insert(std::numeric_limits<sample_t>::max()); // sentinel
 			}
-			std::cerr << "Added " << note_commands.size() << " note commands to track." << std::endl;
+			no_rt::mlog << "Added " << note_commands.size() << " note commands to track." << std::endl;
 
 			for(auto& pr : note_commands)
 			{
@@ -313,14 +313,14 @@ namespace daw_visit {
 			result.emplace(pr.second, std::set<sample_t>{});
 		}
 */
-		std::cerr << "Added track with " << result.size() << " note commands." << std::endl;
+		no_rt::mlog << "Added track with " << result.size() << " note commands." << std::endl;
 		return result;
 	}
 
 	global_map visit(global_t &g)
 	{
 		global_map res;
-		std::cerr << "sz0: " << g.get<track_t>().size() << std::endl;
+		no_rt::mlog << "sz0: " << g.get<track_t>().size() << std::endl;
 
 		for(const auto& pr : g.get<track_t>())
 		{

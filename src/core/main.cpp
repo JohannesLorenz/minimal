@@ -61,6 +61,12 @@ void main_init()
 
 using namespace bars;
 
+void dump_error(const char* error_str)
+{
+	no_rt::mlog << "Aborting on error thrown: " << std::endl
+		<< error_str << std::endl;
+}
+
 int main(int argc, char** argv)
 {
 	try {
@@ -74,7 +80,7 @@ int main(int argc, char** argv)
 		project_t pro;
 
 		plugin.load_project(pro);
-		std::cerr << pro.effects().size() << std::endl;
+		no_rt::mlog << pro.effects().size() << std::endl;
 		pro.finalize(); // TODO: in plugin.load... ?
 
 		jack_engine_t eng;
@@ -88,8 +94,11 @@ int main(int argc, char** argv)
 
 	//	sleep(5);
 	} catch(const char* msg) {
-		no_rt::mlog << "Aborting on error thrown: " << std::endl
-			<< msg << std::endl;
+		dump_error(msg);
+	} catch(std::string msg) {
+		dump_error(msg.c_str());
+	} catch(...) {
+		dump_error("unimplemented exception type");
 	}
 
 	return EXIT_SUCCESS;

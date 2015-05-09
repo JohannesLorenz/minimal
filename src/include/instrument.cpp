@@ -24,10 +24,10 @@
 
 namespace mini {
 
-void send_single_command(lo_port_t& lo_port, const osc_string &str)
+/*void send_single_command(lo_port_t& lo_port, const osc_string &str)
 {
 	lo_port.send_raw(str.raw(), str.size());
-}
+}*/
 
 std::vector<const char *> instrument_t::build_start_args() const
 {
@@ -92,6 +92,9 @@ pid_t instrument_t::make_fork()
 	plugin.call<int, int, argv_t>("main", cmds.size(), cmds.data());
 */
 	plugin = plugin_creator.call<minimal_plugin*, unsigned long>("instantiate", 1024);
+	if(plugin == nullptr)
+	 throw "plugin is null, could not be loaded";
+	plugin->prepare();
 	return 0;
 }
 
@@ -101,13 +104,17 @@ void instrument_t::instantiate()
 	plugin_creator.set_path(library_path());
 
 	pid = make_fork();
+
+#if 0
 	lo_port.init(get_port(pid, 0 /*TODO*/));
 
 	// TODO: init in effect ctor? (probably not doable in every case)
+#endif
 	set_next_time(std::numeric_limits<sample_t>::max());
 
 	for(const command_base* cmd : const_commands)
-	 send_single_command(lo_port, cmd->buffer());
+	 plugin->send_osc_cmd(cmd->buffer().raw());
+//	 send_single_command(lo_port, cmd->buffer());
 
 	init_2();
 }
@@ -122,13 +129,14 @@ void instrument_t::clean_up()
 {
 	{
 		command_base* close_command = make_close_command(); // TODO: auto ptr
-		send_single_command(lo_port, close_command->buffer());
+//		send_single_command(lo_port, close_command->buffer());
+		plugin->send_osc_cmd(close_command->buffer().raw());
 		delete close_command;
 	}
 
 	no_rt::mlog << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
-
+#if 0
 	int status;
 	while (-1 == waitpid(pid, &status, 0)) {
 		puts("...");
@@ -138,6 +146,7 @@ void instrument_t::clean_up()
 		no_rt::mlog << "Process (pid " << pid << ") failed" << std::endl;
 		exit(1);
 	}
+#endif
 
 
 	//std::cout << "destroying instrument: " << name() << std::endl;
@@ -148,27 +157,30 @@ void instrument_t::clean_up()
 	}
 }
 
-bool instrument_t::_proceed(sample_t time)
+bool instrument_t::_proceed(sample_t samples)
 {
-	if(work_queue_t::has_active_tasks(time))
+	if(work_queue_t::has_active_tasks(pos))
 	 throw "should not have active tasks yet";
 
 	// read all changed ports to put new commands on queue
 	for(std::size_t i = 0; i < cp->size(); ++i)
 	if((*cp)[i])
 	{
-		//std::cerr << "in port: " << i << std::endl;
+		//io::mlog << "in port: " << i << io::endl;
 		if(in_ports[i]->update())
 		{
-			in_ports[i]->on_recv(time);
+			in_ports[i]->on_recv(pos);
 		}
 	}
 
-	// execute new commands
-	work_queue_t::run_tasks_keep(time);
+	// send changed osc parameters
+	work_queue_t::run_tasks_keep(pos);
 
-	// all ports are triggers, so sleep
-	return std::numeric_limits<sample_t>::max();
+	// actually do the work
+	return plugin->proceed(samples);
+
+//	// all ports are triggers, so sleep
+//	return std::numeric_limits<sample_t>::max();
 
 	//return time + 0.1f; // TODO??????????????????????????????
 //	return work_queue_t::run_tasks(time);
@@ -178,7 +190,7 @@ bool instrument_t::_proceed(sample_t time)
 		 throw "OUCH!";
 		if(ipb->update())
 		{
-			std::cerr << "unread changes at: " << ipb << std::endl;
+			no_rt::mlog << "unread changes at: " << ipb << std::endl;
 			ipb->on_recv(time);
 			ipb->unread_changes = false;
 		}

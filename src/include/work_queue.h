@@ -120,7 +120,7 @@ public:
 	}
 
 	bool has_active_tasks(sample_t at_time) {
-		//std::cerr << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << std::endl;
+		//io::mlog << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << io::endl;
 		return pq.top()->next_time() <= at_time;
 	}
 

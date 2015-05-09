@@ -20,7 +20,7 @@
 #ifndef IO_H
 #define IO_H
 
-#define ENABLE_IO
+//#define ENABLE_IO
 
 #ifdef ENABLE_IO
 #include <iostream>

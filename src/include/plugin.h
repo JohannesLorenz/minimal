@@ -34,7 +34,7 @@ class project_t;
  */
 class plugin_t
 {
-	void* handle;
+	void* handle = nullptr;
 public:
 	/**
 	 * @brief plugin_t
@@ -74,6 +74,17 @@ public:
 		*(void**) (&funcptr) = get_funcptr(function);
 		if(funcptr)
 		 return funcptr(args...);
+		else
+		 throw "function not found in dynamic library";
+	}
+
+	template<class Ret, class ...Args>
+	Ret call_voidptr(const char* function, Args&&... args)
+	{
+		void*(*funcptr)(Args...);
+		*(void**) (&funcptr) = get_funcptr(function);
+		if(funcptr)
+		 return static_cast<Ret>(funcptr(args...));
 		else
 		 throw "function not found in dynamic library";
 	}

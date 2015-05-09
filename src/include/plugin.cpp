@@ -33,13 +33,15 @@ namespace mini {
 
 plugin_t::plugin_t(const char *path)
 {
+	no_rt::mlog << "Opening plugin: " << path << std::endl;
+
 	// valgrind memory leak is not our fault:
 	handle = dlopen(path, RTLD_LAZY);
 	if(!handle)
 	 throw dlerror();
 }
 
-plugin_t::~plugin_t() { dlclose(handle); }
+plugin_t::~plugin_t() { if(handle) dlclose(handle); }
 
 bool plugin_t::load_project(project_t &pro)
 {
@@ -95,9 +97,13 @@ void* multi_plugin_t::get_funcptr(const char* funcname)
 	tmp_name = tmp_file_name.c_str();
 #endif
 
+	no_rt::mlog << "Calling function " << funcname <<
+		" from plugin: " << path << std::endl;
 	// load the library
 	void* handle = dlopen(tmp_name, dlopen_mode);
-	assert(handle);
+	if(!handle)
+	 throw std::string(dlerror());
+	// TODO: dlclose in ctor?
 
 	// remove the temporary library
 #ifndef HAVE_RTLD_PRIVATE

@@ -55,7 +55,7 @@ int main()
 		
 		assert(are_equal(fl.buffer().data(), "/float\0\0,fi\0\0", 12));
 
-	//	std::cerr << "pad size: " << mini::pad_size<vint>::value() << std::endl;
+	//	no_rt::mlog << "pad size: " << mini::pad_size<vint>::value() << std::endl;
 
 
 
@@ -71,7 +71,7 @@ int main()
 
 		non.cmd_ptr->command::update();
 
-	//	std::cerr << "ARG NOW:" << std::get<2>(non.args) << std::endl;
+	//	no_rt::mlog << "ARG NOW:" << std::get<2>(non.args) << std::endl;
 
 		non.cmd_ptr->complete_buffer();
 		non.cmd_ptr->buffer().inspect();
@@ -95,11 +95,11 @@ int main()
 
 	} catch (const char* s)
 	{
-		std::cerr << s << std::endl;
+		no_rt::mlog << s << std::endl;
 		return 1;
 	}
 
-	std::cerr << "SUCCESS" << std::endl;
+	no_rt::mlog << "SUCCESS" << std::endl;
 	return 0;
 }
 

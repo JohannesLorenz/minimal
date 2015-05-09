@@ -123,7 +123,7 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
 		{
-		//	std::cerr << "app single" << std::endl;
+		//	io::mlog << "app single" << io::endl;
 			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
 			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?
 		}
@@ -145,7 +145,7 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& s, const T& elem)
 		{
-			//std::cerr << "resizing: "<< s.size() << " -> "<< s.size() + pad_size<T>::value() <<std::endl;
+			//no_rt::mlog << "resizing: "<< s.size() << " -> "<< s.size() + pad_size<T>::value() <<std::endl;
 			s.resize(s.size() + pad_size(elem));
 			std::fill(s.end() - pad_size(elem), s.end(), 0); // debug only
 		}
@@ -200,7 +200,7 @@ namespace command_detail
 		template<class T>
 		static void exec(std::vector<char>& v, std::vector<char>::iterator* itr, const T& elem)
 		{
-		/*	std::cerr << "app single" << std::endl;
+		/*	io::mlog << "app single" << io::endl;
 			std::vector<char> osc_str = elem.to_osc_string(); // TODO: this is too slow
 			std::copy(osc_str.begin(), osc_str.end(), std::back_inserter(s)); // TODO: move?*/
 
@@ -220,11 +220,11 @@ namespace command_detail
 		{
 			std::vector<char> osc_str = to_osc_string(elem); // TODO: this is too slow
 
-		//	std::cerr << "complete_single of "<< get_value<T>::exec(elem) << ": " << osc_str.size() << " bytes: " << std::endl;
+		//	io::mlog << "complete_single of "<< get_value<T>::exec(elem) << ": " << osc_str.size() << " bytes: " << io::endl;
 			// note the difference: no inserter here
-		//	std::cerr << "test before: " << osc_string(v) << std::endl;
+		//	io::mlog << "test before: " << osc_string(v) << io::endl;
 			std::copy(osc_str.begin(), osc_str.end(), *itr); // TODO: move?
-		//	std::cerr << "test now: " << osc_string(v) << std::endl;
+		//	io::mlog << "test now: " << osc_string(v) << io::endl;
 
 			*itr += osc_str.size();
 		}
@@ -374,7 +374,7 @@ public:
 		command_base(_path),
 		args(std::forward<Args2>(args)...) {
 
-		// std::cerr << "est. length: " << est_length() << std::endl;
+		// no_rt::mlog << "est. length: " << est_length() << std::endl;
 	}
 
 	virtual ~_command();
@@ -575,7 +575,7 @@ struct fetch_single
 	// (and without overcomplication...)
 	static void exec(T1& port, T2& storage) {
 		storage.set(port.get());
-//		std::cerr << "FETCHED: " << storage << " <- " << port.get() << std::endl;
+//		io::mlog << "FETCHED: " << storage << " <- " << port.get() << io::endl;
 	}
 };
 

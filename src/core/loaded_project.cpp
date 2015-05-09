@@ -52,9 +52,6 @@ std::vector<loaded_instrument_t> loaded_project_t::make_ins() const
 
 void loaded_project_t::init()
 {
-	no_rt::mlog << "Loading project: " << this->project.title() << std::endl;
-	std::cerr << "Found " << project.effects().size() << " effects." << std::endl;
-
 	// instantiate and connect all fx
 	for(effect_t* e : project.effects()) // TODO: -> initializer list
 	{
@@ -79,7 +76,7 @@ void loaded_project_t::init()
 		 throw "Id given twice";
 		//cur_effect->set_id(next_id++);
 
-		//std::cerr << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+		//no_rt::mlog << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
 
 		const auto cb = [&](const std::vector<effect_t*>& next_vector)
 		{
@@ -188,7 +185,7 @@ void _player_t::init()
 	else
 	{
 		pq.push(new task_events(&pr.first, pr2.first, pr2.second.begin()));
-	//	std::cerr << "pushing: " <<  *pr2.second.begin() << std::endl;
+	//	no_rt::mlog << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
 	no_rt::mlog << "Player for " << project.title() << std::endl;
@@ -202,10 +199,10 @@ void _player_t::init()
 		no_rt::mlog << "pushing effect " << e->name() << " (" << e->id() << "), next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
 		handles[e] = add_task(new_task);
-		std::cerr << e << std::endl;
+		no_rt::mlog << e << std::endl;
 		new_task->set_handle(handles[e]);
 	}
-	std::cerr << handles.size();
+
 	for(auto& pr : handles)
 	{
 		task_effect* te = static_cast<task_effect*>(*pr.second);
@@ -236,7 +233,7 @@ void _player_t::init()
 
 /*	for(std::size_t i = 0; i < project.effects().size(); ++i)
 	{
-		//std::cerr << project.effects()[i]->name() << " -> " << project.effects()[i]->get_in_ports().size()
+		//no_rt::mlog << project.effects()[i]->name() << " -> " << project.effects()[i]->get_in_ports().size()
 		//	<< std::endl;
 		changed_ports
 
@@ -268,17 +265,17 @@ void _player_t::play_until(sample_t dest)
 // function probably deprecated
 
 	sample_t final_pos = dest; //pos + work;
-	std::cerr << "starting playback: " << pos << std::endl;
+	io::mlog << "starting playback: " << pos << io::endl;
 	for(; next_task_time() < final_pos; pos = next_task_time()) // TODO: <= ?
 	{
 //		usleep(1000000 * step);
 		process(pos); // TODO: not 0
-		std::cerr << "done: " << pos << std::endl;
-		std::cerr << "next: " << next_task_time() << std::endl;
-		std::cerr << "next name: " << ((task_effect*)peek_next_task())->effect->name() << std::endl;
+		io::mlog << "done: " << pos << io::endl;
+		io::mlog << "next: " << next_task_time() << io::endl;
+		io::mlog << "next name: " << ((task_effect*)peek_next_task())->effect->name() << io::endl;
 
 
-
+		// TODO: not accurate: pos -> clock time
 		useconds_t sleep_time = std::min(next_task_time() - pos,
 				dest - pos) * usecs_per_sample;
 		io::mlog << "Sleeping for " << sleep_time << " useconds..." << io::endl;
@@ -302,6 +299,14 @@ void REALTIME _player_t::process(sample_t work)
 //			
 //		}
 
+		// TODO: thread repeater
+
+		// TODO: always spinlock the work queue!!!!
+
+		io::mlog << dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
+			<< " vs "
+			<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
+
 		while(peek_next_task()->next_time() <= pos &&
 			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
 			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )
@@ -316,53 +321,76 @@ void REALTIME _player_t::process(sample_t work)
 			if(reinsert)
 			 pq.push(top);*/
 			const sample_t cur_next_time = top->next_time();
-			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
+
+			/*int cur_threads_afterwards = ++this_ef->cur_threads;
+			if(cur_threads_afterwards > this_ef->max_threads)
+			{
+				// => argh, should not happen
+
+				// if this happens,
+				//  1. we are exclusively in this if
+				//  2. all other threads have left this effect
+			}*/
 			++this_ef->cur_threads;
+
+			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
 			
 			
 			
 			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
 			
-			top->proceed(pos); // will also update the next-time event
+			top->proceed(/*pos*/ work); // will also update the next-time event
 
 			//handles.at(this_ef) = add_task(top);
-			update(task_e->get_handle());
 
-			/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
+			if(++this_ef->finished_threads == this_ef->max_threads)
 			{
-				handle_type h = handles.at(dep);
-				(*h)->update_next_time(cur_next_time);
-				update(h);
-			}*/
+				// if this happens,
+				//  * we are exclusively in this if block
+				//  * all threads (including ours) are finished
+				//  * no other task has access to this_ef
 
+				update(task_e->get_handle());
 
-			std::size_t count = 0;
-			// TODO: effect should give us this array...
-			for(const out_port_base* op  : this_ef->get_out_ports())
-			{
-			// TODO! only dependencys...
-			if(op->change_stamp <= pos)
-			{
-				for(in_port_base* target_ip : op->readers)
+				/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
 				{
-				//	TODO: check this!!!
-					effect_t* target_ef = target_ip->e;
-
-					changed_ports[target_ef->id()][target_ip->id] = true;
-					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
-
-					//handle_type h = handles.at(target_ef);
-					handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
-					task_base* te = *h;
-
-				//	te->effect
-					te->update_next_time(cur_next_time);
-					io::mlog << "next time: " << cur_next_time << io::endl;
+					handle_type h = handles.at(dep);
+					(*h)->update_next_time(cur_next_time);
 					update(h);
+				}*/
+
+
+				std::size_t count = 0;
+				// TODO: effect should give us this array...
+				for(const out_port_base* op  : this_ef->get_out_ports())
+				{
+				// TODO! only dependencys...
+				if(op->change_stamp <= pos)
+				{
+					for(in_port_base* target_ip : op->readers)
+					{
+					//	TODO: check this!!!
+						effect_t* target_ef = target_ip->e;
+
+						changed_ports[target_ef->id()][target_ip->id] = true;
+						// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
+
+						//handle_type h = handles.at(target_ef);
+						handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
+						task_base* te = *h;
+
+					//	te->effect
+						te->update_next_time(cur_next_time);
+						io::mlog << "next time: " << cur_next_time << io::endl;
+						update(h);
+					}
 				}
-			}
-			else
-			 count +=op->readers.size();
+				else
+				 count +=op->readers.size();
+				}
+
+				this_ef->finished_threads.store(0);
+				this_ef->cur_threads.store(0);
 			}
 #if 0
 			pq_entry top = std::move(pq.top());

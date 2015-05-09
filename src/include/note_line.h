@@ -159,10 +159,10 @@ public:
 	}
 
 
-	bool _proceed(sample_t time)
+	bool _proceed(sample_t )
 	{
 		io::mlog << "proceeding with note line... " << io::endl;
-		set_next_time(impl->_proceed(time));
+		set_next_time(impl->_proceed(pos));
 		return true;
 	}
 };

@@ -116,8 +116,8 @@ list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
 link_directories(${AUDIO_LIBRARY_DIRS})
 
 # compiler details
-if(COMPILER STREQUAL "stoat") # for stoat, it does not matter - TODO?
-	SET(CMAKE_BUILD_TYPE "Release")
+if(COMPILER STREQUAL "stoat")
+	SET(CMAKE_BUILD_TYPE "Debug") # for line detection etc
 else()
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -139,7 +139,12 @@ add_subdirectory(src)
 add_subdirectory(doc)
 
 # custom targets
-add_custom_target(stoat2 stoat -c -w /usr/local/share/stoat/whitelist.txt -b /usr/local/share/stoat/blacklist.txt -w ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ringbuffer/data/stoat_suppression_list.txt -r ${CMAKE_CURRENT_BINARY_DIR}/src/)
+add_custom_target(stoat2 stoat -c
+	-w /usr/local/share/stoat/whitelist.txt
+	-b /usr/local/share/stoat/blacklist.txt
+	-w ${CMAKE_CURRENT_SOURCE_DIR}/data/stoat_suppression_list.txt
+	-w ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ringbuffer/data/stoat_suppression_list.txt
+	-r ${CMAKE_CURRENT_BINARY_DIR}/src/)
 
 # CPack
 SET(MY_NAME_CAP ${PROJECT_NAME})

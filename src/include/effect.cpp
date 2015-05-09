@@ -24,7 +24,8 @@ namespace mini {
 
 void effect_t::add_in_port(mini::in_port_base *ipb) {
 	ipb->id = in_ports.size();
-	io::mlog << "ADDING: " << ipb << ", STAMP: " << ipb->change_stamp
+	io::mlog << "Adding in port: " << ipb
+		<< ", stamp: " << ipb->change_stamp
 		<< ", id: " << ipb->id << io::endl;
 	in_ports.push_back(ipb);
 }

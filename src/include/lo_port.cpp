@@ -167,10 +167,10 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 {
 	char buffer[2048];
 	strncpy(buffer, path, 2048);
-	std::cerr << "buffer" << std::endl;
+	io::mlog << "buffer" << std::endl;
 	lo_message msg = lo_message_deserialise(buffer, strlen(buffer), nullptr);
 	if(!msg)
-	 std::cerr << "NO MESSAGE!" << std::endl;
+	 io::mlog << "NO MESSAGE!" << std::endl;
 	if(dest)
 	 lo_send_message(dest, buffer, msg);
 	return true; // TODO

@@ -61,7 +61,7 @@ void jack_player_t::instantiate()
 	//jack_on_shutdown (client.client, _shutdown, this);
 }
 
-bool jack_player_t::_proceed(sample_t /*time*/)
+bool jack_player_t::_proceed(sample_t /*samples*/)
 {
 	io::mlog << "JACKPLAYER" << io::endl;
 

@@ -127,7 +127,7 @@ class _player_t : public work_queue_t // TODO: own header
 			task_base_with_handle(effect->get_next_time()),
 			effect(effect)
 		{
-			std::cerr << "inited time: " << effect->get_next_time() << ", aka: "<<
+			no_rt::mlog << "inited time: " << effect->get_next_time() << ", aka: "<<
 				next_time()
 				<< std::endl;
 		}
