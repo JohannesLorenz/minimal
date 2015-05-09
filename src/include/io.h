@@ -20,6 +20,7 @@
 #ifndef IO_H
 #define IO_H
 
+//! enable this for debugging - it will print message in realtime context
 //#define ENABLE_IO
 
 #ifdef ENABLE_IO

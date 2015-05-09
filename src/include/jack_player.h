@@ -29,8 +29,8 @@ namespace mini
 
 class jack_player_t : public effect_t, public audio_in
 {
-	jack::client_t client;
-	multiplex<jack::port_t> ports;
+	//jack::client_t client;
+	//multiplex<jack::port_t> ports;
 public:
 	jack_player_t();
 	void instantiate();

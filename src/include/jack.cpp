@@ -62,7 +62,7 @@ ringbuffer_t::ringbuffer_t(std::size_t size)
 ringbuffer_t::~ringbuffer_t() { jack_ringbuffer_free(ring); }
 #endif
 
-std::size_t client_t::sample_rate() const
+frames_t client_t::sample_rate() const
 {
 	return jack_get_sample_rate(client);
 }
@@ -91,8 +91,8 @@ void info_cb(const char* info) {
 client_t::client_t(const char* clientname) :
 	client(jack_client_open (clientname, JackNullOption, nullptr))
 {
-//	jack_set_process_callback(client, p_process, this);
-	//	jack_on_shutdown(client, p_shutdown, this);
+	jack_set_process_callback(client, p_process, this);
+	jack_on_shutdown(client, p_shutdown, this);
 	jack_set_error_function(error_cb);
 	jack_set_info_function(info_cb);
 }
@@ -122,12 +122,12 @@ client_t::~client_t()
 
 const char *port_t::name() const { return jack_port_name(port); }
 
-void* port_t::_get_buffer(jack_nframes_t nframes)
+void* port_t::_get_buffer(frames_t nframes)
 {
 	return jack_port_get_buffer(port, nframes);
 }
 
-const void* port_t::_get_buffer(jack_nframes_t nframes) const
+const void* port_t::_get_buffer(frames_t nframes) const
 {
 	return jack_port_get_buffer(port, nframes);
 }

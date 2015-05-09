@@ -27,6 +27,13 @@ namespace mini {
 
 class jack_engine_t : public engine_t, public jack::client_t
 {
+	virtual int process(jack::frames_t samples) {
+		engine_t::proceed(samples);
+		return 0; // not sure if this is correc
+	}
+	virtual void shutdown() {
+		throw "shutdown not implemented :P";
+	}
 
 public:
 	jack_engine_t();

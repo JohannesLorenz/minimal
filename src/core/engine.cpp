@@ -38,15 +38,20 @@ engine_t::~engine_t()
 {
 }
 
-void engine_t::load_project(project_t&& pro)
+// TODO: && or & ? can multiple player access one project?
+void engine_t::load_project(project_t& pro)
 {
-	lpro = std::move(pro);
+	player.set_project(pro);
+}
+
+void engine_t::proceed(sample_t samples)
+{
+	player.callback(samples);
 }
 
 void engine_t::play_until(bars_t end)
 {
-	player_t<int> pl(lpro);
-	pl.play_until(as_samples_floor(end, samples_per_bar));
+	player.play_until(as_samples_floor(end, samples_per_bar));
 }
 
 }

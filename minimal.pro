@@ -81,6 +81,7 @@ OTHER_FILES += INSTALL.md \
 	src/include/CMakeLists.txt \
 	src/test/CMakeLists.txt \
 	src/config.h.in \
-	README.md
+	README.md \
+	RULES.md
 
 

@@ -86,7 +86,7 @@ class _player_t : public work_queue_t // TODO: own header
 	sample_t step = 0.001f; //0.001seconds;
 	sample_t pos = 0.0f;*/
 	sample_t pos = 0; //!< number of samples played until now
-	loaded_project_t& project; // TODO! must be const
+	loaded_project_t* project; // TODO! must be const
 
 //	std::set<sample_t> end_set = { std::numeric_limits<sample_t>::max() };
 
@@ -179,7 +179,7 @@ class _player_t : public work_queue_t // TODO: own header
 	void init();
 public:
 	_player_t() = default;
-	_player_t& operator=(loaded_project_t& _project);
+	void set_project(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
 	void play_until(sample_t dest);
 

@@ -18,7 +18,7 @@
 /*************************************************************************/
 
 #include "zynaddsubfx.h"
-#include "jack_player.h"
+//#include "jack_player.h"
 #include "project.h"
 #include "lfo.h"
 #include "note_line.h"

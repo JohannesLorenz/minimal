@@ -31,6 +31,7 @@ jack_player_t::jack_player_t() :
 
 void jack_player_t::instantiate()
 {
+#if 0
 	client.init("jack_client_player");
 
 	ports[0] = client.register_port("play_0", JACK_DEFAULT_AUDIO_TYPE,
@@ -59,10 +60,12 @@ void jack_player_t::instantiate()
 
 	//jack_set_process_callback(client.client, _process, this);
 	//jack_on_shutdown (client.client, _shutdown, this);
+#endif
 }
 
 bool jack_player_t::_proceed(sample_t /*samples*/)
 {
+#if 0
 	io::mlog << "JACKPLAYER" << io::endl;
 
 
@@ -95,6 +98,7 @@ bool jack_player_t::_proceed(sample_t /*samples*/)
 	//multiplex<ringbuffer_reader_t> rds(rb_size, rb_size);
 
 	set_next_time(std::numeric_limits<sample_t>::max());
+#endif
 	return true;
 }
 

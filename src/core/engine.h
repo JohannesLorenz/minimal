@@ -46,20 +46,24 @@ class multi_tp : public main_tp, other_tp
 	}
 };
 
+//! There must be a class containing player and threadpool, and this one
+//! volunteered for it.
 class engine_t
 {
 	multi_tp tp;
 
 	//mini::loaded_project_t lpro;
-	mini::project_t lpro;
-	//player_t<int> pl(lpro);
+	//mini::project_t lpro;
+	player_t<void> player;
 public:
 	virtual ~engine_t();
 	//! should start the engine, such that it will repeatedly call
 	//! the processing callback
 	virtual void run() = 0;
 
-	void load_project(project_t &&pro);
+	void load_project(project_t &pro);
+
+	void proceed(sample_t samples);
 
 	void play_until(bars_t end);
 

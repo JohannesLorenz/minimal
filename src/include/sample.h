@@ -20,20 +20,30 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
+#include <cstdint>
+
 namespace mini {
 
-using sample_t = signed long; // TODO: will this suffice?
-
-// TODO: not here:
-// 1 bar = 2 seconds
-// 1000 samples per second
-constexpr sample_t samples_per_sec = 1000;
-constexpr sample_t samples_per_bar = samples_per_sec * 2;
-constexpr sample_t usecs_per_sample = 1000000 / samples_per_sec;
+//! signed int of at least 64 bit
+using sample_t = int_least64_t;
 
 // enough samples for one day
 static_assert(sizeof(sample_t) >= 8,
 	"need 64 bit ints");
+
+// TODO: not here?
+// 1 bar = 2 seconds
+// 1000 samples per second
+
+// fixed constants
+constexpr sample_t samples_per_sec = 1024;
+constexpr sample_t useconds_per_lfo_intv = 1024;
+
+// constants depending on others
+constexpr sample_t samples_per_bar = samples_per_sec * 2;
+constexpr sample_t usecs_per_sample = 1000000 / samples_per_sec;
+
+//constexpr sample_t samples_per_lfo_intv = ;
 
 }
 

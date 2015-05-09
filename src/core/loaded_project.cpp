@@ -18,6 +18,7 @@
 /*************************************************************************/
 
 #include <cstdlib>
+#include <chrono>
 
 #include "io.h"
 #include "loaded_project.h"
@@ -188,13 +189,13 @@ void _player_t::init()
 	//	no_rt::mlog << "pushing: " <<  *pr2.second.begin() << std::endl;
 	}
 	pq.push(new task_events(nullptr, nullptr, end_set.begin())); // = sentinel*/
-	no_rt::mlog << "Player for " << project.title() << std::endl;
+	no_rt::mlog << "Player for " << project->title() << std::endl;
 
-	project.emplace<sentinel_effect>(1 + project.effects().size());
+	project->emplace<sentinel_effect>(1 + project->effects().size());
 	std::map<const effect_t*, handle_type> handles;
 
-	no_rt::mlog << "FOUND " << project.effects().size() << " FX..." << std::endl;
-	for(effect_t*& e : project.get_effects_noconst())
+	no_rt::mlog << "FOUND " << project->effects().size() << " FX..." << std::endl;
+	for(effect_t*& e : project->get_effects_noconst())
 	{
 		no_rt::mlog << "pushing effect " << e->name() << " (" << e->id() << "), next time: " << e->get_next_time() << std::endl;
 		task_effect* new_task = new task_effect(e);
@@ -229,7 +230,7 @@ void _player_t::init()
 
 //	ready_fx.reserve(project.effects().size());
 
-	changed_ports.resize(1 + project.effects().size());
+	changed_ports.resize(1 + project->effects().size());
 
 /*	for(std::size_t i = 0; i < project.effects().size(); ++i)
 	{
@@ -240,14 +241,20 @@ void _player_t::init()
 		changed_ports[i].resize(project.effects()[i]->get_in_ports().size());
 	}*/
 
-	for(effect_t* e : project.effects())
+	for(effect_t* e : project->effects())
 	{
 		changed_ports[e->id()].resize(e->get_in_ports().size());
-	}
+		}
+}
+
+void _player_t::set_project(loaded_project_t &_project)
+{
+	project = &_project;
+	init();
 }
 
 _player_t::_player_t(loaded_project_t &_project) :
-	project(_project)//,
+	project(&_project)//,
 //	engine(new jack_engine_t) // TODO: choice for engine
 {
 	init();
@@ -259,6 +266,13 @@ _player_t::_player_t(loaded_project_t &_project) :
 	#define REALTIME // replace with "nothing"
 #endif
 
+
+/*void _player_t::process_until(sample_t )
+{
+
+
+}*/
+
 // TODO: deprecated!?!?!?
 void _player_t::play_until(sample_t dest)
 {
@@ -266,24 +280,31 @@ void _player_t::play_until(sample_t dest)
 
 	sample_t final_pos = dest; //pos + work;
 	io::mlog << "starting playback: " << pos << io::endl;
+
+	auto start_time = std::chrono::system_clock::now().time_since_epoch();
+
 	for(; next_task_time() < final_pos; pos = next_task_time()) // TODO: <= ?
 	{
-//		usleep(1000000 * step);
+		{
+			auto duration = std::chrono::system_clock::now().time_since_epoch() - start_time;
+			auto useconds_right_now = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+			sample_t samples_right_now = useconds_right_now / usecs_per_sample;
+
+			// do not sleep longer than dest
+			useconds_t sleep_time = std::min(next_task_time() - samples_right_now,
+					dest - samples_right_now) * usecs_per_sample;
+			io::mlog << "Sleeping for " << sleep_time << " useconds..." << io::endl;
+			usleep(sleep_time);
+		}
+
 		process(pos); // TODO: not 0
 		io::mlog << "done: " << pos << io::endl;
 		io::mlog << "next: " << next_task_time() << io::endl;
 		io::mlog << "next name: " << ((task_effect*)peek_next_task())->effect->name() << io::endl;
-
-
-		// TODO: not accurate: pos -> clock time
-		useconds_t sleep_time = std::min(next_task_time() - pos,
-				dest - pos) * usecs_per_sample;
-		io::mlog << "Sleeping for " << sleep_time << " useconds..." << io::endl;
-		usleep(sleep_time);
 	}
 
 	// no more tasks possible, so:
-	pos = final_pos;
+	// pos = final_pos; // dangerous for subsequent calls
 }
 
 //! the "heart" of minimal
