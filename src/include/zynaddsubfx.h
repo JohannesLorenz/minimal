@@ -21,16 +21,16 @@
 #define ZYNADDSUBFX_H
 
 #include <vector>
-#include "instrument.h"
-#include "ports.h"
-#include "impl.h"
 #include "audio_instrument.h" // TODO: separate audio_instrument_t ?
+#include "command_tools.h"
+#include "ports.h"
+//#include "impl.h" // currently unused
 #include "io.h"
 
 namespace mini
 {
 
-class lo_port_t;
+//class lo_port_t;
 
 
 class zyn_tree_t;

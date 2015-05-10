@@ -42,7 +42,9 @@ HEADERS += src/include/plugin.h \
 	src/core/engine.h \
 	src/core/jack_engine.h \
 	src/include/fraction.h \
-	src/include/debug.h
+	src/include/debug.h \
+	src/include/port_fwd.h \
+	src/include/command_tools.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \

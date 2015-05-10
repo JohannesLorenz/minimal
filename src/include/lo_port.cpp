@@ -127,7 +127,7 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 	std::vector<char> v(buffer, buffer + len);
 	osc_string rt(v);
 	io::mlog << "sending raw: " << io::endl;
-	rt.inspect();
+	rt.inspect(no_rt::mlog);
 #endif
 
 	int result;

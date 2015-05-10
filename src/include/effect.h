@@ -20,18 +20,12 @@
 #ifndef EFFECT_H
 #define EFFECT_H
 
-#include <atomic>
-#include <set>
 #include <vector>
-#include <array>
 
 #include "atomic.h"
-#include "daw.h"
-#include "types.h"
+#include "utils.h"
 #include "work_queue.h"
-//#include "ports.h" // TODO!!! not needed!
 #include "simple.h"
-//#include "io.h"
 
 //const sample_t default_step = 0.1f; //0.001seconds; // suggested by fundamental
 

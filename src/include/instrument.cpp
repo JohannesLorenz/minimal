@@ -17,8 +17,9 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <sys/wait.h>
-#include "lo_port.h"
+//#include <sys/wait.h>
+#include "command.h"
+//#include "lo_port.h"
 #include "instrument.h"
 #include "io.h"
 #include "ports.h"
@@ -202,6 +203,21 @@ bool instrument_t::_proceed(sample_t samples)
 	}
 	return std::numeric_limits<sample_t>::max();
 	//return work_queue_t::run_tasks(time);*/
+}
+
+void node_t_base::print_all_used(std::ostream &os) const
+{
+	os << name() << std::endl;
+	for(const auto& pr : used_ch) {
+			pr.second->print_all_used(os);
+		}
+}
+
+void node_t_base::preinit() {
+	on_preinit();
+	for(const auto& pr : used_ch) {
+			pr.second->on_preinit();
+		}
 }
 
 /*instrument_t *instrument_t::clone() const

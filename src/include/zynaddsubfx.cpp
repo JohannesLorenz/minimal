@@ -17,10 +17,9 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <unistd.h> // TODO
 #include <fstream>
 
-#include "lo_port.h"
+//#include "lo_port.h"
 #include "config.h"
 #include "zynaddsubfx.h"
 

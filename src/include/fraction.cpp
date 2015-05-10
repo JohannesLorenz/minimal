@@ -17,12 +17,13 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "bars.h"
+#include "fraction.h"
 #include "io.h"
 
 namespace mini
 {
 
+// TODO: print as x+n/d or x_n/d
 std::ostream & print_fraction(std::ostream &os, unsigned long long n, unsigned long long d)
 {
 	return os << n << '/' << d;

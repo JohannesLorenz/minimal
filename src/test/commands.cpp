@@ -46,12 +46,12 @@ int main()
 		command<osc_float, self_port_templ<int>> fl("/float", 42.0, self_port_templ<int>{});
 		//inspect_rtosc_string(fl.buffer);
 
-		fl.buffer().inspect();
+		fl.buffer().inspect(no_rt::mlog);
 
 		fl.port_at<1>().set(123);
 		fl.command::update();
 
-		fl.complete_buffer().inspect();
+		fl.complete_buffer().inspect(no_rt::mlog);
 		
 		assert(are_equal(fl.buffer().data(), "/float\0\0,fi\0\0", 12));
 
@@ -63,7 +63,7 @@ int main()
 
 		zynaddsubfx_t z("hello world!");
 		m_note_on_t non(&z, 0, 1, self_port_templ<int, true>{});
-		non.cmd_ptr->buffer().inspect();
+		non.cmd_ptr->buffer().inspect(no_rt::mlog);
 
 
 
@@ -74,23 +74,23 @@ int main()
 	//	no_rt::mlog << "ARG NOW:" << std::get<2>(non.args) << std::endl;
 
 		non.cmd_ptr->complete_buffer();
-		non.cmd_ptr->buffer().inspect();
+		non.cmd_ptr->buffer().inspect(no_rt::mlog);
 		
 		
 		command<const char*> str_cmd("/string", "hello world!");
-		str_cmd.buffer().inspect();
-		str_cmd.complete_buffer().inspect();
+		str_cmd.buffer().inspect(no_rt::mlog);
+		str_cmd.complete_buffer().inspect(no_rt::mlog);
 
 	{
 		command<osc_float, bool, bool, self_port_templ<bool>, osc_int> has_bool("/bool", 42.0, false, true, self_port_templ<bool>{}, 42);
 		//inspect_rtosc_string(fl.buffer);
 
-		has_bool.buffer().inspect();
+		has_bool.buffer().inspect(no_rt::mlog);
 
 		has_bool.port_at<3>().set(true);
 		has_bool.command::update();
 
-		has_bool.complete_buffer().inspect();
+		has_bool.complete_buffer().inspect(no_rt::mlog);
 	}
 
 	} catch (const char* s)

@@ -94,7 +94,7 @@ void init(project_t& p)
 
 	sine_bass.note_input() << nl;
 
-	sine_bass.print_all_used();
+	sine_bass.print_all_used(no_rt::mlog);
 
 	player << sine_bass;
 

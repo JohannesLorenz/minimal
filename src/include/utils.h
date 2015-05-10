@@ -20,7 +20,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <vector>
+#include <type_traits>
+//#include <vector>
 
 namespace util {
 
@@ -63,10 +64,12 @@ public:
 template<class ...Args>
 typename counted_t<Args...>::id_t counted_t<Args...>::next_id = 0;
 
+#if USE_STORED_T
 template<class Store, class ...Args>
 class stored_t : public counted_t<Store, Args...>
 {
 private:
+	using base = counted_t<Store, Args...>;
 	static std::vector<Store> elems;
 public:
 	template<class ...Constr>
@@ -74,8 +77,10 @@ public:
 	{
 		return *elems.emplace(c...);
 	}
-	static const Store& at(const id_t& id) { return elems[id]; }
+	static const Store& at(const typename base::id_t& id) {
+		return elems[id]; }
 };
+#endif
 
 /*
 	templates for structs that you don't want to instantiate

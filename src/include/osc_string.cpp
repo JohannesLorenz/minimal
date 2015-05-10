@@ -46,6 +46,10 @@ namespace mini {
 
 //#define DUMP_RAW
 
+std::ostream& osc_string::inspect(std::ostream& stream) const {
+	return stream << *this << std::endl;
+}
+
 std::ostream& operator<<(std::ostream& stream,
 	const osc_string& r_str)
 {

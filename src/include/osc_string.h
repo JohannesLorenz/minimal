@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <cstring>
-#include "io.h"
 
 namespace mini {
 
@@ -57,10 +56,7 @@ public:
 		return itr;
 	}
 
-	std::ostream& inspect(std::ostream& stream = no_rt::mlog) const {
-		return stream << *this << std::endl; // TODO: cpp file
-	}
-
+	std::ostream& inspect(std::ostream& stream) const;
 	friend std::ostream& operator<<(std::ostream& stream, const osc_string&);
 
 	bool operator==(const osc_string& other) const {

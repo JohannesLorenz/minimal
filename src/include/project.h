@@ -20,14 +20,10 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include <sys/types.h>
-
+#include <string>
 #include <vector>
-#include <map>
 #include <algorithm>
 
-#include "instrument.h"
-#include "tuple_helpers.h"
 #include "effect.h"
 
 namespace mini
