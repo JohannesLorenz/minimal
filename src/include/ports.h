@@ -28,6 +28,8 @@
 #include "utils.h"
 #include "io.h" // TODO
 
+#include "port_fwd.h"
+
 namespace mini
 {
 
@@ -37,15 +39,6 @@ class out_port_base;
 
 void add_out_port(effect_t& e, out_port_base* opb);
 void add_in_port(effect_t& e, in_port_base* opb);
-
-template<class Port>
-class port_ctor
-{
-	effect_t* e;
-public:
-	port_ctor(effect_t* e) : e(e) {}
-	effect_t* effect() { return e; }
-};
 
 class port_base : public is_variable
 {

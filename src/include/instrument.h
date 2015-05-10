@@ -30,15 +30,13 @@
 // when is it going to end?
 
 #include "plugin.h"
-#include "types.h"
+//#include "types.h"
 #include "utils.h"
-#include "daw.h"
 #include "command.h"
 #include "effect.h"
 #include "work_queue.h"
-#include "lo_port.h"
-#include "io.h" // TODO?
 #include "minimal_plugin.h"
+#include "port_fwd.h"
 
 namespace mini
 {
@@ -215,9 +213,7 @@ public:
 	void instantiate();
 
 	instrument_t(const char* name, std::initializer_list<const command_base*> const_commands);
-	void add_const_command(const command_base& cmd) {
-		const_commands.push_back(&cmd);
-	}
+	void add_const_command(const command_base& cmd);
 
 	virtual ~instrument_t();
 

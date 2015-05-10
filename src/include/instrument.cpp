@@ -21,6 +21,7 @@
 #include "lo_port.h"
 #include "instrument.h"
 #include "io.h"
+#include "ports.h"
 
 namespace mini {
 
@@ -123,6 +124,10 @@ instrument_t::instrument_t(const char *name, std::initializer_list<const command
 	effect_t(name),
 	const_commands(const_commands)
 {
+}
+
+void instrument_t::add_const_command(const command_base &cmd) {
+	const_commands.push_back(&cmd);
 }
 
 void instrument_t::clean_up()

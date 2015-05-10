@@ -17,25 +17,22 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "effect.h"
-#include "io.h"
-#include "ports.h"
+#ifndef PORT_FWD_H
+#define PORT_FWD_H
 
 namespace mini {
 
-void effect_t::add_in_port(mini::in_port_base *ipb) {
-	ipb->id = in_ports.size();
-	io::mlog << "Adding in port: " << ipb
-		<< ", stamp: " << ipb->change_stamp
-		<< ", id: " << ipb->id << io::endl;
-	in_ports.push_back(ipb);
-}
+class effect_t;
 
-void effect_t::add_out_port(mini::out_port_base *opb) {
-	out_ports.push_back(opb);
-}
-
-void effect_t::proceed_message() {
-	io::mlog << "proceeding with effect " << id() << io::endl; }
+template<class Port>
+class port_ctor
+{
+	effect_t* e;
+public:
+	port_ctor(effect_t* e) : e(e) {}
+	effect_t* effect() { return e; }
+};
 
 }
+
+#endif // PORT_FWD_H

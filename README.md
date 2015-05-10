@@ -37,8 +37,9 @@ Type make doc for doxygen. TODO: more stuff here...
 
 # 4 Credits
 The author thanks:
-  * [Mark D. McCurry (fundamental)](http://fundamental-code.com/)
-    from [zynaddsubfx](http://zynaddsubfx.sourceforge.net/)
+  * [Mark D. McCurry (fundamental)](http://fundamental-code.com/) from
+    [zynaddsubfx](http://zynaddsubfx.sourceforge.net/) for a lot of very
+    helpful support, especially with real time coding and ZynAddSubFX.
 
 # 5 Contact
 

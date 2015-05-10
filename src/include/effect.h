@@ -29,9 +29,9 @@
 #include "daw.h"
 #include "types.h"
 #include "work_queue.h"
-#include "ports.h" // TODO!!! not needed!
+//#include "ports.h" // TODO!!! not needed!
 #include "simple.h"
-#include "io.h"
+//#include "io.h"
 
 //const sample_t default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
@@ -102,8 +102,10 @@ public:
 
 	std::vector<effect_t*> readers, deps, writers;
 	// returns the next time when the effect must be started
+
+	void proceed_message();
 	sample_t proceed(sample_t samples) {
-		io::mlog << "proceeding with effect " << id() << io::endl;
+		proceed_message();
 		//return next_time = _proceed(time);
 		_proceed(samples);
 		pos += samples;
