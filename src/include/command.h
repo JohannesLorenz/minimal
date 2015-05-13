@@ -60,36 +60,14 @@ template<std::size_t I, class ...Args2>
 using type_at = typename std::tuple_element<I, std::tuple<Args2...>>::type;
 
 
-namespace detail
+namespace command_detail
 {
-
-#if 0
-	template<class T>
-	constexpr std::size_t length_of() {
-//		return util::dont_instantiate_me_func<std::size_t>();
-		return pad_size<T>::value;
-	}
-//	template<>
-//	constexpr std::size_t length_of<int>() { return 4; }
-
-	template<class... Others>
-	constexpr std::size_t est_length_args();
-
-	template<class Arg1, class ...More>
-	constexpr std::size_t est_length_args_first()
+	//template<class T, T>
+	struct do_nothing
 	{
-		return length_of<Arg1>() + est_length_args<More...>();
-	}
-
-	template<class... Others>
-	constexpr std::size_t est_length_args()
-	{
-		return est_length_args_first<Others...>();
-	}
-
-	template<>
-	constexpr std::size_t est_length_args<>() { return 0; }
-#endif
+		template<class ...Args>
+		static void exec(Args...) {}
+	};
 
 	template<std::size_t I, class ...Args>
 	struct est_length_args
@@ -102,20 +80,11 @@ namespace detail
 	struct est_length_args<0, Args...> {
 		constexpr static std::size_t exec(const std::tuple<Args...>& ) { return 0; }
 	};
-}
 
-namespace command_detail
-{
 	//! pushes back a given element to the vector if Printable is true
-	template<bool Printable> // Printable = false
-	struct push_back_single
-	{
-		template<class T>
-		static void exec(std::vector<char>& , const T& )
-		{
-			// general case: can not append
-		}
-	};
+	// TODO: bad name: no allocation... append()?
+	template<bool > // false, i.e. not printable
+	struct push_back_single : do_nothing {};
 
 	template<>
 	struct push_back_single<true>
@@ -129,15 +98,8 @@ namespace command_detail
 		}
 	};
 
-	template<bool SizeFix> // SizeFix = false
-	struct pad_single // todo: rename: pad/resize
-	{
-		template<class T>
-		static void exec(std::vector<char>&, const T& )
-		{
-			// general case: can not fill
-		}
-	};
+	template<bool > // false, i.e. no fix size
+	struct pad_single : do_nothing {}; // todo: rename: pad/resize
 
 	template<>
 	struct pad_single<true>
@@ -153,7 +115,7 @@ namespace command_detail
 
 	//! prefills a vector with a tuple as far as possible,
 	//! using push back or pad instructions
-	template<bool Ok, std::size_t N, std::size_t I, class ...Args2>
+	template<bool /*do sth*/, std::size_t N, std::size_t I, class ...Args2>
 	struct prefill
 	{
 		static void exec(std::vector<char>& s, const std::tuple<Args2...>& tp)
@@ -172,24 +134,12 @@ namespace command_detail
 		}
 	};
 
+
 	template<std::size_t N, std::size_t I, class ...Args2>
-	struct prefill<false, N, I, Args2...>
-	{
-		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
-		{
-			// not ok
-		}
-	};
+	struct prefill<false, N, I, Args2...> : do_nothing {}; // nothing to execute
 
 	template<bool Ok, std::size_t N, class ...Args2>
-	struct prefill<Ok, N, N, Args2...>
-	{
-		static void exec(std::vector<char>& , const std::tuple<Args2...>& )
-		{
-			// end reached
-		}
-	};
-
+	struct prefill<Ok, N, N, Args2...> : do_nothing {}; // end reached
 
 	// TODO: generalize all this: template<class ...Args, bool Active> action { exec(); }... then inherit
 
@@ -258,15 +208,7 @@ namespace command_detail
 	};
 
 	template<bool All, std::size_t N, class ...Args2> // All = false
-	struct complete<All, N, N, Args2...>
-	{
-		static void exec(std::vector<char>& , std::vector<char>::iterator* , const std::tuple<Args2...>& )
-		{
-			// end reached
-		}
-	};
-
-
+	struct complete<All, N, N, Args2...> : do_nothing {}; // end reached
 
 	template<bool FixedSign> // = true
 	struct fill_enhanced_type_str_single
@@ -303,24 +245,10 @@ namespace command_detail
 	};
 
 	template<std::size_t N> // All = false
-	struct fill_enhanced_type_str<N, N>
-	{
-		template<class ...Args2>
-		static void exec(std::string& , const std::tuple<Args2...>& )
-		{
-			// end reached
-		}
-	};
-
+	struct fill_enhanced_type_str<N, N> : do_nothing {}; // end reached
 
 	template<bool FixedSign> // = true
-	struct update_enhanced_type_str_single
-	{
-		template<std::size_t I, class ...Args2>
-		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& )
-		{
-		}
-	};
+	struct update_enhanced_type_str_single : do_nothing {}; // no reason :(
 
 	template<>
 	struct update_enhanced_type_str_single<false>
@@ -346,12 +274,7 @@ namespace command_detail
 	};
 
 	template<std::size_t N>
-	struct update_enhanced_type_str<N, N>
-	{
-		template<class ...Args2>
-		static void exec(std::vector<char>::iterator& , const std::tuple<Args2...>& ) {}
-	};
-
+	struct update_enhanced_type_str<N, N> : do_nothing {}; // no reason :(
 }
 
 // TODO: unused class
@@ -366,7 +289,7 @@ protected:
 	constexpr std::size_t est_length() const {
 		return pad<4>(path().length() + 1) // path + \0
 			+ pad<4>(sizeof...(Args) + 2)// ,<types>\0
-			+ detail::est_length_args<sizeof...(Args), Args...>::exec(args);
+			+ command_detail::est_length_args<sizeof...(Args), Args...>::exec(args);
 	}
 public:
 	template<class ...Args2>

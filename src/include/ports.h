@@ -26,7 +26,6 @@
 #include "sample.h"
 #include "types.h"
 #include "utils.h"
-#include "io.h" // TODO
 
 #include "port_fwd.h"
 
@@ -355,7 +354,7 @@ public:
 	constexpr bool update() const { return true; }
 
 	const void* get_value() const {
-		io::mlog << "GET: " << *reinterpret_cast<const T*>(&data) << io::endl;
+	//	io::mlog << "GET: " << *reinterpret_cast<const T*>(&data) << io::endl;
 		return reinterpret_cast<const void*>(&data); }
 
 	//! this has no effect

@@ -20,20 +20,10 @@
 #ifndef LOADED_PROJECT_H
 #define LOADED_PROJECT_H
 
-#include <unistd.h>
-//#include <lo/lo_types.h>
-
-#include "instrument.h"
 #include "project.h"
-#include "lo_port.h"
-#include "types.h"
-#include "lfo.h"
-#include "daw_visit.h"
 #include "work_queue.h"
 #include "sample.h"
 #include "bars.h"
-
-//#include "jack_engine.h"
 
 namespace mini {
 
@@ -50,8 +40,6 @@ public:
 	}
 };*/
 
-
-//class loaded_project_t;
 
 /*
 //! rt-safe stack, once reserved
@@ -74,17 +62,8 @@ using loaded_project_t = project_t;
 
 class _player_t : public work_queue_t // TODO: own header
 {
-	// TODO: class handle_work_queue_t?
-	std::map<const effect_t*, handle_type> handles;
-
 	//array_stack<effect_t*> ready_fx;
 
-/*	//!< maximum seconds to sleep until wakeup forced
-	//!< @deprecated deprecated?
-	static constexpr const sample_t max_sleep_time = 0.1;
-
-	sample_t step = 0.001f; //0.001seconds;
-	sample_t pos = 0.0f;*/
 	sample_t pos = 0; //!< number of samples played until now
 	loaded_project_t* project; // TODO! must be const
 
@@ -127,9 +106,6 @@ class _player_t : public work_queue_t // TODO: own header
 			task_base_with_handle(effect->get_next_time()),
 			effect(effect)
 		{
-			no_rt::mlog << "inited time: " << effect->get_next_time() << ", aka: "<<
-				next_time()
-				<< std::endl;
 		}
 
 		void proceed(sample_t time)
@@ -166,13 +142,7 @@ class _player_t : public work_queue_t // TODO: own header
 		}*/
 	};
 
-//	void update_effects();
-	void fill_commands();
-	void send_commands();
-
 	std::vector<std::vector<bool>> changed_ports;
-
-	//engine_t* engine;
 
 	void process(sample_t work);
 

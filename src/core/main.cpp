@@ -23,7 +23,6 @@
 #include <termios.h>
 
 #include "plugin.h"
-#include "lo_port.h"
 #include "io.h"
 #include "project.h"
 #include "jack_engine.h"
@@ -87,16 +86,12 @@ int main(int argc, char** argv)
 		eng.load_project(pro);
 		eng.play_until(5_1);
 
-		/*loaded_project_t lpro(std::move(pro));
-		
-		player_t<int> pl(lpro);
-		pl.play_until(4.0f);*/
-
-	//	sleep(5);
 	} catch(const char* msg) {
 		dump_error(msg);
 	} catch(std::string msg) {
 		dump_error(msg.c_str());
+	} catch(std::exception e) {
+		no_rt::mlog << "Caught std::exception: " << e.what() << std::endl;
 	} catch(...) {
 		dump_error("unimplemented exception type");
 	}

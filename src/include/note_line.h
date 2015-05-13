@@ -24,7 +24,7 @@
 #include "daw.h"
 #include "ports.h"
 #include "impl.h"
-#include "io.h"
+//#include "io.h"
 
 namespace mini {
 
@@ -161,7 +161,7 @@ public:
 
 	bool _proceed(sample_t )
 	{
-		io::mlog << "proceeding with note line... " << io::endl;
+		//io::mlog << "proceeding with note line... " << io::endl;
 		set_next_time(impl->_proceed(pos));
 		return true;
 	}

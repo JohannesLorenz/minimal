@@ -19,9 +19,11 @@
 
 #include <cstdlib>
 #include <chrono>
+#include <map>
 
 #include "io.h"
 #include "loaded_project.h"
+#include "ports.h"
 
 namespace mini
 {
@@ -142,39 +144,6 @@ loaded_project_t::~loaded_project_t()
 }
 #endif
 
-#if 0
-void _player_t::update_effects()
-{
-	// TODO: use player's copies
-
-	ready_fx.push(&project.effect_root());
-	do
-	{
-		effect_t* cur_effect = ready_fx.pop();
-
-		cur_effect->proceed(pos);
-
-		for(effect_t* next: cur_effect->deps)
-		 ready_fx.push(next);
-
-	} while(ready_fx.size());
-}
-#endif
-
-void _player_t::fill_commands()
-{
-/*	for(const auto& pr : global())
-	for(const auto& pr2 : pr.second)
-	{
-		pr2.first->complete_buffer();
-	}*/
-}
-
-void _player_t::send_commands()
-{
-
-}
-
 void _player_t::init()
 {
 /*	for(const auto& pr : global())
@@ -255,7 +224,6 @@ void _player_t::set_project(loaded_project_t &_project)
 
 _player_t::_player_t(loaded_project_t &_project) :
 	project(&_project)//,
-//	engine(new jack_engine_t) // TODO: choice for engine
 {
 	init();
 }
@@ -265,13 +233,6 @@ _player_t::_player_t(loaded_project_t &_project) :
 #else
 	#define REALTIME // replace with "nothing"
 #endif
-
-
-/*void _player_t::process_until(sample_t )
-{
-
-
-}*/
 
 // TODO: deprecated!?!?!?
 void _player_t::play_until(sample_t dest)
@@ -310,10 +271,6 @@ void _player_t::play_until(sample_t dest)
 //! the "heart" of minimal
 void REALTIME _player_t::process(sample_t work)
 {
-//		update_effects();
-//		fill_commands();
-	//	send_commands();
-	//
 		(void)work; // TODO
 		
 //		const auto& has_active_tasks = []() -> bool {
@@ -413,28 +370,6 @@ void REALTIME _player_t::process(sample_t work)
 				this_ef->finished_threads.store(0);
 				this_ef->cur_threads.store(0);
 			}
-#if 0
-			pq_entry top = std::move(pq.top());
-			pq.pop();
-
-			//project.cons()[top.ins]
-
-			project.cons().front().send_osc_str(top.cmd->buffer());
-
-
-			top.itr->operator ++();
-
-			pq.push(std::move(top));
-
-#endif
-		//	if(top.itr == top.vals.end())
-		//	 throw "end";
-
-			//pq.decrease(pq.top());
-
-			/*if(top().itr == top().vals.end())
-			 pq.insert
-			pq.pop();*/
 		} // while has active tasks at this time
 }
 
