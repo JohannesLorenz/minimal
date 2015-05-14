@@ -22,7 +22,7 @@
 #include <map>
 
 #include "io.h"
-#include "loaded_project.h"
+#include "player.h"
 #include "ports.h"
 
 namespace mini

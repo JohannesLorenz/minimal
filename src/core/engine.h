@@ -24,7 +24,7 @@
 #include "threadpool/src/include/thread.h"
 // ^ TODO: get rid of this? use new instead of vector?
 
-#include "loaded_project.h"
+#include "player.h"
 
 namespace mini {
 

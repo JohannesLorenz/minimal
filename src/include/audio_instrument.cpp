@@ -18,7 +18,6 @@
 /*************************************************************************/
 
 #include <jack/jack.h>
-#include "pid.h"
 #include "audio_instrument.h"
 #include "io.h"
 
