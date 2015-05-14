@@ -73,13 +73,6 @@ void cp_file(const char* dst_name, const char* src_name)
 	dst << src.rdbuf();
 }
 
-// TODO: check for rtld_private
-
-
-#ifdef HAVE_RTLD_PRIVATE
-#error "to be implemented"
-#endif
-
 void* multi_plugin_t::get_funcptr(const char* funcname)
 {
 	int dlopen_mode = RTLD_NOW | RTLD_LOCAL;

@@ -213,7 +213,7 @@ void _player_t::init()
 	for(effect_t* e : project->effects())
 	{
 		changed_ports[e->id()].resize(e->get_in_ports().size());
-		}
+	}
 }
 
 void _player_t::set_project(loaded_project_t &_project)
@@ -251,11 +251,10 @@ void _player_t::play_until(sample_t dest)
 			auto useconds_right_now = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 			sample_t samples_right_now = useconds_right_now / usecs_per_sample;
 
-			// do not sleep longer than dest
-			useconds_t sleep_time = std::min(next_task_time() - samples_right_now,
-					dest - samples_right_now) * usecs_per_sample;
-			io::mlog << "Sleeping for " << sleep_time << " useconds..." << io::endl;
-			usleep(sleep_time);
+			// do not sleep longer than dest, but at least 0
+			sample_t sleep_time = std::max(std::min(next_task_time() - samples_right_now,
+					dest - samples_right_now) * usecs_per_sample, 0_smps);
+			usleep((useconds_t)sleep_time);
 		}
 
 		process(pos); // TODO: not 0

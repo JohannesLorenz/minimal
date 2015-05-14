@@ -27,6 +27,8 @@ namespace mini {
 //! signed int of at least 64 bit
 using sample_t = int_least64_t;
 
+inline sample_t operator"" _smps(unsigned long long int n) { return n; }
+
 // enough samples for one day
 static_assert(sizeof(sample_t) >= 8,
 	"need 64 bit ints");

@@ -35,6 +35,7 @@ HEADERS += src/include/plugin.h \
 	src/include/io.h \
 	src/include/jack_player.h \
 	src/include/sample.h \
+	src/include/bars.h \
 	src/core/engine.h \
 	src/core/jack_engine.h \
 	src/include/fraction.h \
