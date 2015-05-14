@@ -66,7 +66,7 @@ namespace command_detail
 	struct do_nothing
 	{
 		template<class ...Args>
-		static void exec(Args...) {}
+		static void exec(const Args&...) {}
 	};
 
 	template<std::size_t I, class ...Args>
@@ -128,7 +128,7 @@ namespace command_detail
 			push_back_single<_is_const>::exec(s, std::get<I>(tp));
 			// case 2: not const, but fixed size -> buffer it
 			constexpr bool case_2 = (!_is_const) && _size_fix;
-			pad_single<case_2>::template exec<tp_at>(s, std::get<I>(tp));
+			pad_single<case_2>::exec(s, std::get<I>(tp));
 			// continue if const or fix
 			prefill<_size_fix || _is_const, N, I+1, Args2...>::exec(s, tp);
 		}
@@ -247,13 +247,13 @@ namespace command_detail
 	template<std::size_t N> // All = false
 	struct fill_enhanced_type_str<N, N> : do_nothing {}; // end reached
 
-	template<bool FixedSign> // = true
+	template<std::size_t I, bool FixedSign> // = true
 	struct update_enhanced_type_str_single : do_nothing {}; // no reason :(
 
-	template<>
-	struct update_enhanced_type_str_single<false>
+	template<std::size_t I>
+	struct update_enhanced_type_str_single<I, false>
 	{
-		template<std::size_t I, class ...Args2>
+		template<class ...Args2>
 		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp)
 		{
 			// TODO: is going backward cache efficient?
@@ -268,7 +268,7 @@ namespace command_detail
 		template<class ...Args2>
 		static void exec(std::vector<char>::iterator& itr, const std::tuple<Args2...>& tp) {
 			using tp_at = type_at<I, Args2...>;
-			update_enhanced_type_str_single<has_fixed_sign<tp_at>()>::template exec<I>(itr, tp);
+			update_enhanced_type_str_single<I, has_fixed_sign<tp_at>()>::exec(itr, tp);
 			update_enhanced_type_str<N, I+1>::exec(itr, tp);
 		}
 	};
@@ -453,16 +453,6 @@ public:
 
 	//std::string arg(std::size_t i)
 
-	/*std::string rtosc_msg() const
-	{
-		std::string res = path;
-		std::string type_str { Args::sign()... };
-		res += " " + type_str;
-		//for(std::size_t i = 0; i < sizeof...(Args); ++i)
-		// res += " " + std::get<i>().to_str();
-		// ^^ TODO!!!
-		return res;
-	}*/
 //	virtual command* clone() const { return new command(*this); }
 	virtual ~testcommand(); // TODO: = 0 ?
 };
@@ -567,11 +557,7 @@ struct _for_all_variables_single
 };
 
 template<>
-struct _for_all_variables_single<false>
-{
-	template<class Var, class Ftor>
-	static void exec(Var& , Ftor& ) {}
-};
+struct _for_all_variables_single<false> : command_detail::do_nothing{};
 
 // TODO: count *down* ??
 template<std::size_t N, std::size_t I = 0>
@@ -588,12 +574,7 @@ public:
 };
 
 template<std::size_t N>
-class _for_all_variables<N, N> {
-public:
-	template<class Ftor, class Tpl>
-	static void exec(const Ftor& , const Tpl& ) {}
-};
-
+class _for_all_variables<N, N> : public command_detail::do_nothing {};
 
 template<class ...Args>
 class command : /*public port_tuple<make_port<Args>...>,*/ public testcommand<Args...>
