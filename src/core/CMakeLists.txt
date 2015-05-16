@@ -14,3 +14,6 @@ target_link_libraries(minimal-bin minimal threadpool ${AUDIO_LIBRARIES})
 
 add_subdirectory(threadpool)
 
+install(TARGETS minimal-bin
+	RUNTIME DESTINATION bin)
+

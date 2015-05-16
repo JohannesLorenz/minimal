@@ -17,50 +17,28 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef ATOMIC_H
-#define ATOMIC_H
+#ifndef SPINLOCK_H
+#define SPINLOCK_H
 
 #include <atomic>
 
-namespace mini
-{
+namespace mini {
 
-// TODO: check if relaxed is always acceptable
-//! minimal atomic: an std atomic with relaxed memory order
-template<class T>
-class atomic
+//! atomic, lock-free, spinlock, as suggested on
+//! http://en.cppreference.com/w/cpp/atomic/atomic_flag
+
+class spinlock_t
 {
-	std::atomic<T> at;
+	std::atomic_flag locked = ATOMIC_FLAG_INIT;
 public:
-	T load() const { return at.load(std::memory_order_relaxed); }
-	T load() const volatile { return at.load(std::memory_order_relaxed); }
-
-	void store(T x) { at.store(x, std::memory_order_relaxed); }
-	void store(T x) volatile { at.store(x, std::memory_order_relaxed); }
-
-	operator T() const { return at.operator T(); }
-	operator T() const volatile { return at.operator T(); }
-
-	T operator++() { return ++at; } // TODO: fetch add
-	T operator++() volatile { return ++at; } // TODO: fetch add
-
-	atomic() = default;
-	constexpr atomic(T desired) : at(desired) {}
-	atomic(const atomic&) = delete;
-
-	std::atomic<T>& impl() { return at; }
-	const std::atomic<T>& impl() const { return at; }
-};
-
-//! minimal atomic with default construction value
-template<class T, T DefaultValue>
-class atomic_def : public atomic<T>
-{
-public:
-	atomic_def() : atomic<T>(DefaultValue) {}
-	atomic_def(const atomic_def&) = delete;
+	void lock() {
+		while (locked.test_and_set(std::memory_order_acquire)) ;
+	}
+	void unlock() {
+		locked.clear(std::memory_order_release);
+	}
 };
 
 }
 
-#endif // ATOMIC_H
+#endif // SPINLOCK_H

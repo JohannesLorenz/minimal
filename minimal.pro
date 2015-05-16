@@ -42,7 +42,9 @@ HEADERS += src/include/plugin.h \
 	src/include/debug.h \
 	src/include/port_fwd.h \
 	src/include/command_tools.h \
-	src/core/player.h
+	src/core/player.h \
+	src/include/atomic.h \
+	src/include/spinlock.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
@@ -79,6 +81,7 @@ OTHER_FILES += INSTALL.md \
 	src/test/CMakeLists.txt \
 	src/config.h.in \
 	README.md \
-	RULES.md
+	RULES.md \
+	src/minimal.pc.in
 
 

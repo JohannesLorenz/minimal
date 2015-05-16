@@ -24,6 +24,7 @@
 #include "work_queue.h"
 #include "sample.h"
 #include "bars.h"
+#include "spinlock.h"
 
 namespace mini {
 
@@ -66,6 +67,8 @@ class _player_t : public work_queue_t // TODO: own header
 
 	sample_t pos = 0; //!< number of samples played until now
 	loaded_project_t* project; // TODO! must be const
+
+	spinlock_t work_queue_lock;
 
 //	std::set<sample_t> end_set = { std::numeric_limits<sample_t>::max() };
 

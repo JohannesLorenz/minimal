@@ -284,6 +284,7 @@ void REALTIME _player_t::process(sample_t work)
 			<< " vs "
 			<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
+
 		while(peek_next_task()->next_time() <= pos &&
 			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
 			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )
@@ -327,7 +328,9 @@ void REALTIME _player_t::process(sample_t work)
 				//  * all threads (including ours) are finished
 				//  * no other task has access to this_ef
 
+				work_queue_lock.lock();
 				update(task_e->get_handle());
+				work_queue_lock.unlock();
 
 				/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
 				{
@@ -359,7 +362,10 @@ void REALTIME _player_t::process(sample_t work)
 					//	te->effect
 						te->update_next_time(cur_next_time);
 						io::mlog << "next time: " << cur_next_time << io::endl;
+
+						work_queue_lock.lock();
 						update(h);
+						work_queue_lock.unlock();
 					}
 				}
 				else

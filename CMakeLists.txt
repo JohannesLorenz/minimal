@@ -1,5 +1,23 @@
 cmake_minimum_required(VERSION 2.8)
 
+#check_submodule(threadpool "0.8.0")
+#check_submodule(libfs "1.0.0")
+#check_submodule(zlib "4.0.0")
+#check_submodule(libfs "1.0.0")
+
+function(print_submodules submodules)
+	foreach(submodule ${submodules})
+		MESSAGE(STATUS "submodule: ${submodule}")
+	endforeach()
+endfunction()
+
+
+# todo: ask git ;)
+list(APPEND submodules threadpool ringbuffer)
+print_submodules("${submodules}")
+
+#print_submodules()
+
 # compiler - must be set before the project initialisation
 set(WARN_EXC "")
 
@@ -32,9 +50,9 @@ SET(COMPILER_SET "1")
 # general things
 project(minimal)
 
-SET(VERSION_MAJOR "1")
+SET(VERSION_MAJOR "0")
 SET(VERSION_MINOR "0")
-SET(VERSION_PATCH "0")
+SET(VERSION_PATCH "1")
 SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 MESSAGE("")
@@ -91,12 +109,12 @@ find_package(Boost 1.49.0
 	COMPONENTS graph)
 
 #todo: -> rtosc?
-pkg_search_module(LIBLO liblo>=0.25 REQUIRED)
-mark_as_advanced(LIBLO_LIBRARIES)
-include_directories(${LIBLO_INCLUDE_DIRS})
-
-list(APPEND AUDIO_LIBRARIES ${LIBLO_LIBRARIES})
-list(APPEND AUDIO_LIBRARY_DIRS ${LIBLO_LIBRARY_DIRS})
+#pkg_search_module(LIBLO liblo>=0.25 REQUIRED)
+#mark_as_advanced(LIBLO_LIBRARIES)
+#include_directories(${LIBLO_INCLUDE_DIRS})
+#
+#list(APPEND AUDIO_LIBRARIES ${LIBLO_LIBRARIES})
+#list(APPEND AUDIO_LIBRARY_DIRS ${LIBLO_LIBRARY_DIRS})
 
 pkg_check_modules(JACK jack)
 
@@ -131,6 +149,21 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall ${WARN_EXC} -std=c++11 -pipe")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
+
+# install paths
+get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+if("${LIB64}" STREQUAL "TRUE")
+    set(LIBSUFFIX 64)
+else()
+    set(LIBSUFFIX "")
+endif()
+
+set(MINIMAL_LIB_DIR "lib${LIBSUFFIX}" CACHE PATH "Installation directory for libraries")
+set(MINIMAL_INC_DIR "include" CACHE PATH "Installation directory for headers")
+mark_as_advanced(
+	MINIMAL_LIB_DIR
+	MINIMAL_INC_DIR
+	)
 
 # subdirectories
 MESSAGE("READING SUB-DIRECTORIES...")

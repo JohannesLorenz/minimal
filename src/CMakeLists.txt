@@ -11,5 +11,11 @@ add_subdirectory(include)
 add_subdirectory(core)
 add_subdirectory(songs)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/minimal.pc.in
+	${CMAKE_CURRENT_BINARY_DIR}/minimal.pc @ONLY)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/minimal.pc"
+	DESTINATION "${MINIMAL_LIB_DIR}/pkgconfig")
+
 #cp_script(test.sh)
 
