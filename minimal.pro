@@ -7,7 +7,8 @@ TEMPLATE = subdirs
 # Directories
 
 INCLUDEPATH += src/include/ \
-	rtosc/include
+	submodules/
+
 
 # Input
 

@@ -20,11 +20,11 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "ringbuffer/src/lib/ringbuffer.h"
+#include <jack/types.h>
+#include <ringbuffer/src/lib/ringbuffer.h>
+
 #include "ports.h"
 #include "utils.h"
-
-#include <jack/types.h>
 
 namespace mini
 {

@@ -21,8 +21,8 @@
 #define RECORDER_H
 
 #include <sndfile.hh>
+#include <ringbuffer/src/lib/ringbuffer.h>
 
-#include "ringbuffer/src/lib/ringbuffer.h"
 #include "audio.h"
 #include "jack.h"
 #include "effect.h"

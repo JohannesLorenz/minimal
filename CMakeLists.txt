@@ -5,17 +5,6 @@ cmake_minimum_required(VERSION 2.8)
 #check_submodule(zlib "4.0.0")
 #check_submodule(libfs "1.0.0")
 
-function(print_submodules submodules)
-	foreach(submodule ${submodules})
-		MESSAGE(STATUS "submodule: ${submodule}")
-	endforeach()
-endfunction()
-
-
-# todo: ask git ;)
-list(APPEND submodules threadpool ringbuffer)
-print_submodules("${submodules}")
-
 #print_submodules()
 
 # compiler - must be set before the project initialisation
@@ -82,6 +71,7 @@ enable_testing ()
 SET(src_base "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/src/") # for config.h
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/submodules")
 
 # functions
 function(cp_script script_name)
@@ -131,7 +121,40 @@ pkg_check_modules(SNDFILE sndfile)
 list(APPEND AUDIO_LIBRARIES ${SNDFILE_LIBRARIES})
 list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
 
+# own submodules
+
+macro(find_submodules submodules)
+	foreach(submodule ${submodules})
+		string(REGEX REPLACE "[^A-Za-z].*" "" fname ${submodule})
+		MESSAGE("FNAME: ${fname} vs ${submodule}")
+
+		SET(CUR_FOUND "0")
+		SET(CUR_LIBRARIES "")
+		SET(CUR_LIBRARY_DIRS "")
+
+		pkg_search_module(CUR ${submodule})
+		# MESSAGE(${PC_MODULE_FOUND})
+		if(PC_${fname}_FOUND STREQUAL "1")
+			list(APPEND AUDIO_LIBRARIES ${CUR_LIBRARIES})
+			list(APPEND AUDIO_LIBRARY_DIRS ${CUR_LIBRARY_DIRS})
+		else()
+			#MESSAGE(STATUS "submodule nf: ${submodule}")
+			add_custom_target(${fname}_fetch COMMAND "echo" "FETCHING SUBMODULE")
+			list(APPEND COMPILED_SUBMODULES ${fname})
+		endif()
+	endforeach()
+endmacro()
+
+# todo: ask git ;)
+list(APPEND submodules threadpool>=0.8.0 ringbuffer>=0.8.0)
+find_submodules("${submodules}")
+
+MESSAGE("ALD now: ${AUDIO_LIBRARY_DIRS}")
 link_directories(${AUDIO_LIBRARY_DIRS})
+
+add_custom_target(init "git" "submodule" "init" "--" ${COMPILED_SUBMODULES})
+add_custom_target(fetch git submodule update)
+add_dependencies(fetch init)
 
 # compiler details
 if(COMPILER STREQUAL "stoat")
@@ -168,8 +191,29 @@ mark_as_advanced(
 # subdirectories
 MESSAGE("READING SUB-DIRECTORIES...")
 #add_subdirectory(rtosc)
+add_subdirectory(submodules)
 add_subdirectory(src)
 add_subdirectory(doc)
+
+macro(depend_submodules submodules)
+	foreach(submodule ${submodules})
+		string(REGEX REPLACE "[^A-Za-z].*" "" fname ${submodule})
+		MESSAGE("FNAME: ${fname} vs ${submodule}")
+
+		SET(CUR_FOUND "0")
+		SET(CUR_LIBRARIES "")
+		SET(CUR_LIBRARY_DIRS "")
+
+		pkg_search_module(CUR ${submodule})
+		# MESSAGE(${PC_MODULE_FOUND})
+		if(PC_${fname}_FOUND STREQUAL "1")
+		else()
+			add_dependencies(${fname} ${fname}_fetch)
+		endif()
+	endforeach()
+endmacro()
+
+depend_submodules("${submodules}")
 
 # custom targets
 add_custom_target(stoat2 stoat -c

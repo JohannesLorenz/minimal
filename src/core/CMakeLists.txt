@@ -12,8 +12,6 @@ set_target_properties(minimal-bin
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ldl")
 target_link_libraries(minimal-bin minimal threadpool ${AUDIO_LIBRARIES})
 
-add_subdirectory(threadpool)
-
 install(TARGETS minimal-bin
 	RUNTIME DESTINATION bin)
 

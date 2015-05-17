@@ -20,8 +20,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "threadpool/src/include/threadpool.h"
-#include "threadpool/src/include/thread.h"
+#include <threadpool/src/include/threadpool.h>
+#include <threadpool/src/include/thread.h>
 // ^ TODO: get rid of this? use new instead of vector?
 
 #include "player.h"

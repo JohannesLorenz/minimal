@@ -18,8 +18,8 @@
 /*************************************************************************/
 
 #include <thread>
+#include <threadpool/src/include/thread.h>
 
-#include "threadpool/src/include/thread.h"
 #include "engine.h"
 
 namespace mini {

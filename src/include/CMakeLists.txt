@@ -1,5 +1,3 @@
-add_subdirectory(ringbuffer)
-
 set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(GLOB lib_src ${src_dir}/*.cpp)
