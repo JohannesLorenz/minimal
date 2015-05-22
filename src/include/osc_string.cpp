@@ -80,12 +80,10 @@ std::ostream& operator<<(std::ostream& stream,
 	std::vector<char>::const_iterator itr = str.begin() + strlen(str.data());
 	++itr;
 	itr += pad_next<4>(std::distance(str.begin(), itr));
-	//for(; !*itr; ++itr) ;
 	if(*(itr++)!=',')
 	 throw "rtosc string invalid: type string does not start with `,'";
 	const char* args = &*itr;
 	itr += strlen(&*itr);
-//	for(; !*itr; ++itr) ;
 	++itr;
 	itr += pad_next<4>(std::distance(str.begin(), itr));
 	for(; *args && (itr != str.end()); ++args)

@@ -19,21 +19,23 @@ In the future, you will be able to create music, videos, computer games,
 mathematical graphics etc.
 
 # 2 Why using minimal?
-A few benefits from using minimal:
-  * **Good support** for developping issues.
+minimal is practical:
   * You can easily **license your projects**, since they are in plain text.
   * In minimal, you have a clear overview on your effects. You can even dump
     an **effect graph**.
+  * minimal is (assumably) **RT compatible**.
+  * minimal supports **open souce** and has **no windows only plugins**.
+minimal is minimal:
   * minimal is designed for **instant compiling and startup**.
   * **short and human readable project files**
-  * minimal is (assumably) **RT compatible**.
   * minimal can be used **without any X server**.
+minimal is developper-friendly:
   * minimal lets you **easily write plugins**, e.g. for any **OSC** plugin.
   * In minimal, coders can use **C++11**.
-  * minimal supports **open souce** and has **no windows only plugins**.
+  * **Good support** for developping issues.
 
 # 3 Documentation
-Type make doc for doxygen. TODO: more stuff here...
+Type `make doc` for doxygen. TODO: more stuff here...
 
 # 4 Credits
 The author thanks:

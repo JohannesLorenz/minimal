@@ -85,7 +85,6 @@ public:
 	{
 		proceed_base(time);
 
-		//send_single_command(*lo_port, cmd->complete_buffer());
 		(*plugin)->send_osc_cmd(cmd->complete_buffer().raw());
 
 		// TODO: not sure, but max sounds correct:
@@ -234,7 +233,6 @@ void rtosc_in_port_t<T>::on_recv(sample_t time)
 		cmd->update_next_time(time);
 		ins->update(cmd->get_handle());
 	}
-//	send_single_command(ins->lo_port, cmd->cmd->complete_buffer());
 }
 
 

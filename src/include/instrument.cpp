@@ -17,19 +17,12 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-//#include <sys/wait.h>
 #include "command.h"
-//#include "lo_port.h"
 #include "instrument.h"
 #include "io.h"
 #include "ports.h"
 
 namespace mini {
-
-/*void send_single_command(lo_port_t& lo_port, const osc_string &str)
-{
-	lo_port.send_raw(str.raw(), str.size());
-}*/
 
 std::vector<const char *> instrument_t::build_start_args() const
 {
@@ -83,12 +76,8 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	return true;
 }
 
-pid_t instrument_t::make_fork()
+pid_t instrument_t::make_fork() // TODO rename
 {
-/*	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
-	_get_input(make_start_command().c_str(), &pid);
-	return pid;*/
-
 /*	const std::vector<const char*> cmds = build_start_args();
 	typedef char* argv_t[];
 	plugin.call<int, int, argv_t>("main", cmds.size(), cmds.data());
@@ -107,16 +96,10 @@ void instrument_t::instantiate()
 
 	pid = make_fork();
 
-#if 0
-	lo_port.init(get_port(pid, 0 /*TODO*/));
-
-	// TODO: init in effect ctor? (probably not doable in every case)
-#endif
 	set_next_time(std::numeric_limits<sample_t>::max());
 
 	for(const command_base* cmd : const_commands)
 	 plugin->send_osc_cmd(cmd->buffer().raw());
-//	 send_single_command(lo_port, cmd->buffer());
 
 	init_2();
 }
@@ -135,32 +118,14 @@ void instrument_t::clean_up()
 {
 	{
 		command_base* close_command = make_close_command(); // TODO: auto ptr
-//		send_single_command(lo_port, close_command->buffer());
 		plugin->send_osc_cmd(close_command->buffer().raw());
 		delete close_command;
 	}
 
 	no_rt::mlog << "zasf should be closed now... " << std::endl;
-	// TODO: kill() if this did not work
-#if 0
-	int status;
-	while (-1 == waitpid(pid, &status, 0)) {
-		puts("...");
-		usleep(10000); // TODO: what is a good value here?
-	}
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		no_rt::mlog << "Process (pid " << pid << ") failed" << std::endl;
-		exit(1);
-	}
-#endif
 
-
-	//std::cout << "destroying instrument: " << name() << std::endl;
 	for(const command_base*& cb : const_commands)
-	{
-	//	std::cout << name() << ": deleting " << cb->path() << std::endl;
-		delete cb;
-	}
+	 delete cb;
 }
 
 bool instrument_t::_proceed(sample_t samples)

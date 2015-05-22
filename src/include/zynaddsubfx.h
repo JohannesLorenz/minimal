@@ -30,9 +30,6 @@
 namespace mini
 {
 
-//class lo_port_t;
-
-
 class zyn_tree_t;
 
 namespace zyn {

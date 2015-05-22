@@ -109,8 +109,6 @@ public:
 //	void operator<<(in_port_templ<T>& ipt, const out_port_templ<T>& opt);
 };
 
-class lo_port_t;
-
 // TODO: abstract port base
 class in_port_base : public util::non_copyable_t, public port_base
 {
@@ -163,9 +161,6 @@ public:
 	}
 
 	virtual bool update() = 0;
-
-	// TODO: const? probably not...
-	//virtual void send_all(lo_port_t* ) {} // TODO: not sure if this fits here always
 
 	bool is_trigger() const { return _is_trigger; }
 	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?

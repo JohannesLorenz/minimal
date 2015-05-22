@@ -75,6 +75,8 @@ private:
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
 	}
 protected:
+	//! should advance the effect s.t. at least @a samples samples
+	//! are computed in all out ports
 	virtual bool _proceed(sample_t samples) = 0;
 	void set_next_time(sample_t next) { next_time = next; }
 public:

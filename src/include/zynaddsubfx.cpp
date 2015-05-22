@@ -19,7 +19,6 @@
 
 #include <fstream>
 
-//#include "lo_port.h"
 #include "config.h"
 #include "zynaddsubfx.h"
 

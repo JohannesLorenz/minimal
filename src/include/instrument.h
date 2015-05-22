@@ -22,7 +22,6 @@
 
 #include <string>
 #include <vector>
-//#include <memory>
 #include <map>
 #include <initializer_list>
 
@@ -37,8 +36,6 @@ namespace mini
 {
 
 class command_base;
-
-//void send_single_command(lo_port_t& lp, const osc_string& str);
 
 #if 0
 
@@ -166,12 +163,6 @@ public:
 
 
 
-
-
-
-
-
-
 class instrument_t : public effect_t, public work_queue_t
 {
 	multi_plugin_t plugin_creator;
@@ -179,10 +170,7 @@ class instrument_t : public effect_t, public work_queue_t
 	virtual const char* library_path() const = 0;
 	virtual const std::vector<const char *> start_args() const = 0;
 	std::vector<const char *> build_start_args() const;
-public:
-	//lo_port_t lo_port; // TODO: private?
 protected:
-	pid_t pid; // TODO: private?
 	minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
 private:
 	std::vector<const command_base*> const_commands;
@@ -190,7 +178,6 @@ private:
 	const std::vector<bool>* cp;
 	pid_t make_fork();
 public:
-	using udp_port_t = int;
 	using effect_t::effect_t;
 
 	minimal_plugin** get_plugin_ptr() { return &plugin; }
@@ -209,9 +196,12 @@ public:
 	}
 
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
-
+	//! should create OSC commands which cause the plugin to clean up as
+	//! much as it requireds
 	virtual command_base *make_close_command() const = 0;
 
+	//! should create an OSC command which will cause the plugin to
+	//! initialize, as much as the plugin requires
 	virtual std::string make_start_command() const = 0;
 	//! shall return the lo port (UDP) after the program was started
 	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
