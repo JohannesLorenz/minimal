@@ -1,6 +1,6 @@
 install_prefix=@CMAKE_INSTALL_PREFIX@
-include_prefix=${install_prefix}/@MINIMAL_INC_DIR@
-lib_prefix=${install_prefix}/@MINIMAL_LIB_DIR@
+include_prefix=${install_prefix}/@INSTALL_INC_DIR@
+lib_prefix=${install_prefix}/@INSTALL_LIB_DIR@
 
 Name: minimal
 Description: a minimal sequencer

@@ -43,21 +43,6 @@ const char* zynaddsubfx_t::library_path() const
 	return ZYN_BINARY;
 }
 
-instrument_t::udp_port_t zynaddsubfx_t::get_port(pid_t pid, int) const
-{
-	udp_port_t port;
-	std::string tmp_filename = "/tmp/zynaddsubfx_"
-			+ std::to_string(pid);
-	std::cout << "Reading " << tmp_filename << std::endl;
-	sleep(1); // wait for zyn to be started... (TODO)
-	std::ifstream stream(tmp_filename);
-	if(!stream.good()) {
-		throw "Error: Communication to zynaddsubfx failed.";
-	}
-	stream >> port;
-	return port;
-}
-
 command_base *zynaddsubfx_t::make_close_command() const
 {
 	return new command<>("/close-ui");

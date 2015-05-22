@@ -446,7 +446,6 @@ class zynaddsubfx_t : public zyn_tree_t
 	const char* library_path() const;
 	const std::vector<const char *> start_args() const { return _start_args; }
 
-	instrument_t::udp_port_t get_port(pid_t pid, int) const;
 	command_base* make_close_command() const;
 
 public:

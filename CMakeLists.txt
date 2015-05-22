@@ -24,10 +24,8 @@ SET(VERSION_PATCH "1")
 # SET(COMPILER "" CACHE STRING "Compiler to use (allowed: [gcc|clang|stoat])")
 SET(ZYN_BINARY "" CACHE STRING "/usr/bin/zynaddsubfx")
 
-include(cmake/process_project.txt)
-
 # TODO -> src
-MESSAGE("Checking for libraries...")
+#MESSAGE("Checking for libraries...")
 
 # TODO?!?
 find_package(PkgConfig REQUIRED)
@@ -103,47 +101,6 @@ link_directories(${AUDIO_LIBRARY_DIRS})
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${FLTO_FLAGS}")
 
-# install paths
-get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-if("${LIB64}" STREQUAL "TRUE")
-    set(LIBSUFFIX 64)
-else()
-    set(LIBSUFFIX "")
-endif()
-
-set(INSTALL_LIB_DIR "lib${LIBSUFFIX}" CACHE PATH "Installation directory for libraries")
-set(INSTALL_INC_DIR "include" CACHE PATH "Installation directory for headers")
-mark_as_advanced(
-	INSTALL_LIB_DIR
-	INSTALL_INC_DIR
-	)
-
-# subdirectories
-MESSAGE("READING SUB-DIRECTORIES...")
-#add_subdirectory(rtosc)
-add_subdirectory(submodules)
-add_subdirectory(src)
-add_subdirectory(doc)
-
-macro(depend_submodules submodules)
-	foreach(submodule ${submodules})
-		string(REGEX REPLACE "[^A-Za-z].*" "" fname ${submodule})
-		MESSAGE("FNAME: ${fname} vs ${submodule}")
-
-		SET(CUR_FOUND "0")
-		SET(CUR_LIBRARIES "")
-		SET(CUR_LIBRARY_DIRS "")
-
-		pkg_search_module(CUR ${submodule})
-		# MESSAGE(${PC_MODULE_FOUND})
-		if(PC_${fname}_FOUND STREQUAL "1")
-		else()
-			add_dependencies(${fname} ${fname}_fetch)
-		endif()
-	endforeach()
-endmacro()
-
-depend_submodules("${submodules}")
 
 # custom targets
 add_custom_target(stoat2 stoat -c
@@ -169,6 +126,9 @@ SET(DESCRIPTION "a minimal osc sequencer")
 #	set(MSG_BUILD_TYPE_FLAG ${CMAKE_CXX_FLAGS_RELEASE})
 #endif()
 #MESSAGE(" * Build Type: ${CMAKE_BUILD_TYPE} (${MSG_BUILD_TYPE_FLAG})")
+
+include(cmake/process_project.txt)
+
 print_summary_base()
 MESSAGE(" * Zyn binary (-DZYN_BINARY): ${ZYN_BINARY}")
 #MESSAGE(" * Building Doc: No - Type make doc if you want")

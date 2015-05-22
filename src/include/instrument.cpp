@@ -94,7 +94,7 @@ void instrument_t::instantiate()
 //	on_preinit();
 	plugin_creator.set_path(library_path());
 
-	pid = make_fork();
+	make_fork();
 
 	set_next_time(std::numeric_limits<sample_t>::max());
 

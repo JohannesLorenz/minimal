@@ -203,8 +203,6 @@ public:
 	//! should create an OSC command which will cause the plugin to
 	//! initialize, as much as the plugin requires
 	virtual std::string make_start_command() const = 0;
-	//! shall return the lo port (UDP) after the program was started
-	virtual udp_port_t get_port(pid_t pid, int fd) const = 0;
 
 	void clean_up();
 

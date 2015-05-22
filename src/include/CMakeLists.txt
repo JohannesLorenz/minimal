@@ -7,7 +7,7 @@ add_library(minimal SHARED ${lib_src} ${lib_hdr})
 target_link_libraries(minimal ringbuffer)
 
 install(TARGETS minimal
-	LIBRARY DESTINATION ${MINIMAL_LIB_DIR})
+	LIBRARY DESTINATION ${INSTALL_LIB_DIR})
 install(FILES ${lib_hdr}
-	DESTINATION "${MINIMAL_INC_DIR}/minimal")
+	DESTINATION "${INSTALL_INC_DIR}/minimal")
 
