@@ -42,10 +42,11 @@ inline constexpr T1 gcd(T1 a, T2 b) {
 }*/
 
 template<class T1, class T2>
-inline T1 lcm(T1 a, T2 b)
+inline constexpr T1 lcm(T1 a, T2 b, T3 tmp = 0)
 {
-	T1 temp = gcd(a, b);
-	return temp ? (a / temp * b) : 0;
+//	T1 temp = gcd(a, b);
+//	return temp ? (a / temp * b) : 0;
+	return tmp = gcd(a, b), tmp ? ( a/tmp * b ) : 0;
 }
 
 /**
@@ -65,6 +66,8 @@ class fraction_t
 
 public:
 	//! TODO: should be private?
+	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
+	//! however, gcd(m,d) = 1 is not required
 	fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
 		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
 	{
@@ -79,7 +82,6 @@ public:
 	{
 	}
 
-
 	fraction_t(const fraction_t& ) = default;
 
 	const fraction_t operator+(const fraction_t& rhs) const {
@@ -90,11 +92,13 @@ public:
 	bool operator==(const fraction_t& other) const {
 		return other.n == n && other.d == d;
 	}
-	
+	//! prints a fraction as "z+n/d"	
 	template<class N, class D>
 	friend std::ostream& operator<<(std::ostream& os, const fraction_t<N, D>& b);
 
+	//! returns the floor of n/d
 	num_t floor() const { return n/d; }
+	//! returns the rest of dividing n/d
 	fraction_t rest() const { return fraction_t(n%d, d); }
 	//sample_t ceil() const { r } TODO: this is not just n/d + 1
 

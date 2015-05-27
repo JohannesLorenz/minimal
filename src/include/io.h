@@ -35,10 +35,12 @@ namespace mini {
 #ifdef ENABLE_IO
 namespace io {
 using mlog_t = std::ostream;
+//! logging class for IO in real time safe environments
 extern mlog_t& mlog;
 mlog_t& endl(mlog_t& os);
 }
 namespace no_rt {
+//! logging class for IO in non real time safe environments
 extern std::ostream& mlog;
 }
 #else
@@ -54,6 +56,7 @@ struct mlog_t
 	}
 };
 
+//! logging class for IO in real time safe environments
 extern mlog_t mlog;
 
 inline mlog_t& endl(mlog_t& os) {
@@ -62,17 +65,9 @@ inline mlog_t& endl(mlog_t& os) {
 
 }
 
-/*namespace std
-{
-template<typename _CharT, typename _Traits>
-class basic_ostream;
-typedef basic_ostream<char> 		ostream;
-}*/
-
-// TODO: fwd declare ostream
-
 namespace no_rt {
 
+//! logging class for IO in non real time safe environments
 extern std::ostream& mlog;
 
 std::ostream& endl(std::ostream& os);
