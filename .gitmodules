@@ -7,3 +7,9 @@
 [submodule "src/core/threadpool"]
 	path = submodules/threadpool
 	url = git@github.com:JohannesLorenz/threadpool.git
+[submodule "submodules/threadpool"]
+	path = submodules/threadpool
+	url = git@github.com:JohannesLorenz/threadpool.git
+[submodule "submodules/ringbuffer"]
+	path = submodules/ringbuffer
+	url = git@github.com:JohannesLorenz/ringbuffer.git
