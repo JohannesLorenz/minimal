@@ -34,9 +34,12 @@ class osc_string
 {
 	std::vector<char> _data;
 public:
+	//! returns the full OSC string, including 0-bytes, as vector
 	std::vector<char>& data() { return _data; }
 	const std::vector<char>& data() const { return _data; }
+	//! like data(), but returns the string as a C string
 	const char* raw() const { return _data.data(); }
+	//! returns the size of the full OSC string, including 0-bytes
 	std::size_t size() const { return _data.size(); }
 
 	std::vector<char>::iterator get_itr_type_str() {
@@ -55,18 +58,23 @@ public:
 		itr += pad_next<4>(std::distance(_data.begin(), itr));
 		return itr;
 	}
-
+	
+	//! prints the OSC string verbosely, including a newline
 	std::ostream& inspect(std::ostream& stream) const;
+	//! prints the OSC string human readable
 	friend std::ostream& operator<<(std::ostream& stream, const osc_string&);
 
 	bool operator==(const osc_string& other) const {
 		return _data == other._data; }
+	//! lexicographical comparison of the full OSC strings with 0-bytes
+	//! included
 	bool operator<(const osc_string& other) const {
 		return _data < other._data; }
-
+	
+	//! constructor from raw data
 	osc_string(std::vector<char>& _data) : _data(_data) {}
 	osc_string(std::vector<char>&& _data) : _data(std::move(_data)) {}
-	osc_string() {}
+	osc_string() = default;
 };
 
 

@@ -120,13 +120,9 @@ std::ostream& operator<<(std::ostream& stream,
 	}
 
 	if(*args) // i.e. itr reached end too early
-	{
-		stream << " -> rtosc string not terminated here." << std::endl;
-	}
+	 stream << " -> rtosc string not terminated here." << std::endl;
 	else if(itr != str.end())
-	{
-		stream << " -> rtosc string has overfluent bytes." << std::endl;
-	}
+	 stream << " -> rtosc string has overfluent bytes." << std::endl;
 
 	// TODO
 

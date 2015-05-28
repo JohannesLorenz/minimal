@@ -37,7 +37,7 @@ protected:
 	std::string _path;
 public:
 
-	using call_functor = void (*)(const char*, const char*, ...);
+//	using call_functor = void (*)(const char*, const char*, ...);
 
 	const std::string& path() const { return _path; }
 	command_base(const char* _path) :
@@ -247,8 +247,9 @@ namespace command_detail
 	template<std::size_t N> // All = false
 	struct fill_enhanced_type_str<N, N> : do_nothing {}; // end reached
 
-	template<std::size_t I, bool FixedSign> // = true
-	struct update_enhanced_type_str_single : do_nothing {}; // no reason :(
+	template<std::size_t I, bool FixedSign> // FixedSign = true
+	struct update_enhanced_type_str_single : do_nothing {};
+	// => already filled in
 
 	template<std::size_t I>
 	struct update_enhanced_type_str_single<I, false>
@@ -274,7 +275,7 @@ namespace command_detail
 	};
 
 	template<std::size_t N>
-	struct update_enhanced_type_str<N, N> : do_nothing {}; // no reason :(
+	struct update_enhanced_type_str<N, N> : do_nothing {};
 }
 
 // TODO: unused class
@@ -283,7 +284,7 @@ class _command : public command_base
 {
 	using self = _command<Args...>;
 protected:
-public:// TODO?!
+public:// TODO: protected or document this
 	std::tuple<Args...> args;
 protected:
 	constexpr std::size_t est_length() const {
@@ -343,7 +344,7 @@ template<class ...Args>
 class testcommand : public _command<Args...>
 {
 	using base_t = _command<Args...>;
-public:
+public: // TODO?
 	mutable osc_string _buffer;
 
 private:
@@ -393,6 +394,8 @@ private:
 
 
 public:
+	//! constructs the command and prepares internal OSC string buffer as
+	//! far as this is possible at construction
 	template<class ...Args2>
 	testcommand(const char* _path, Args2&&... args) :
 		base_t(_path, std::forward<Args2>(args)...),
