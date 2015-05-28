@@ -1,12 +1,6 @@
 [submodule "rtosc"]
 	path = rtosc
 	url = git://github.com/fundamental/rtosc.git
-[submodule "src/include/ringbuffer"]
-	path = submodules/ringbuffer
-	url = git@github.com:JohannesLorenz/ringbuffer.git
-[submodule "src/core/threadpool"]
-	path = submodules/threadpool
-	url = git@github.com:JohannesLorenz/threadpool.git
 [submodule "submodules/threadpool"]
 	path = submodules/threadpool
 	url = git@github.com:JohannesLorenz/threadpool.git
