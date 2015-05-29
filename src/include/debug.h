@@ -21,6 +21,7 @@
 #define DEBUG_H
 
 #include <limits>
+#include <set>
 #include "effect.h"
 #include "ports.h"
 #include "io.h"
@@ -78,8 +79,12 @@ struct start_t : public debug_effect_base, public int_out
 	}
 };
 
-struct pipe_t : public debug_effect_base, public int_in_1, public int_out
+class pipe_t : public debug_effect_base, public int_in_1, public int_out
 {
+	std::set<thread::id_t> threads_used;
+public:
+	std::size_t n_threads_used() const { return threads_used.size(); }
+		
 	pipe_t() : debug_effect_base("pipe"),
 		int_in_1((effect_t&)*this),
 		int_out((effect_t&)*this)
@@ -93,6 +98,8 @@ struct pipe_t : public debug_effect_base, public int_in_1, public int_out
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: pipe_t" << io::endl;
+		threads_used.insert(thread::);
+
 		//set_next_time(t + 1); // TODO: assertion if next time was not updated
 		set_next_time(std::numeric_limits<sample_t>::max());
 		return true;

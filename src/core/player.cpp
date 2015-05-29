@@ -284,6 +284,15 @@ void REALTIME _player_t::process(sample_t work)
 			<< " vs "
 			<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
+		work_queue_lock.lock();
+
+		// the author of this function must be proud of its name...
+		auto try_get_task = [] {
+			task_base* ret = nullptr;
+			spinlock.lock();
+
+			spinlock.unlock();
+		};
 
 		while(peek_next_task()->next_time() <= pos &&
 			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
