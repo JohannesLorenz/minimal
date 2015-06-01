@@ -38,8 +38,8 @@ void init(project_t& p)
 
 	// effects
 	start_t& start = p.emplace<start_t>();
-	pipe_t& p1 = p.emplace<pipe_t>();
-	pipe_t& p2 = p.emplace<pipe_t>();
+	pipe_t& p1 = p.emplace<pipe_t>(3);
+	pipe_t& p2 = p.emplace<pipe_t>(7);
 	in2_t& sink = p.emplace<in2_t>();
 
 	// effect connections

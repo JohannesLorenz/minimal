@@ -284,34 +284,35 @@ private:
 		void on_recv(sample_t pos)
 		{
 			io::mlog << "zyn notes port::on_recv" << io::endl;
-			for(const std::pair<int, int>& p : notes_in::data->recently_changed)
-			if(p.first < 0)
+			for(const std::pair<int, int>& rch : notes_in::data->recently_changed)
+			if(rch.first < 0)
 			 break;
 			else
 			{
 				// for self_port_t, on_recv is not virtual, so we call it manually...
-				std::pair<int, int> p2 = notes_in::data->lines[p.first][p.second];				
-				if(p2.first < 0)
+				std::pair<int, int> p2 = notes_in::data->lines[rch.first][rch.second];
+				if(p2.first < 0) // i.e. note off
 				{
 				// TODO!!
 					// note_offs[p.first].on_recv();
 
 
 
-					if(note_offs[p.first].cmd.set_changed())
+					if(note_offs[rch.first].cmd.set_changed())
 					{
-						note_offs[p.first].cmd.update_next_time(pos); // TODO: call on recv
-						ins->update(note_offs[p.first].cmd.get_handle());
+						note_offs[rch.first].cmd.update_next_time(pos); // TODO: call on recv
+						ins->update(note_offs[rch.first].cmd.get_handle());
 					}
 				}
-				else
+				else // i.e. note on
 				{
-					m_note_on_t& note_on_cmd = note_ons[p.first];
+					m_note_on_t& note_on_cmd = note_ons[rch.first];
 					// self_port_t must be completed manually:
 					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
 					note_on_cmd.cmd_ptr->command::update();
 
 					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_recv??
+
 					if(note_on_cmd.cmd.set_changed())
 					{
 						note_on_cmd.cmd.update_next_time(pos); // TODO: call on recv

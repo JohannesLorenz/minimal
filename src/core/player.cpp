@@ -284,30 +284,37 @@ void REALTIME _player_t::process(sample_t work)
 			<< " vs "
 			<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
-		work_queue_lock.lock();
-
-		// the author of this function must be proud of its name...
-		auto try_get_task = [] {
-			task_base* ret = nullptr;
-			spinlock.lock();
-
-			spinlock.unlock();
+		// the author of this function must be proud of the functions name...
+		auto try_get_task = [this](sample_t pos) -> task_effect* {
+			task_effect* ret = nullptr;
+			work_queue_lock.lock();
+			task_base* next_task = peek_next_task();
+			io::mlog << "next task: " << dynamic_cast<task_effect*>(next_task)->effect << io::endl;
+			if(next_task->next_time() <= pos
+				&& dynamic_cast<task_effect*>(next_task)->effect->cur_threads
+				< dynamic_cast<task_effect*>(next_task)->effect->max_threads)
+			 ret = dynamic_cast<task_effect*>(next_task);
+			work_queue_lock.unlock();
+			return ret;
 		};
 
-		while(peek_next_task()->next_time() <= pos &&
+
+		task_effect* task_e;
+		/*while(peek_next_task()->next_time() <= pos &&
 			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
-			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )
+			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )*/
+		while((task_e = try_get_task(pos)))
 		{
 			// TODO: simple reinsert??
 
-			task_base* top = peek_next_task();
-			task_effect* task_e = dynamic_cast<task_effect*>(top);
+			//task_base* top = peek_next_task();
+//			task_effect* task_e = dynamic_cast<task_effect*>(top);
 			effect_t* this_ef = task_e->effect;
 
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
 			 pq.push(top);*/
-			const sample_t cur_next_time = top->next_time();
+			const sample_t cur_next_time = task_e->next_time();
 
 			/*int cur_threads_afterwards = ++this_ef->cur_threads;
 			if(cur_threads_afterwards > this_ef->max_threads)
@@ -326,11 +333,11 @@ void REALTIME _player_t::process(sample_t work)
 			
 			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
 			
-			top->proceed(/*pos*/ work); // will also update the next-time event
+			task_e->proceed(/*pos*/ work); // will also update the next-time event
 
 			//handles.at(this_ef) = add_task(top);
 
-			if(++this_ef->finished_threads == this_ef->max_threads)
+			if(++this_ef->finished_threads == this_ef->max_threads) // TODO: wrong
 			{
 				// if this happens,
 				//  * we are exclusively in this if block
@@ -338,7 +345,9 @@ void REALTIME _player_t::process(sample_t work)
 				//  * no other task has access to this_ef
 
 				work_queue_lock.lock();
+				io::mlog << "update start -> " << io::endl;
 				update(task_e->get_handle());
+				io::mlog << "<- update end" << io::endl;
 				work_queue_lock.unlock();
 
 				/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)

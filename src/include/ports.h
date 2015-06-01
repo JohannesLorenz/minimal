@@ -374,11 +374,16 @@ constexpr std::size_t POLY_MAX = 16;
 struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
+	//! lines[x][y] : pair at height x, polymorphy y
+	//! first: a unique id for this note, or -1 for note off
+	//! second: volume
 	std::pair<int, int> lines[NOTES_MAX][POLY_MAX];
 
 	int changed_stamp = 0;
 
 	//! the recently switched lines
+	//! pairs geometry <-> polymorphy id
+	//! if the pair is <x,y>, it marks lines[x][y]
 	std::array<std::pair<int, int>, POLY_MAX> recently_changed;
 
 	note_signal_t() {

@@ -42,11 +42,11 @@ inline constexpr T1 gcd(T1 a, T2 b) {
 }*/
 
 template<class T1, class T2>
-inline constexpr T1 lcm(T1 a, T2 b, T3 tmp = 0)
+inline constexpr T1 lcm(T1 a, T2 b, T1 tmp = 0)
 {
 //	T1 temp = gcd(a, b);
 //	return temp ? (a / temp * b) : 0;
-	return tmp = gcd(a, b), tmp ? ( a/tmp * b ) : 0;
+	return (tmp = gcd(a, b)), tmp ? ( a/tmp * b ) : 0;
 }
 
 /**

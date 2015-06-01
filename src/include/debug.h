@@ -17,11 +17,14 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+//! @file debug.h This file contains a project for thread testing
+
 #ifndef DEBUG_H
 #define DEBUG_H
 
 #include <limits>
 #include <set>
+#include <thread>
 #include "effect.h"
 #include "ports.h"
 #include "io.h"
@@ -81,14 +84,15 @@ struct start_t : public debug_effect_base, public int_out
 
 class pipe_t : public debug_effect_base, public int_in_1, public int_out
 {
-	std::set<thread::id_t> threads_used;
+	std::set<std::thread::id> threads_used;
 public:
 	std::size_t n_threads_used() const { return threads_used.size(); }
 		
-	pipe_t() : debug_effect_base("pipe"),
+	pipe_t(std::size_t n_tasks) : debug_effect_base("pipe"),
 		int_in_1((effect_t&)*this),
 		int_out((effect_t&)*this)
 	{
+		max_threads.store(n_tasks);
 		set_next_time(std::numeric_limits<sample_t>::max());
 	}
 
@@ -98,7 +102,7 @@ public:
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
 		io::mlog << "proceed: pipe_t" << io::endl;
-		threads_used.insert(thread::);
+		threads_used.insert(std::this_thread::get_id());
 
 		//set_next_time(t + 1); // TODO: assertion if next time was not updated
 		set_next_time(std::numeric_limits<sample_t>::max());
