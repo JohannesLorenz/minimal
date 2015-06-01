@@ -140,7 +140,7 @@ bool instrument_t::_proceed(sample_t samples)
 		//io::mlog << "in port: " << i << io::endl;
 		if(in_ports[i]->update())
 		{
-			in_ports[i]->on_recv(pos);
+			in_ports[i]->on_read(pos);
 		}
 	}
 
@@ -162,7 +162,7 @@ bool instrument_t::_proceed(sample_t samples)
 		if(ipb->update())
 		{
 			no_rt::mlog << "unread changes at: " << ipb << std::endl;
-			ipb->on_recv(time);
+			ipb->on_read(time);
 			ipb->unread_changes = false;
 		}
 	}

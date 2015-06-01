@@ -47,13 +47,13 @@ struct int_out : out_port_templ<int>
 
 struct int_in_1 : in_port_templ<int>
 {
-	void on_recv(sample_t ) {}
+	void on_read(sample_t ) {}
 	using base::in_port_templ;
 };
 
 struct int_in_2 : in_port_templ<int>
 {
-	void on_recv(sample_t ) {}
+	void on_read(sample_t ) {}
 	using base::in_port_templ;
 };
 

@@ -281,20 +281,20 @@ private:
 			set_trigger(); // TODO: here?
 		}
 
-		void on_recv(sample_t pos)
+		void on_read(sample_t pos)
 		{
-			io::mlog << "zyn notes port::on_recv" << io::endl;
+			io::mlog << "zyn notes port::on_read" << io::endl;
 			for(const std::pair<int, int>& rch : notes_in::data->recently_changed)
 			if(rch.first < 0)
 			 break;
 			else
 			{
-				// for self_port_t, on_recv is not virtual, so we call it manually...
+				// for self_port_t, on_read is not virtual, so we call it manually...
 				std::pair<int, int> p2 = notes_in::data->lines[rch.first][rch.second];
 				if(p2.first < 0) // i.e. note off
 				{
 				// TODO!!
-					// note_offs[p.first].on_recv();
+					// note_offs[p.first].on_read();
 
 
 
@@ -311,7 +311,7 @@ private:
 					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
 					note_on_cmd.cmd_ptr->command::update();
 
-					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_recv??
+					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_read??
 
 					if(note_on_cmd.cmd.set_changed())
 					{
@@ -320,7 +320,7 @@ private:
 					}
 
 					// TODO!!
-					// note_on_cmd.on_recv();
+					// note_on_cmd.on_read();
 				}
 			}
 		}

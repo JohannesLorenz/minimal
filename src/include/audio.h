@@ -99,7 +99,7 @@ void operator<<(in_port_templ<multiplex<ringbuffer_reader_t>, IsDep>& ipt,
 
 struct audio_in : in_port_templ<multiplex<ringbuffer_reader_t>, true /*TODO?*/>
 {
-	void on_recv(sample_t ) {} // TODO??
+	void on_read(sample_t ) {} // TODO??
 	using base::in_port_templ;
 };
 

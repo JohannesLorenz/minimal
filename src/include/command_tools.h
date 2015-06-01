@@ -105,7 +105,7 @@ struct rtosc_in_port_t : PortType
 	{
 	}
 
-	void on_recv(sample_t time); // see below
+	void on_read(sample_t time); // see below
 //	rtosc_in_port_t(effect_t& ef) : PortType(ef) {}
 };
 
@@ -224,7 +224,7 @@ template <char ...Letters> class fixed_str {
 };
 
 template<class T>
-void rtosc_in_port_t<T>::on_recv(sample_t time)
+void rtosc_in_port_t<T>::on_read(sample_t time)
 {
 	// mark as changed
 	if(cmd->set_changed())

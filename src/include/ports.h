@@ -168,7 +168,7 @@ public:
 	bool is_precomputable() const { return _is_precomputable; } // TODO: can those be removed?
 	void set_precomputable(bool is_precomputable = true) { _is_precomputable = is_precomputable; }
 
-	virtual void on_recv(sample_t time) = 0;
+	virtual void on_read(sample_t time) = 0;
 
 	virtual const void* get_value() const = 0;
 
