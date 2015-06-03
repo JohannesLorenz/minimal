@@ -291,7 +291,21 @@ private:
 			{
 				// for self_port_t, on_read is not virtual, so we call it manually...
 				std::pair<int, int> p2 = notes_in::data->lines[rch.first][rch.second];
-				if(p2.first < 0) // i.e. note off
+				
+				auto& ipwc = (p2.first < 0) ? note_offs[rch.first] : note_ons[rch.first]; // TODO: move up?
+				if(p2.first >= 0) // i.e. note on
+				{
+					m_note_on_t& note_on_cmd = ipwc;
+					// self_port_t must be completed manually:
+					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
+					note_on_cmd.cmd_ptr->command::update();
+
+					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_read??
+				}
+				
+				auto& cmd_ref = ipwc.cmd;
+
+/*				if(p2.first < 0) // i.e. note off
 				{
 				// TODO!!
 					// note_offs[p.first].on_read();
@@ -306,13 +320,6 @@ private:
 				}
 				else // i.e. note on
 				{
-					m_note_on_t& note_on_cmd = note_ons[rch.first];
-					// self_port_t must be completed manually:
-					note_on_cmd.cmd_ptr->port_at<2>().set(p2.second);
-					note_on_cmd.cmd_ptr->command::update();
-
-					note_on_cmd.cmd_ptr->complete_buffer(); // TODO: call in on_read??
-
 					if(note_on_cmd.cmd.set_changed())
 					{
 						note_on_cmd.cmd.update_next_time(pos); // TODO: call on recv
@@ -321,7 +328,7 @@ private:
 
 					// TODO!!
 					// note_on_cmd.on_read();
-				}
+				}*/
 			}
 		}
 	};

@@ -31,7 +31,7 @@ zyn_tree_t::zyn_tree_t(const char *name) :
 {
 }
 
-std::string zynaddsubfx_t::make_start_command() const
+std::string zynaddsubfx_t::make_start_command() const // TODO: make start args
 {
 	const std::string cmd = ZYN_BINARY
 		" --no-gui -p -O alsa"; // TODO: read from options file
