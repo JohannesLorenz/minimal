@@ -166,10 +166,6 @@ public:
 class instrument_t : public effect_t, public work_queue_t
 {
 	multi_plugin_t plugin_creator;
-
-	virtual const char* library_path() const = 0;
-	virtual const std::vector<const char *> start_args() const = 0;
-	std::vector<const char *> build_start_args() const;
 protected:
 	minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
 private:

@@ -127,100 +127,6 @@ struct _port_type_of<use_no_port, T> { using type = T; };
 template<template<class , bool> class P, class T>
 using port_type_of = typename _port_type_of<P, T>::type;
 
-#ifdef NEW_PORT_TYPES
-template<char ...Chars>
-class cstr
-{
-};
-
-template<class Port, char ...Chars>
-class named_port : cstr<Chars...>
-{
-};
-
-template<int I>
-struct lookup_name;
-
-template<int I, class Search, class Content>
-struct lookup_name_dtl : util::dont_instantiate_me<Content>
-{
-};
-
-template<int I, class Search, class Port, char ...Chars>
-struct lookup_name_dtl<I, Search, std::pair<cstr<Chars...>, Port>>
-{
-	template<class Tpl>
-	static const char* exec() {
-		return lookup_name<I-1>::template exec<Tpl, Search>();
-	}
-};
-
-template<int I, class Search, char ...Chars>
-struct lookup_name_dtl<I, Search, std::pair<cstr<Chars...>, Search>>
-{
-	template<class >
-	static std::array<char, sizeof...(Chars)> exec() {
-		return { Chars... };
-	}
-};
-
-
-template<int I>
-struct lookup_name
-{
-	template<class Tpl, class Search>
-	static std::array<char, 0> exec()
-	{
-		return lookup_name_dtl<I, Search, typename std::tuple_element<I, Tpl>::type>::template exec<Tpl>();
-	}
-};
-
-template<>
-struct lookup_name<-1>
-{
-	template<class , class Search>
-	static const char* exec()
-	{
-		util::dont_instantiate_me_func<Search>();
-	}
-};
-
-namespace z
-{
-	template<class Parent>
-	struct next
-	{
-
-	};
-
-
-	template<class Parent>
-	struct insefx
-	{
-		using self = insefx<Parent>;
-		using next = next<self>;
-
-		using ports = std::tuple<std::pair<cstr<'n', 'e', 'x', 't'>, next>>;
-	};
-
-	template<class Self>
-	struct path_to_string
-	{
-		static std::string exec() { return "/"; }
-	};
-
-	template<class Parent, template<class > class Self>
-	struct path_to_string<Self<Parent>>
-	{
-		static std::string exec() {
-			// TODO: replace Self<Parent> by simply Self?
-			return lookup_name<std::tuple_size<typename Parent::ports>::value - 1>::template exec<typename Parent::ports, Self<Parent>>().data();
-		}
-	};
-
-}
-#endif
-
 class zyn_tree_t : public zyn::znode_t, public audio_instrument_t
 {
 	// todo: only send some params on new note?
@@ -430,14 +336,7 @@ public:
 
 class zynaddsubfx_t : public zyn_tree_t
 {
-	const std::vector<const char*> _start_args = {
-		"--no-gui", "-p", "-O", "alsa"
-	};
-
-	std::string make_start_command() const;
-	const char* library_path() const;
-	const std::vector<const char *> start_args() const { return _start_args; }
-
+	std::string make_start_command() const { return "/TODO"; }
 	command_base* make_close_command() const;
 
 public:

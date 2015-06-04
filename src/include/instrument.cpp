@@ -24,16 +24,6 @@
 
 namespace mini {
 
-std::vector<const char *> instrument_t::build_start_args() const
-{
-	const std::vector<const char *> _start_args = start_args();
-	std::vector<const char*> cmd_args(1 + _start_args.size());
-	cmd_args[0] = library_path();
-	for(std::size_t i = 1; i < _start_args.size(); ++i)
-	 cmd_args[1+i] = _start_args[i];
-	return cmd_args;
-}
-
 instrument_t::~instrument_t()
 {
 }
@@ -92,7 +82,7 @@ pid_t instrument_t::make_fork() // TODO rename
 void instrument_t::instantiate()
 {
 //	on_preinit();
-	plugin_creator.set_path(library_path());
+	plugin_creator.set_path("TODO");
 
 	make_fork();
 
