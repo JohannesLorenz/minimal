@@ -27,7 +27,6 @@ HEADERS += src/include/plugin.h \
 	src/include/effect.h \
 	src/include/work_queue.h \
 	src/include/note_line.h \
-	src/include/ports.h \
 	src/include/recorder.h \
 	src/include/soundfile.h \
 	src/include/jack.h \
@@ -45,7 +44,8 @@ HEADERS += src/include/plugin.h \
 	src/include/command_tools.h \
 	src/core/player.h \
 	src/include/atomic.h \
-	src/include/spinlock.h
+	src/include/spinlock.h \
+    src/include/mports.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \

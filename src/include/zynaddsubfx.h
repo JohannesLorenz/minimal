@@ -23,7 +23,7 @@
 #include <vector>
 #include "audio_instrument.h" // TODO: separate audio_instrument_t ?
 #include "command_tools.h"
-#include "ports.h"
+#include "mports.h"
 //#include "impl.h" // currently unused
 #include "io.h"
 

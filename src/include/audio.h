@@ -21,9 +21,9 @@
 #define AUDIO_H
 
 #include <jack/types.h>
-#include <ringbuffer/src/lib/ringbuffer.h>
+#include <ringbuffer/ringbuffer.h>
 
-#include "ports.h"
+#include "mports.h"
 #include "utils.h"
 
 namespace mini

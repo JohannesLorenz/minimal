@@ -17,5 +17,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/minimal.pc.in
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/minimal.pc"
 	DESTINATION "${INSTALL_LIB_DIR}/pkgconfig")
 
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/version.h"
+		"${CMAKE_CURRENT_BINARY_DIR}/config.h"
+		DESTINATION "${INSTALL_INC_DIR}/ringbuffer")
+# ^ TODO: into common files
+
 #cp_script(test.sh)
 

@@ -26,7 +26,7 @@
 #include <set>
 #include <thread>
 #include "effect.h"
-#include "ports.h"
+#include "mports.h"
 #include "io.h"
 
 namespace mini

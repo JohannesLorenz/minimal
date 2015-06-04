@@ -20,7 +20,7 @@
 #include "command.h"
 #include "instrument.h"
 #include "io.h"
-#include "ports.h"
+#include "mports.h"
 
 namespace mini {
 
