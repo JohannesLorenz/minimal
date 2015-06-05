@@ -77,7 +77,7 @@ private:
 protected:
 	//! should advance the effect s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool _proceed(sample_t samples) = 0;
+	virtual bool _proceed(sample_t samples) = 0; // TODO: private?
 	void set_next_time(sample_t next) { next_time = next; }
 public:
 	// TODO: private, access functions

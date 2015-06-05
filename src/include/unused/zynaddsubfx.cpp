@@ -17,9 +17,9 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <fstream>
+//#include <fstream>
 
-#include "config.h"
+//#include "config.h"
 #include "zynaddsubfx.h"
 
 namespace mini {

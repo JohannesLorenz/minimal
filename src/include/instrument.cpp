@@ -66,25 +66,10 @@ bool _get_input(const char* shell_command, pid_t* _childs_pid)
 	return true;
 }
 
-pid_t instrument_t::make_fork() // TODO rename
-{
-/*	const std::vector<const char*> cmds = build_start_args();
-	typedef char* argv_t[];
-	plugin.call<int, int, argv_t>("main", cmds.size(), cmds.data());
-*/
-	plugin = plugin_creator.call<minimal_plugin*, unsigned long>("instantiate", 1024);
-	if(plugin == nullptr)
-	 throw "plugin is null, could not be loaded";
-	plugin->prepare();
-	return 0;
-}
-
 void instrument_t::instantiate()
 {
 //	on_preinit();
-	plugin_creator.set_path("TODO");
-
-	make_fork();
+	instantiate_first();
 
 	set_next_time(std::numeric_limits<sample_t>::max());
 
@@ -138,7 +123,8 @@ bool instrument_t::_proceed(sample_t samples)
 	work_queue_t::run_tasks_keep(pos);
 
 	// actually do the work
-	return plugin->proceed(samples);
+	//return plugin->proceed(samples);
+	return advance(samples);
 
 //	// all ports are triggers, so sleep
 //	return std::numeric_limits<sample_t>::max();
@@ -174,6 +160,22 @@ void node_t_base::preinit() {
 			pr.second->on_preinit();
 		}
 }
+
+#if 0
+void plugin_instrument::instantiate_first()
+{
+	/*	const std::vector<const char*> cmds = build_start_args();
+	typedef char* argv_t[];
+	plugin.call<int, int, argv_t>("main", cmds.size(), cmds.data());
+	*/
+	set_path("TODO");
+	call<minimal_plugin*, unsigned long>("instantiate", 1024);
+	if(plugin == nullptr)
+	 throw "plugin is null, could not be loaded";
+	plugin->prepare();
+	return 0;
+}
+#endif
 
 /*instrument_t *instrument_t::clone() const
 {

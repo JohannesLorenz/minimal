@@ -29,7 +29,7 @@
 #include "utils.h"
 #include "effect.h"
 #include "work_queue.h"
-#include "minimal_plugin.h"
+//#include "minimal_plugin.h"
 #include "port_fwd.h"
 
 namespace mini
@@ -167,16 +167,20 @@ class instrument_t : public effect_t, public work_queue_t
 {
 	multi_plugin_t plugin_creator;
 protected:
-	minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
+	//minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
 private:
 	std::vector<const command_base*> const_commands;
 
 	const std::vector<bool>* cp;
 	pid_t make_fork();
+
+	//! should advance the instrument s.t. at least @a samples samples
+	//! are computed in all out ports
+	virtual bool advance(sample_t samples) = 0;
 public:
 	using effect_t::effect_t;
 
-	minimal_plugin** get_plugin_ptr() { return &plugin; }
+	//minimal_plugin** get_plugin_ptr() { return &plugin; }
 
 	virtual void init_2() = 0;
 	void instantiate();
@@ -193,7 +197,7 @@ public:
 
 //	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
 	//! should create OSC commands which cause the plugin to clean up as
-	//! much as it requireds
+	//! much as it requires
 	virtual command_base *make_close_command() const = 0;
 
 	//! should create an OSC command which will cause the plugin to
@@ -202,7 +206,14 @@ public:
 
 	void clean_up();
 
-	bool _proceed(sample_t samples);
+	bool _proceed(sample_t samples) final;
+
+	virtual void instantiate_first() = 0;
+};
+
+class plugin_instrument : public instrument_t, public multi_plugin_t
+{
+	void instantiate_first();
 };
 
 }

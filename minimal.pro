@@ -21,7 +21,6 @@ HEADERS += src/include/plugin.h \
 	src/include/util.h \
 	src/include/lfo.h \
 	src/include/types.h \
-	src/include/zynaddsubfx.h \
 	src/include/osc_string.h \
 	src/include/command.h \
 	src/include/effect.h \
@@ -45,7 +44,7 @@ HEADERS += src/include/plugin.h \
 	src/core/player.h \
 	src/include/atomic.h \
 	src/include/spinlock.h \
-    src/include/mports.h
+	src/include/mports.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
@@ -54,7 +53,6 @@ SOURCES += src/core/main.cpp \
 	src/include/instrument.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
-	src/include/zynaddsubfx.cpp \
 	src/include/osc_string.cpp \
 	src/include/note_line.cpp \
 	src/include/command.cpp \
@@ -71,7 +69,7 @@ SOURCES += src/core/main.cpp \
 	src/core/jack_engine.cpp \
 	src/include/fraction.cpp \
 	src/songs/debug_proj.cpp \
-    src/core/player.cpp
+	src/core/player.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \
