@@ -22,7 +22,8 @@
 #include "project.h"
 #include "lfo.h"
 #include "osc_string.h"
-#include "zynaddsubfx.h"
+#include "command.h"
+//#include "zynaddsubfx.h"
 #include "io.h"
 
 using namespace mini;
@@ -58,13 +59,12 @@ int main()
 	//	no_rt::mlog << "pad size: " << mini::pad_size<vint>::value() << std::endl;
 
 
-
+#if OLD_ZYN
 		using m_note_on_t = zynaddsubfx_t::note_on<use_no_port, use_no_port, self_port_templ>;
 
 		zynaddsubfx_t z("hello world!");
 		m_note_on_t non(&z, 0, 1, self_port_templ<int, true>{});
 		non.cmd_ptr->buffer().inspect(no_rt::mlog);
-
 
 
 		non.cmd_ptr->port_at<2>().set(99);
@@ -75,7 +75,7 @@ int main()
 
 		non.cmd_ptr->complete_buffer();
 		non.cmd_ptr->buffer().inspect(no_rt::mlog);
-		
+#endif
 		
 		command<const char*> str_cmd("/string", "hello world!");
 		str_cmd.buffer().inspect(no_rt::mlog);

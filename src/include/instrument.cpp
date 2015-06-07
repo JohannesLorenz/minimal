@@ -74,7 +74,7 @@ void instrument_t::instantiate()
 	set_next_time(std::numeric_limits<sample_t>::max());
 
 	for(const command_base* cmd : const_commands)
-	 plugin->send_osc_cmd(cmd->buffer().raw());
+	 /*plugin->*/send_osc_cmd(cmd->buffer().raw());
 
 	init_2();
 }
@@ -93,7 +93,7 @@ void instrument_t::clean_up()
 {
 	{
 		command_base* close_command = make_close_command(); // TODO: auto ptr
-		plugin->send_osc_cmd(close_command->buffer().raw());
+		/*plugin->*/send_osc_cmd(close_command->buffer().raw());
 		delete close_command;
 	}
 

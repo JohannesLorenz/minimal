@@ -203,11 +203,15 @@ public:
 	//! should create an OSC command which will cause the plugin to
 	//! initialize, as much as the plugin requires
 	virtual std::string make_start_command() const = 0;
+	
+	//! shall send the OSC string @a cmd to the plugin
+	virtual void send_osc_cmd(const char* cmd) const = 0;
 
 	void clean_up();
 
 	bool _proceed(sample_t samples) final;
-
+	
+	// this will be instantiated before the instrument will be
 	virtual void instantiate_first() = 0;
 };
 
