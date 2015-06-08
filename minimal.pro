@@ -49,7 +49,6 @@ HEADERS += src/include/plugin.h \
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
 	src/include/project.cpp \
-	src/songs/demo.cpp \
 	src/include/instrument.cpp \
 	src/core/lfo.cpp \
 	src/test/test_str.cpp \
