@@ -26,6 +26,7 @@ namespace mini {
 
 //! signed int of at least 64 bit
 using sample_t = int_least64_t;
+using sample_rate_t = sample_t;
 
 inline sample_t operator"" _smps(unsigned long long int n) { return n; }
 

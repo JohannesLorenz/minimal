@@ -42,10 +42,10 @@ class prioritized_command : public prioritized_command_base
 {
 	bool changed = false;
 protected:
-	minimal_plugin** plugin; // TODO: single pointer would be cool...
+	instrument_t** plugin; // TODO: single pointer would be cool...
 public:
 	prioritized_command(std::size_t priority, sample_t next_time,
-		minimal_plugin** plugin) :
+		instrument_t** plugin) :
 		prioritized_command_base(priority, next_time),
 		plugin(plugin)
 	{
@@ -74,7 +74,7 @@ class prioritized_command_cmd : public prioritized_command
 public:
 	command_base* cmd; // TODO: does command_base suffice?
 	prioritized_command_cmd(work_queue_t* w,
-		std::size_t priority, sample_t next_time, minimal_plugin** plugin,
+		std::size_t priority, sample_t next_time, instrument_t** plugin,
 		command_base* cmd) :
 		prioritized_command(priority, next_time, plugin),
 		w(w),
@@ -135,7 +135,7 @@ using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), In
 template<std::size_t N, std::size_t I = 0>
 struct init_port {
 	template<class InsType, class CmdType>
-	static void exec(InsType& ins, CmdType& cmd, minimal_plugin** plugin)
+	static void exec(InsType& ins, CmdType& cmd, instrument_t** plugin)
 	{
 		cmd.cmd->template port_at<I>().set_trigger();
 		cmd.cmd->template port_at<I>().ins = ins;
@@ -149,7 +149,7 @@ struct init_port {
 template<std::size_t N>
 struct init_port<N, N> {
 	template<class InsType, class CmdType>
-	static void exec(const InsType& , const CmdType& , const minimal_plugin** ) {}
+	static void exec(const InsType& , const CmdType& , const instrument_t** ) {}
 };
 
 template<class Ins, class Cmd>
@@ -184,7 +184,7 @@ public:
 	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
 		node_t<void>(ins, base, ext),
 		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
-		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins->get_plugin_ptr(), cmd_ptr)
+		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, &ins, cmd_ptr)
 	{
 		/*cmd.cmd->template port_at<0>().set_trigger();
 		cmd.cmd->template port_at<0>().ins = ins;
