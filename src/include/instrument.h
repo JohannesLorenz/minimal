@@ -205,7 +205,7 @@ public:
 	virtual std::string make_start_command() const = 0;
 	
 	//! shall send the OSC string @a cmd to the plugin
-	virtual void send_osc_cmd(const char* cmd) const = 0;
+    virtual void send_osc_cmd(const char* cmd) = 0;
 
 	void clean_up();
 

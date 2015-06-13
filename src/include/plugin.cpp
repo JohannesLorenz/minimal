@@ -36,7 +36,7 @@ plugin_t::plugin_t(const char *path)
 	no_rt::mlog << "Opening plugin: " << path << std::endl;
 
 	// valgrind memory leak is not our fault:
-	handle = dlopen(path, RTLD_LAZY);
+	handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 	if(!handle)
 	 throw dlerror();
 }
@@ -75,7 +75,7 @@ void cp_file(const char* dst_name, const char* src_name)
 
 void* multi_plugin_t::get_funcptr(const char* funcname)
 {
-	int dlopen_mode = RTLD_NOW | RTLD_LOCAL;
+	int dlopen_mode = RTLD_NOW | RTLD_GLOBAL;
 	const char* tmp_name;
 
 	// use RTLD_PRIVATE or copy the library

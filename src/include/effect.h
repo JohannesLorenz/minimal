@@ -56,6 +56,7 @@ public:
 	static constexpr std::size_t no_id() { return -1; }
 };
 
+//! a node in the sequencers graph
 class effect_t : util::non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
@@ -78,8 +79,10 @@ protected:
 	//! should advance the effect s.t. at least @a samples samples
 	//! are computed in all out ports
 	virtual bool _proceed(sample_t samples) = 0; // TODO: private?
-	void set_next_time(sample_t next) { next_time = next; }
+	void set_next_time(sample_t next);
 public:
+	void init_next_time(sample_t next);
+
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
 	atomic_def<int, 1> max_threads; // TODO: uint16_t
@@ -145,7 +148,7 @@ class sentinel_effect : public effect_t
 public:
 	sentinel_effect(const id_t& id) : effect_t("sentinel") {
 		set_id(id);
-		set_next_time(std::numeric_limits<sample_t>::max());
+		init_next_time(std::numeric_limits<sample_t>::max());
 	}
 	bool _proceed(sample_t ) { throw "impossible"; return true; }
 	void instantiate() {}

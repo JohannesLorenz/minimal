@@ -25,6 +25,7 @@
 #include "sample.h"
 #include "bars.h"
 #include "spinlock.h"
+#include "io.h"
 
 namespace mini {
 
@@ -100,7 +101,7 @@ class _player_t : public work_queue_t // TODO: own header
 	{
 	//	const instrument_t* ins;
 	public:
-		effect_t* effect;
+		effect_t* const effect;
 		std::vector<task_effect*> in_efcs, out_efcs;
 		//const command_base* cmd;
 	public:
@@ -113,7 +114,7 @@ class _player_t : public work_queue_t // TODO: own header
 
 		void proceed(sample_t time)
 		{
-			if(effect->proceed(time))
+			if(effect->proceed(time) && true)
 			{
 				update_next_time(effect->get_next_time());
 			}
@@ -132,11 +133,19 @@ class _player_t : public work_queue_t // TODO: own header
 			//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
 			const effect_t* const o_effect = dynamic_cast<const task_effect&>(other).effect;
 
+			if(&other == this)
+			 io::mlog << "equal fx compared..." << io::endl;
+
 			bars_t b_self(effect->cur_threads, effect->max_threads),
 				b_other(o_effect->cur_threads, o_effect->max_threads);
 			
+			io::mlog << "bars: " << b_self << " vs " << b_other << ": " <<
+					(b_self == b_other) << ", " << (b_self > b_other) << std::endl;
+
 			// strict ordering is guaranteed (!)
-			return (b_self == b_other) ? effect->id() > o_effect->id() : (b_self < b_other);
+			return (b_self == b_other) // don't bother about b_other?
+				? effect->id() > o_effect->id() // take smaller id
+				: (b_self > b_other); // take smaller bar
 			
 		}
 

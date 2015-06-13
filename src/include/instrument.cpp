@@ -105,6 +105,8 @@ void instrument_t::clean_up()
 
 bool instrument_t::_proceed(sample_t samples)
 {
+	std::cerr << "Proceeding with effect no " << id() << std::endl;
+
 	if(work_queue_t::has_active_tasks(pos))
 	 throw "should not have active tasks yet";
 

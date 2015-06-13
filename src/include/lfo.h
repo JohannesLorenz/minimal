@@ -102,7 +102,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		repeat((end - start)/times),
 		premult(2 * M_PI/(end - start))
 	{
-		set_next_time(0.0f); // must be set initially, even if 0.0f < start
+		init_next_time(0.0f); // must be set initially, even if 0.0f < start
 	}
 };
 

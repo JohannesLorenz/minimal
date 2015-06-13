@@ -260,7 +260,8 @@ void _player_t::play_until(sample_t dest)
 		process(pos); // TODO: not 0
 		io::mlog << "done: " << pos << io::endl;
 		io::mlog << "next: " << next_task_time() << io::endl;
-		io::mlog << "next name: " << ((task_effect*)peek_next_task())->effect->name() << io::endl;
+		io::mlog << "next name / id: " << ((task_effect*)peek_next_task())->effect->name() << " / "
+			<< ((task_effect*)peek_next_task())->effect->id() << io::endl;
 	}
 
 	// no more tasks possible, so:
@@ -270,130 +271,139 @@ void _player_t::play_until(sample_t dest)
 //! the "heart" of minimal
 void REALTIME _player_t::process(sample_t work)
 {
-		(void)work; // TODO
-		
-//		const auto& has_active_tasks = []() -> bool {
-//			
-//		}
+	(void)work; // TODO
 
-		// TODO: thread repeater
+//	const auto& has_active_tasks = []() -> bool {
+//
+//	}
 
-		// TODO: always spinlock the work queue!!!!
+	// TODO: thread repeater
 
-		io::mlog << dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
-			<< " vs "
-			<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
+	// TODO: always spinlock the work queue!!!!
 
-		// the author of this function must be proud of the functions name...
-		auto try_get_task = [this](sample_t pos) -> task_effect* {
-			task_effect* ret = nullptr;
-			work_queue_lock.lock();
-			task_base* next_task = peek_next_task();
-			io::mlog << "next task: " << dynamic_cast<task_effect*>(next_task)->effect << io::endl;
-			if(next_task->next_time() <= pos
-				&& dynamic_cast<task_effect*>(next_task)->effect->cur_threads
-				< dynamic_cast<task_effect*>(next_task)->effect->max_threads)
-			 ret = dynamic_cast<task_effect*>(next_task);
-			work_queue_lock.unlock();
-			return ret;
-		};
+	io::mlog << dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
+		<< " vs "
+		<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
+
+	// the author of this function must be proud of the functions name...
+	auto try_get_task = [this](sample_t pos) -> task_effect* {
+		task_effect* ret = nullptr;
+		work_queue_lock.lock();
+		task_base* next_task = peek_next_task();
+		io::mlog << "next task: " << dynamic_cast<task_effect*>(next_task)->effect->id() << io::endl
+			<< "at time: " << next_task->next_time() << io::endl;
+		if(next_task->next_time() <= pos
+			&& dynamic_cast<task_effect*>(next_task)->effect->cur_threads
+			< dynamic_cast<task_effect*>(next_task)->effect->max_threads)
+		 ret = dynamic_cast<task_effect*>(next_task);
+		work_queue_lock.unlock();
+		io::mlog << "acceptable? "
+			<< ret << io::endl;
+		return ret;
+	};
 
 
-		task_effect* task_e;
-		/*while(peek_next_task()->next_time() <= pos &&
-			dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
-			< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )*/
-		while((task_e = try_get_task(pos)))
-		{
-			// TODO: simple reinsert??
+	task_effect* task_e;
+	/*while(peek_next_task()->next_time() <= pos &&
+		dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
+		< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )*/
+	while((task_e = try_get_task(pos)))
+	{
+		// TODO: simple reinsert??
 
-			//task_base* top = peek_next_task();
+		//task_base* top = peek_next_task();
 //			task_effect* task_e = dynamic_cast<task_effect*>(top);
-			effect_t* this_ef = task_e->effect;
+		effect_t* this_ef = task_e->effect;
 
-			/*const bool reinsert = top->proceed(pos);
-			if(reinsert)
-			 pq.push(top);*/
-			const sample_t cur_next_time = task_e->next_time();
+		/*const bool reinsert = top->proceed(pos);
+		if(reinsert)
+		 pq.push(top);*/
+		const sample_t cur_next_time = task_e->next_time();
 
-			/*int cur_threads_afterwards = ++this_ef->cur_threads;
-			if(cur_threads_afterwards > this_ef->max_threads)
+		/*int cur_threads_afterwards = ++this_ef->cur_threads;
+		if(cur_threads_afterwards > this_ef->max_threads)
+		{
+			// => argh, should not happen
+
+			// if this happens,
+			//  1. we are exclusively in this if
+			//  2. all other threads have left this effect
+		}*/
+		++this_ef->cur_threads;
+
+		this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
+
+
+
+		io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
+
+		task_e->proceed(/*pos*/ work); // will also update the next-time event
+
+		//handles.at(this_ef) = add_task(top);
+
+		// update pq, since #finished_threads has changed
+		work_queue_lock.lock();
+		io::mlog << "update start -> " << io::endl;
+		update(task_e->get_handle());
+		io::mlog << "<- update end" << io::endl;
+		work_queue_lock.unlock();
+
+
+		if(++this_ef->finished_threads == this_ef->max_threads) // TODO: wrong
+		{
+			io::mlog << "REACHED MAX TASKS!" << io::endl;
+			// if this happens,
+			//  * we are exclusively in this if block
+			//  * all threads (including ours) are finished
+			//  * no other task has access to this_ef
+
+			/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
 			{
-				// => argh, should not happen
-
-				// if this happens,
-				//  1. we are exclusively in this if
-				//  2. all other threads have left this effect
+				handle_type h = handles.at(dep);
+				(*h)->update_next_time(cur_next_time);
+				update(h);
 			}*/
-			++this_ef->cur_threads;
 
-			this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
-			
-			
-			
-			io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
-			
-			task_e->proceed(/*pos*/ work); // will also update the next-time event
 
-			//handles.at(this_ef) = add_task(top);
-
-			if(++this_ef->finished_threads == this_ef->max_threads) // TODO: wrong
+			std::size_t count = 0;
+			// TODO: effect should give us this array...
+			for(const out_port_base* op  : this_ef->get_out_ports())
 			{
-				// if this happens,
-				//  * we are exclusively in this if block
-				//  * all threads (including ours) are finished
-				//  * no other task has access to this_ef
-
-				work_queue_lock.lock();
-				io::mlog << "update start -> " << io::endl;
-				update(task_e->get_handle());
-				io::mlog << "<- update end" << io::endl;
-				work_queue_lock.unlock();
-
-				/*for(const effect_t* dep : reinterpret_cast<task_effect*>(top)->effect->deps)
+			// TODO! only dependencys...
+			if(op->change_stamp <= pos)
+			{
+				for(in_port_base* target_ip : op->readers)
 				{
-					handle_type h = handles.at(dep);
-					(*h)->update_next_time(cur_next_time);
+				//	TODO: check this!!!
+					effect_t* target_ef = target_ip->e;
+
+					changed_ports[target_ef->id()][target_ip->id] = true;
+					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
+
+					//handle_type h = handles.at(target_ef);
+					handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
+					task_base* te = *h;
+
+				//	te->effect
+					dynamic_cast<task_effect*>(te)->effect->init_next_time(cur_next_time);
+					te->update_next_time(cur_next_time);
+					io::mlog << "next time: " << cur_next_time << io::endl;
+
+					work_queue_lock.lock();
 					update(h);
-				}*/
-
-
-				std::size_t count = 0;
-				// TODO: effect should give us this array...
-				for(const out_port_base* op  : this_ef->get_out_ports())
-				{
-				// TODO! only dependencys...
-				if(op->change_stamp <= pos)
-				{
-					for(in_port_base* target_ip : op->readers)
-					{
-					//	TODO: check this!!!
-						effect_t* target_ef = target_ip->e;
-
-						changed_ports[target_ef->id()][target_ip->id] = true;
-						// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
-
-						//handle_type h = handles.at(target_ef);
-						handle_type h = task_e->out_efcs[count++]->get_handle(); //target_ef
-						task_base* te = *h;
-
-					//	te->effect
-						te->update_next_time(cur_next_time);
-						io::mlog << "next time: " << cur_next_time << io::endl;
-
-						work_queue_lock.lock();
-						update(h);
-						work_queue_lock.unlock();
-					}
+					work_queue_lock.unlock();
 				}
-				else
-				 count +=op->readers.size();
-				}
-
-				this_ef->finished_threads.store(0);
-				this_ef->cur_threads.store(0);
 			}
-		} // while has active tasks at this time
+			else
+			 count +=op->readers.size();
+			}
+
+			this_ef->finished_threads.store(0);
+			this_ef->cur_threads.store(0);
+		}
+		else
+		 io::mlog << "NOT REACHED MAX TASKS!" << io::endl;
+	} // while has active tasks at this time
 }
 
 }

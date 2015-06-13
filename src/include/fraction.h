@@ -111,6 +111,13 @@ public:
 		return n * (l/d) < other.n * (l/other.d);
 	}
 
+	// TODO: code duplication, see above
+	bool operator>(const fraction_t& other) const {
+		num_t l = lcm(d, other.d);
+		// TODO: shortening for if d>o.d && n<o.n and the opposite?
+		return n * (l/d) > other.n * (l/other.d);
+	}
+
 	fraction_t operator-() const { return fraction_t(-n, d); }
 	template<class N, class D>
 	friend fraction_t<N, D> operator+(

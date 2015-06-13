@@ -17,44 +17,11 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include "effect.h"
-#include "io.h"
-#include "mports.h"
+#include "debug.h"
 
 namespace mini {
 
-void effect_t::set_next_time(sample_t next)
-{
-	if(finished_threads >= max_threads - 1) { // TODO: check atomacity...
-		io::mlog << "OK: only finished threads " << finished_threads
-			<< " of " << max_threads << io::endl;
-		next_time = next;
-	}
-	else
-	 io::mlog << "WARNING: only finished threads " << finished_threads
-		<< " of " << max_threads << io::endl;
-}
-
-void effect_t::init_next_time(sample_t next)
-{
-	io::mlog << "NOTE: init_next_time" << io::endl;
-	if(!finished_threads) // TODO: check atomacity...
-		next_time = next;
-}
-
-void effect_t::add_in_port(mini::in_port_base *ipb) {
-	ipb->id = in_ports.size();
-	io::mlog << "Adding in port: " << ipb
-		 << ", stamp: " << ipb->change_stamp
-		 << ", id: " << ipb->id << io::endl;
-	in_ports.push_back(ipb);
-}
-
-void effect_t::add_out_port(mini::out_port_base *opb) {
-	out_ports.push_back(opb);
-}
-
-void effect_t::proceed_message() {
-	io::mlog << "proceeding with effect " << id() << io::endl; }
+atomic_def<int, 0> pipe_t::counter;
 
 }
+

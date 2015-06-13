@@ -25,6 +25,7 @@
 #include <limits>
 #include <set>
 #include <thread>
+#include "atomic.h"
 #include "effect.h"
 #include "mports.h"
 #include "io.h"
@@ -68,7 +69,7 @@ struct start_t : public debug_effect_base, public int_out
 {
 	start_t() : debug_effect_base("start"), int_out((effect_t&)*this)
 	{
-		set_next_time(0);
+		init_next_time(0);
 	}
 
 	void instantiate() {}
@@ -93,18 +94,28 @@ public:
 		int_out((effect_t&)*this)
 	{
 		max_threads.store(n_tasks);
-		set_next_time(std::numeric_limits<sample_t>::max());
+		init_next_time(std::numeric_limits<sample_t>::max());
+
+		sum_this.store(0);
 	}
 
 	void instantiate() {}
 	void clean_up() {}
 
+	static atomic_def<int, 0> counter;
+	std::atomic<int> sum_this;
+
 	// this will be only called on startup
 	bool _proceed(sample_t ) {
+
+		sum_this += (++counter);
+
 		io::mlog << "proceed: pipe_t" << io::endl;
 		threads_used.insert(std::this_thread::get_id());
 
 		//set_next_time(t + 1); // TODO: assertion if next time was not updated
+
+		// TODO: find a way that this is only allowed when all threads are finished
 		set_next_time(std::numeric_limits<sample_t>::max());
 		return true;
 	}
@@ -116,7 +127,7 @@ struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 		int_in_1((effect_t&)*this),
 		int_in_2((effect_t&)*this)
 	{
-		set_next_time(std::numeric_limits<sample_t>::max());
+		init_next_time(std::numeric_limits<sample_t>::max());
 	}
 
 	void instantiate() {}
