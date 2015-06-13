@@ -68,6 +68,7 @@ void dump_error(const char* error_str)
 
 int main(int argc, char** argv)
 {
+	int errors = 0;
 	try {
 		main_init();
 
@@ -87,14 +88,18 @@ int main(int argc, char** argv)
 		eng.play_until(5_1);
 
 	} catch(const char* msg) {
-		dump_error(msg);
+		++errors; dump_error(msg);
 	} catch(std::string msg) {
-		dump_error(msg.c_str());
+		++errors; dump_error(msg.c_str());
 	} catch(std::exception e) {
-		no_rt::mlog << "Caught std::exception: " << e.what() << std::endl;
+		++errors;
+		no_rt::mlog << "Caught std::exception: " << e.what()
+			<< std::endl;
 	} catch(...) {
-		dump_error("unimplemented exception type");
+		++errors; dump_error("unimplemented exception type");
 	}
 
-	return EXIT_SUCCESS;
+	return errors
+		? EXIT_FAILURE
+		: EXIT_SUCCESS;
 }

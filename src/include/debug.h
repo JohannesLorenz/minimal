@@ -22,24 +22,14 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <limits>
 #include <set>
 #include <thread>
 #include "atomic.h"
 #include "effect.h"
 #include "mports.h"
-#include "io.h"
 
 namespace mini
 {
-
-/*template<class OutType = float>
-struct lfo_t;
-
-template<class OutType = float>
-struct lfo_con : ef_con_t<lfo_t<OutType>>, public port_chain<freq_lfo_out<OutType>>
-{
-};*/
 
 struct int_out : out_port_templ<int>
 {
@@ -67,37 +57,24 @@ struct debug_effect_base : public effect_t
 
 struct start_t : public debug_effect_base, public int_out
 {
-	start_t() : debug_effect_base("start"), int_out((effect_t&)*this)
-	{
-		init_next_time(0);
-	}
+	start_t();
 
 	void instantiate() {}
 	void clean_up() {}
 
-	// this will be only called on startup
-	bool _proceed(sample_t ) {
-		io::mlog << "proceed: start_t" << io::endl;
-		set_next_time(std::numeric_limits<sample_t>::max());
-		return true;
-	}
+	// this will only be called on startup
+	bool _proceed(sample_t );
 };
 
 class pipe_t : public debug_effect_base, public int_in_1, public int_out
 {
 	std::set<std::thread::id> threads_used;
+	const int expected;
 public:
 	std::size_t n_threads_used() const { return threads_used.size(); }
 		
-	pipe_t(std::size_t n_tasks) : debug_effect_base("pipe"),
-		int_in_1((effect_t&)*this),
-		int_out((effect_t&)*this)
-	{
-		max_threads.store(n_tasks);
-		init_next_time(std::numeric_limits<sample_t>::max());
-
-		sum_this.store(0);
-	}
+	pipe_t(std::size_t n_tasks, int expected);
+	~pipe_t();
 
 	void instantiate() {}
 	void clean_up() {}
@@ -106,40 +83,18 @@ public:
 	std::atomic<int> sum_this;
 
 	// this will be only called on startup
-	bool _proceed(sample_t ) {
-
-		sum_this += (++counter);
-
-		io::mlog << "proceed: pipe_t" << io::endl;
-		threads_used.insert(std::this_thread::get_id());
-
-		//set_next_time(t + 1); // TODO: assertion if next time was not updated
-
-		// TODO: find a way that this is only allowed when all threads are finished
-		set_next_time(std::numeric_limits<sample_t>::max());
-		return true;
-	}
+	bool _proceed(sample_t );
 };
 
 struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 {
-	in2_t() : debug_effect_base("sink"),
-		int_in_1((effect_t&)*this),
-		int_in_2((effect_t&)*this)
-	{
-		init_next_time(std::numeric_limits<sample_t>::max());
-	}
+	in2_t();
 
 	void instantiate() {}
 	void clean_up() {}
 
-	// this will be only called on startup
-	bool _proceed(sample_t ) {
-		io::mlog << "proceed: in2_t" << io::endl;
-		//set_next_time(t + 1);
-		set_next_time(std::numeric_limits<sample_t>::max());
-		return true;
-	}
+	// this will be only called on startup // -> ??
+	bool _proceed(sample_t );
 };
 
 }

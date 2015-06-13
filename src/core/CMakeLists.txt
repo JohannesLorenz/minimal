@@ -15,3 +15,5 @@ target_link_libraries(minimal-bin minimal threadpool ${AUDIO_LIBRARIES})
 install(TARGETS minimal-bin
 	RUNTIME DESTINATION bin)
 
+add_test(scheduler minimal ../songs/libdebug_proj.so)
+

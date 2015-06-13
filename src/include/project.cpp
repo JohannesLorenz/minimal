@@ -28,8 +28,8 @@ project_t::project_t()
 
 project_t::~project_t()
 {
-//	for(const instrument_t* ins : _instruments)
-//	 delete ins;
+	for(const effect_t* ef : effects())
+	 delete ef;
 }
 
 void project_t::finalize()
