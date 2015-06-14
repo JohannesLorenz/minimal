@@ -35,7 +35,7 @@ public:
 	jack_player_t();
 	void instantiate();
 	void clean_up() {} // TODO??
-	bool _proceed(sample_t );
+	bool _proceed(sample_no_t );
 };
 
 }

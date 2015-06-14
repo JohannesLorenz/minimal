@@ -100,7 +100,7 @@ public:
 	num_t floor() const { return n/d; }
 	//! returns the rest of dividing n/d
 	fraction_t rest() const { return fraction_t(n%d, d); }
-	//sample_t ceil() const { r } TODO: this is not just n/d + 1
+	//sample_no_t ceil() const { r } TODO: this is not just n/d + 1
 
 	num_t numerator() const { return n; }
 	denom_t denominator() const { return d; }

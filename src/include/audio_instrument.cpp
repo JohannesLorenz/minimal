@@ -43,7 +43,7 @@ int audio_instrument_t::process (jack_nframes_t /*nframes*/)
 	}
 	}
 #endif
-	std::size_t to_write = nframes * sizeof(jack_default_audio_sample_t);
+	std::size_t to_write = nframes * sizeof(jack_default_audio_sample_no_t);
 
 	if(data[0].write_space() < to_write
 		|| data[1].write_space() < to_write)

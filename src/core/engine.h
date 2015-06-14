@@ -72,7 +72,7 @@ public:
 
 	void load_project(project_t &pro);
 
-	void proceed(sample_t samples);
+	void proceed(sample_no_t samples);
 
 	void play_until(bars_t end);
 

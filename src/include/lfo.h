@@ -37,7 +37,7 @@ struct lfo_con : ef_con_t<lfo_t<OutType>>, public port_chain<freq_lfo_out<OutTyp
 {
 };*/
 
-constexpr sample_t default_lfo_step = 441;
+constexpr sample_no_t default_lfo_step = 441;
 
 enum class lfo_type
 {
@@ -50,10 +50,10 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 {
 	//using base = port_chain<lfo_out<OutType>>;
 	const float min, max, mm2, middle;
-	const sample_t start, end;
+	const sample_no_t start, end;
 	const float times;
 	const float outside;
-	const sample_t step;
+	const sample_no_t step;
 	const float repeat; // unused
 	const float premult;
 	//float time =
@@ -63,7 +63,7 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	void instantiate() {}
 	void clean_up() {}
 
-	bool _proceed(sample_t time)
+	bool _proceed(sample_no_t time)
 	{
 		io::mlog << "proceeding with lfo... " << io::endl;
 		if(time < start) {
@@ -81,13 +81,13 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 		else
 		{
 			freq_lfo_out<OutType>::set(outside, time);
-			set_next_time(std::numeric_limits<sample_t>::max());
+			set_next_time(std::numeric_limits<sample_no_t>::max());
 		}
 		return true; // LFO is always single threaded
 	//	return 0.0f; // TODO
 	}
 
-	lfo_t(float min, float max, sample_t start, sample_t end, float times = 1.0f, float outside = 0.0f, sample_t step = default_lfo_step) :
+	lfo_t(float min, float max, sample_no_t start, sample_no_t end, float times = 1.0f, float outside = 0.0f, sample_no_t step = default_lfo_step) :
 		effect_t(std::tuple<freq_lfo_out<OutType>&>{*this}),
 		freq_lfo_out<OutType>((effect_t&)*this),
 		min(min),
@@ -120,9 +120,9 @@ struct constant : effect_t, freq_lfo_out<OutType>
 	void clean_up() {}
 
 	// this will be only called on startup
-	bool _proceed(sample_t ) {
+	bool _proceed(sample_no_t ) {
 		//freq_lfo_out<OutType>::set(Value, time);
-		set_next_time(std::numeric_limits<sample_t>::max());
+		set_next_time(std::numeric_limits<sample_no_t>::max());
 		return true;
 	}
 };

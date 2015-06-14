@@ -48,7 +48,7 @@ namespace mini {
 public:
 	std::size_t can_read_size() const;
 
-	constexpr static std::size_t sample_size() { return sizeof(jack_default_audio_sample_t); }
+	constexpr static std::size_t sample_size() { return sizeof(jack_default_audio_sample_no_t); }
 
 	// TODO: audio_ringbuffer_t?
 	std::size_t bytes_per_frame() const { return channels * sample_size(); }
@@ -98,10 +98,10 @@ public:
 // TODO: own header
 namespace scales
 {
-	//constexpr sample_t samples_per_sec = 1024; sample_rate
-	constexpr sample_t useconds_per_lfo_intv = 1024;
+	//constexpr sample_no_t samples_per_sec = 1024; sample_rate
+	constexpr sample_no_t useconds_per_lfo_intv = 1024;
 
-	constexpr sample_t samples_per_bar(sample_t samples_per_sec,
+	constexpr sample_no_t samples_per_bar(sample_no_t samples_per_sec,
 		)
 	{
 		return samples_per_sec << 1;
@@ -110,10 +110,10 @@ namespace scales
 
 
 	// constants depending on others
-	constexpr sample_t samples_per_bar = samples_per_sec * 2;
-	constexpr sample_t usecs_per_sample = 1000000 / samples_per_sec;
+	constexpr sample_no_t samples_per_bar = samples_per_sec * 2;
+	constexpr sample_no_t usecs_per_sample = 1000000 / samples_per_sec;
 
-	constexpr sample_t samples_per_lfo_intv = ;
+	constexpr sample_no_t samples_per_lfo_intv = ;
 }
 #endif
 

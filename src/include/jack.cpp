@@ -41,7 +41,7 @@ std::size_t ringbuffer_t::can_read_size() const {
 
 /*constexpr std::size_t ringbuffer_t::sample_size()
 {
-	return sizeof(jack_default_audio_sample_t);
+	return sizeof(jack_default_audio_sample_no_t);
 }*/
 
 std::size_t ringbuffer_t::read(char *framebuf, std::size_t size) {

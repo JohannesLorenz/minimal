@@ -235,11 +235,11 @@ _player_t::_player_t(loaded_project_t &_project) :
 #endif
 
 // TODO: deprecated!?!?!?
-void _player_t::play_until(sample_t dest)
+void _player_t::play_until(sample_no_t dest)
 {
 // function probably deprecated
 
-	sample_t final_pos = dest; //pos + work;
+	sample_no_t final_pos = dest; //pos + work;
 	io::mlog << "starting playback: " << pos << io::endl;
 
 	auto start_time = std::chrono::system_clock::now().time_since_epoch();
@@ -249,10 +249,10 @@ void _player_t::play_until(sample_t dest)
 		{
 			auto duration = std::chrono::system_clock::now().time_since_epoch() - start_time;
 			auto useconds_right_now = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-			sample_t samples_right_now = useconds_right_now / usecs_per_sample;
+			sample_no_t samples_right_now = useconds_right_now / usecs_per_sample;
 
 			// do not sleep longer than dest, but at least 0
-			sample_t sleep_time = std::max(std::min(next_task_time() - samples_right_now,
+			sample_no_t sleep_time = std::max(std::min(next_task_time() - samples_right_now,
 					dest - samples_right_now) * usecs_per_sample, 0_smps);
 			usleep((useconds_t)sleep_time);
 		}
@@ -271,7 +271,7 @@ void _player_t::play_until(sample_t dest)
 }
 
 //! the "heart" of minimal
-void REALTIME _player_t::process(sample_t work)
+void REALTIME _player_t::process(sample_no_t work)
 {
 	if(work == 0) {
 	 std::cerr << "WARNING: work = 0" << std::endl;
@@ -290,7 +290,7 @@ void REALTIME _player_t::process(sample_t work)
 		<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
 	// the author of this function must be proud of the functions name...
-	auto try_get_task = [this](sample_t pos) -> task_effect* {
+	auto try_get_task = [this](sample_no_t pos) -> task_effect* {
 		task_effect* ret = nullptr;
 		work_queue_lock.lock();
 		task_base* next_task = peek_next_task();
@@ -322,7 +322,7 @@ void REALTIME _player_t::process(sample_t work)
 		/*const bool reinsert = top->proceed(pos);
 		if(reinsert)
 		 pq.push(top);*/
-		const sample_t cur_next_time = task_e->next_time();
+		const sample_no_t cur_next_time = task_e->next_time();
 
 		/*int cur_threads_afterwards = ++this_ef->cur_threads;
 		if(cur_threads_afterwards > this_ef->max_threads)

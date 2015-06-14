@@ -50,14 +50,14 @@ public: // TODO!! protected
 	std::vector<in_port_base*> readers;
 public:
 //	bool changed = true; // TODO: stamp?
-	sample_t change_stamp = -1.0f;
+	sample_no_t change_stamp = -1.0f;
 	out_port_base(effect_t& ef) :
 		e(&ef)
 	{
 	}
 
 	virtual const void* get_value() const = 0; // void* is not good...
-	sample_t next_time = std::numeric_limits<sample_t>::max();
+	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
 
 	//virtual void connect(const in_port_base& ) ;
 };
@@ -92,7 +92,7 @@ public:
 	}
 
 	const T& get() const { return data; }
-	void set(const T& new_val, sample_t now)
+	void set(const T& new_val, sample_no_t now)
 	{ /*return base::ref*/
 		if(start || data != new_val)
 		{
@@ -119,7 +119,7 @@ private:
 	bool _is_precomputable;
 //protected:
 public: // TODO
-	sample_t change_stamp = -1;
+	sample_no_t change_stamp = -1;
 	std::size_t id;
 
 	//bool unread_changes = false; // initally send values - TODO??
@@ -156,7 +156,7 @@ public:
 	template<class P>
 	in_port_base(port_ctor<P> pc) : in_port_base(*pc.effect()) {}
 
-	sample_t get_outs_next_time() const {
+	sample_no_t get_outs_next_time() const {
 		return source->next_time;
 	}
 
@@ -168,7 +168,7 @@ public:
 	bool is_precomputable() const { return _is_precomputable; } // TODO: can those be removed?
 	void set_precomputable(bool is_precomputable = true) { _is_precomputable = is_precomputable; }
 
-	virtual void on_read(sample_t time) = 0;
+	virtual void on_read(sample_no_t time) = 0;
 
 	virtual const void* get_value() const = 0;
 
@@ -313,9 +313,9 @@ class self_port_base : public port_base
 {
 public:
 	bool unread_changes = false; // initally send values - TODO
-	sample_t get_outs_next_time() const {
+	sample_no_t get_outs_next_time() const {
 		// who knows :-)) (bad validation of protocol...)
-		return std::numeric_limits<sample_t>::max();
+		return std::numeric_limits<sample_no_t>::max();
 	}
 	virtual const void* get_value() const = 0;
 };
@@ -325,7 +325,7 @@ class self_port_templ : public self_port_base
 {
 protected:
 	T data;
-	sample_t next_time;
+	sample_no_t next_time;
 
 protected:
 /*	bool set(const T& new_value) {

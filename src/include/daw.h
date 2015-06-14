@@ -113,9 +113,9 @@ namespace daw
 
 #if 0
 	struct note_event_t {
-		int inst_id; sample_t pos;
+		int inst_id; sample_no_t pos;
 	public:
-		note_event_t(int inst_id, sample_t pos) : inst_id(inst_id), pos(pos) {}
+		note_event_t(int inst_id, sample_no_t pos) : inst_id(inst_id), pos(pos) {}
 	};
 #endif
 
@@ -129,7 +129,7 @@ namespace daw
 	};
 
 	/*class note_t : public seg_base<note_geom_t> {
-		sample_t propagate() const { return geom.start; } // TODO: also propagate end?
+		sample_no_t propagate() const { return geom.start; } // TODO: also propagate end?
 	public:
 		note_data_t n;
 		using seg_base::seg_base;

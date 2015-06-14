@@ -23,7 +23,7 @@
 
 namespace mini {
 
-void effect_t::set_next_time(sample_t next)
+void effect_t::set_next_time(sample_no_t next)
 {
 	if(finished_threads >= max_threads - 1) { // TODO: check atomacity...
 		io::mlog << "OK: only finished threads " << finished_threads
@@ -35,7 +35,7 @@ void effect_t::set_next_time(sample_t next)
 		<< " of " << max_threads << io::endl;
 }
 
-void effect_t::init_next_time(sample_t next)
+void effect_t::init_next_time(sample_no_t next)
 {
 	io::mlog << "NOTE: init_next_time" << io::endl;
 	if(!finished_threads) // TODO: check atomacity...

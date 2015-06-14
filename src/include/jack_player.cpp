@@ -26,7 +26,7 @@ jack_player_t::jack_player_t() :
 	audio_in((effect_t&)*this, rb_size, rb_size)
 {
 	// TODO: error prone that programmer can forget this:
-	set_next_time(std::numeric_limits<sample_t>::max());
+	set_next_time(std::numeric_limits<sample_no_t>::max());
 }
 
 void jack_player_t::instantiate()
@@ -63,7 +63,7 @@ void jack_player_t::instantiate()
 #endif
 }
 
-bool jack_player_t::_proceed(sample_t /*samples*/)
+bool jack_player_t::_proceed(sample_no_t /*samples*/)
 {
 #if 0
 	io::mlog << "JACKPLAYER" << io::endl;
@@ -73,9 +73,9 @@ bool jack_player_t::_proceed(sample_t /*samples*/)
 		audio_in::data[0].read_space(),
 		audio_in::data[1].read_space());
 
-	using jsample_t = jack_default_audio_sample_t; // TODO: incompatible?
-	jsample_t* buf0 = ports[0].get_buffer<jsample_t>(read_space);
-	jsample_t* buf1 = ports[1].get_buffer<jsample_t>(read_space);
+	using jsample_no_t = jack_default_audio_sample_no_t; // TODO: incompatible?
+	jsample_no_t* buf0 = ports[0].get_buffer<jsample_no_t>(read_space);
+	jsample_no_t* buf1 = ports[1].get_buffer<jsample_no_t>(read_space);
 
 	{
 		auto rs = audio_in::data[0].read(read_space);
@@ -97,7 +97,7 @@ bool jack_player_t::_proceed(sample_t /*samples*/)
 	//multiplex<ringbuffer_t> rbs(rb_size, rb_size);
 	//multiplex<ringbuffer_reader_t> rds(rb_size, rb_size);
 
-	set_next_time(std::numeric_limits<sample_t>::max());
+	set_next_time(std::numeric_limits<sample_no_t>::max());
 #endif
 	return true;
 }

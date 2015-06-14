@@ -40,18 +40,18 @@ public:
 	class task_base // TODO: make this crtp when possible?
 	{
 //		const command_base* cmd;
-		sample_t _next_time;
+		sample_no_t _next_time;
 	public:
-		void update_next_time(sample_t new_value) {
+		void update_next_time(sample_no_t new_value) {
 			_next_time = new_value;
 		}
-		virtual void proceed(sample_t time) = 0;
-		sample_t next_time() const { return _next_time; }
-		task_base(sample_t next_time) : _next_time(next_time) {}
+		virtual void proceed(sample_no_t time) = 0;
+		sample_no_t next_time() const { return _next_time; }
+		task_base(sample_no_t next_time) : _next_time(next_time) {}
 		virtual bool cmp(const task_base& other) const { return this < &other; }
 		virtual handle_type& get_handle() { throw "not implemented"; }
 
-//		virtual sample_t next() = 0;
+//		virtual sample_no_t next() = 0;
 	};
 
 	class task_base_with_handle : public task_base
@@ -66,7 +66,7 @@ public:
 private:
 	pq_type pq;
 public:
-	sample_t run_tasks(sample_t pos)
+	sample_no_t run_tasks(sample_no_t pos)
 	{
 		while(pq.top()->next_time() <= pos)
 		{
@@ -85,7 +85,7 @@ public:
 		return pq.top()->next_time();
 	}
 
-	sample_t run_tasks_keep(sample_t pos)
+	sample_no_t run_tasks_keep(sample_no_t pos)
 	{
 		while(pq.top()->next_time() <= pos)
 		{
@@ -102,7 +102,7 @@ public:
 		return pq.top()->next_time();
 	}
 
-	sample_t next_task_time() const {
+	sample_no_t next_task_time() const {
 		return pq.top()->next_time();
 	}
 
@@ -120,7 +120,7 @@ public:
 		return ret_val;
 	}
 
-	bool has_active_tasks(sample_t at_time) {
+	bool has_active_tasks(sample_no_t at_time) {
 		//io::mlog << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << io::endl;
 		return pq.top()->next_time() <= at_time;
 	}

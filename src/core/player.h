@@ -75,7 +75,7 @@ struct audio_sink : effect_t, public audio_in
 	void instantiate() {}
 	void clean_up() {}
 
-	bool _proceed(sample_t ) {
+	bool _proceed(sample_no_t ) {
 		// nothing to do, the engine will read from us
 		return true;
 	}
@@ -85,28 +85,28 @@ class _player_t : public work_queue_t // TODO: own header
 {
 	//array_stack<effect_t*> ready_fx;
 
-	sample_t pos = 0; //!< number of samples played until now
+	sample_no_t pos = 0; //!< number of samples played until now
 	loaded_project_t* project; // TODO! must be const
 
 	spinlock_t work_queue_lock;
 
-//	std::set<sample_t> end_set = { std::numeric_limits<sample_t>::max() };
+//	std::set<sample_no_t> end_set = { std::numeric_limits<sample_no_t>::max() };
 
 /*	class task_events : public task_base
 	{
 	//	const loaded_project_t& project;
 		const loaded_instrument_t* ins;
 		const command_base* cmd;
-		std::set<sample_t>::const_iterator itr;
+		std::set<sample_no_t>::const_iterator itr;
 	public:
-		void proceed(sample_t); // TODO: really cpp?
+		void proceed(sample_no_t); // TODO: really cpp?
 
-		//sample_t next() { return *itr; }
+		//sample_no_t next() { return *itr; }
 		// TODO: no idea why I can not use initializer lists
 		task_events(//const loaded_project_t& project,
 			const loaded_instrument_t* ins,
 			const command_base* cmd,
-			const std::set<sample_t>::const_iterator& itr) :
+			const std::set<sample_no_t>::const_iterator& itr) :
 			task_base(*itr),
 			//project(project),
 			ins(ins),
@@ -131,7 +131,7 @@ class _player_t : public work_queue_t // TODO: own header
 		{
 		}
 
-		void proceed(sample_t time)
+		void proceed(sample_no_t time)
 		{
 			if(effect->proceed(time) && true)
 			{
@@ -175,7 +175,7 @@ class _player_t : public work_queue_t // TODO: own header
 
 	std::vector<std::vector<bool>> changed_ports;
 
-	void process(sample_t work);
+	void process(sample_no_t work);
 
 	void init();
 public:
@@ -184,12 +184,12 @@ public:
 	_player_t() = default;
 	void set_project(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
-	void play_until(sample_t dest);
+	void play_until(sample_no_t dest);
 
 	//! will be asking for the next nframes frames (i.e. samples for us)
 	//! and announce the following callback at @a pos + @a nframes samples
 	void callback(std::size_t nframes) {
-		if(next_task_time() <= pos + (sample_t)nframes)
+		if(next_task_time() <= pos + (sample_no_t)nframes)
 		 process(nframes);
 	}
 };

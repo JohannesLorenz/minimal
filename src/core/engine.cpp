@@ -44,7 +44,7 @@ void engine_t::load_project(project_t& pro)
 	player.set_project(pro);
 }
 
-void engine_t::proceed(sample_t samples)
+void engine_t::proceed(sample_no_t samples)
 {
 	player.callback(samples);
 }

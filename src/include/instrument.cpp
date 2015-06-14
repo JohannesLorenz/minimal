@@ -71,7 +71,7 @@ void instrument_t::instantiate()
 //	on_preinit();
 	instantiate_first();
 
-	set_next_time(std::numeric_limits<sample_t>::max());
+	set_next_time(std::numeric_limits<sample_no_t>::max());
 
 	for(const command_base* cmd : const_commands)
 	 /*plugin->*/send_osc_cmd(cmd->buffer().raw());
@@ -103,7 +103,7 @@ void instrument_t::clean_up()
 	 delete cb;
 }
 
-bool instrument_t::_proceed(sample_t samples)
+bool instrument_t::_proceed(sample_no_t samples)
 {
 	std::cerr << "Proceeding with effect no " << id() << std::endl;
 
@@ -129,7 +129,7 @@ bool instrument_t::_proceed(sample_t samples)
 	return advance(samples);
 
 //	// all ports are triggers, so sleep
-//	return std::numeric_limits<sample_t>::max();
+//	return std::numeric_limits<sample_no_t>::max();
 
 	//return time + 0.1f; // TODO??????????????????????????????
 //	return work_queue_t::run_tasks(time);
@@ -144,7 +144,7 @@ bool instrument_t::_proceed(sample_t samples)
 			ipb->unread_changes = false;
 		}
 	}
-	return std::numeric_limits<sample_t>::max();
+	return std::numeric_limits<sample_no_t>::max();
 	//return work_queue_t::run_tasks(time);*/
 }
 

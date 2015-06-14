@@ -27,7 +27,7 @@
 #include "work_queue.h"
 #include "simple.h"
 
-//const sample_t default_step = 0.1f; //0.001seconds; // suggested by fundamental
+//const sample_no_t default_step = 0.1f; //0.001seconds; // suggested by fundamental
 
 namespace mini
 {
@@ -60,11 +60,11 @@ public:
 class effect_t : util::non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
-	sample_t pos = 0; //!< number of samples played yet
+	sample_no_t pos = 0; //!< number of samples played yet
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports; // TODO: not public
 private:
-	sample_t next_time;
+	sample_no_t next_time;
 	template<class T, class Tpl, int ...Is>
 	//! helper
 	static std::vector<T> make_vector(const Tpl& tpl, util::seq<Is...> ) {
@@ -78,10 +78,10 @@ private:
 protected:
 	//! should advance the effect s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool _proceed(sample_t samples) = 0; // TODO: private?
-	void set_next_time(sample_t next);
+	virtual bool _proceed(sample_no_t samples) = 0; // TODO: private?
+	void set_next_time(sample_no_t next);
 public:
-	void init_next_time(sample_t next);
+	void init_next_time(sample_no_t next);
 
 	// TODO: private, access functions
 	// TODO: into separate struct: "loaded effect"?
@@ -103,7 +103,7 @@ public:
 	// returns the next time when the effect must be started
 
 	void proceed_message();
-	sample_t proceed(sample_t samples) {
+	sample_no_t proceed(sample_no_t samples) {
 		proceed_message();
 		//return next_time = _proceed(time);
 		_proceed(samples);
@@ -111,11 +111,11 @@ public:
 		return get_next_time();
 	}
 
-	sample_t get_next_time() const { return next_time; }
+	sample_no_t get_next_time() const { return next_time; }
 
 #if 0
-	sample_t get_childrens_next_time() const {
-		sample_t result = std::numeric_limits<sample_t>::max();
+	sample_no_t get_childrens_next_time() const {
+		sample_no_t result = std::numeric_limits<sample_no_t>::max();
 		for(const effect_t* e : writers)
 		 result = std::min(result, e->get_next_time());
 		return result;
@@ -148,9 +148,9 @@ class sentinel_effect : public effect_t
 public:
 	sentinel_effect(const id_t& id) : effect_t("sentinel") {
 		set_id(id);
-		init_next_time(std::numeric_limits<sample_t>::max());
+		init_next_time(std::numeric_limits<sample_no_t>::max());
 	}
-	bool _proceed(sample_t ) { throw "impossible"; return true; }
+	bool _proceed(sample_no_t ) { throw "impossible"; return true; }
 	void instantiate() {}
 	void clean_up() {}
 };
@@ -200,9 +200,9 @@ public:
 
 struct _test : effect_t
 {
-	port_chain<lfo_in<sample_t>, lfo_out<sample_t>> ch;
+	port_chain<lfo_in<sample_no_t>, lfo_out<sample_no_t>> ch;
 	_test() : ch(*this) {
-		auto p = ch.lfo_in<sample_t>::port;
+		auto p = ch.lfo_in<sample_no_t>::port;
 		(void)p;
 	}
 };

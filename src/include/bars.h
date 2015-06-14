@@ -25,7 +25,7 @@
 
 namespace mini {
 
-using bars_t = fraction_t<sample_t, sample_t>;
+using bars_t = fraction_t<sample_no_t, sample_no_t>;
 
 namespace bars
 {
@@ -39,7 +39,7 @@ inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
 
 }
 
-inline sample_t as_samples_floor(const bars_t& b, const sample_t& samples_per_bar)
+inline sample_no_t as_samples_floor(const bars_t& b, const sample_no_t& samples_per_bar)
 {
 	return bars_t(b.numerator(), b.denominator(), samples_per_bar).floor();
 }

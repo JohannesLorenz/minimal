@@ -114,7 +114,7 @@ class effect_root_t : public effect_t
 {
 	void instantiate() {}
 	void clean_up() {}
-	bool _proceed(sample_t ) { return true; }
+	bool _proceed(sample_no_t ) { return true; }
 public:
 	effect_root_t(effect_root_t&& ) = default;
 	effect_root_t() : effect_t("effect root") {}

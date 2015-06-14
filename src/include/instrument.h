@@ -176,7 +176,7 @@ private:
 
 	//! should advance the instrument s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool advance(sample_t samples) = 0;
+	virtual bool advance(sample_no_t samples) = 0;
 public:
 	using effect_t::effect_t;
 
@@ -209,7 +209,7 @@ public:
 
 	void clean_up();
 
-	bool _proceed(sample_t samples) final;
+	bool _proceed(sample_no_t samples) final;
 	
 	// this will be instantiated before the instrument will be
 	virtual void instantiate_first() = 0;

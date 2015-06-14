@@ -38,9 +38,9 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 {
 	friend class note_line_t;
 
-	sample_t last_time = -1.0f;
-	//std::map<int, std::map<sample_t, note_t>> note_lines;
-	/*sample_t last_time = -1.0f;
+	sample_no_t last_time = -1.0f;
+	//std::map<int, std::map<sample_no_t, note_t>> note_lines;
+	/*sample_no_t last_time = -1.0f;
 	struct notes_impl_t
 	{
 		std::map<note_geom_t, note_t>::const_iterator itr;
@@ -79,12 +79,12 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 		std::map<note_geom_t, m_note_event>::const_iterator itr;
 
 
-		void proceed(sample_t time);
+		void proceed(sample_no_t time);
 
 		note_task_t(note_line_impl& nl_ref,
 			const int& note_height,
-			const std::map<sample_t, note_t>& values,
-			sample_t first_event = 0.0f) :
+			const std::map<sample_no_t, note_t>& values,
+			sample_no_t first_event = 0.0f) :
 			task_base(first_event),
 			nl_ref(&nl_ref),
 			//last_key(nl_ref.notes_pressed.get()),
@@ -123,7 +123,7 @@ public:
 
 	note_line_impl(note_line_t *nl);
 
-	sample_t _proceed(sample_t time); /* {
+	sample_no_t _proceed(sample_no_t time); /* {
 		return run_tasks(time);
 	}*/
 };
@@ -159,7 +159,7 @@ public:
 	}
 
 
-	bool _proceed(sample_t )
+	bool _proceed(sample_no_t )
 	{
 		//io::mlog << "proceeding with note line... " << io::endl;
 		set_next_time(impl->_proceed(pos));

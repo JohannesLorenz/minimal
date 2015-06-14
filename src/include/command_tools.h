@@ -36,8 +36,8 @@ namespace mini {
 struct prioritized_command_base : public work_queue_t::task_base_with_handle
 {
 	std::size_t priority;
-	prioritized_command_base(std::size_t priority, sample_t ) :
-		task_base_with_handle(std::numeric_limits<sample_t>::max()),
+	prioritized_command_base(std::size_t priority, sample_no_t ) :
+		task_base_with_handle(std::numeric_limits<sample_no_t>::max()),
 		priority(priority)
 	{
 
@@ -54,7 +54,7 @@ class prioritized_command : public prioritized_command_base
 protected:
 	instrument_t* plugin; // TODO: single pointer would be cool...
 public:
-	prioritized_command(std::size_t priority, sample_t next_time,
+	prioritized_command(std::size_t priority, sample_no_t next_time,
 		instrument_t* plugin) :
 		prioritized_command_base(priority, next_time),
 		plugin(plugin)
@@ -62,7 +62,7 @@ public:
 
 	}
 
-	void proceed_base(sample_t) { // TODO: call virtual from here?
+	void proceed_base(sample_no_t) { // TODO: call virtual from here?
 	//	io::mlog << "PROCEEDING: " << this << io::endl;
 		if(!changed)
 		 throw "proceeding with unchanged command...";
@@ -85,14 +85,14 @@ class prioritized_command_cmd : public prioritized_command
 public:
 	command_base* cmd; // TODO: does command_base suffice?
 	prioritized_command_cmd(work_queue_t* w,
-		std::size_t priority, sample_t next_time, instrument_t* plugin,
+		std::size_t priority, sample_no_t next_time, instrument_t* plugin,
 		command_base* cmd) :
 		prioritized_command(priority, next_time, plugin),
 		w(w),
 		cmd(cmd)
 		{}
 
-	void proceed(sample_t time)
+	void proceed(sample_no_t time)
 	{
 		proceed_base(time);
 
@@ -103,7 +103,7 @@ public:
 		plugin->send_osc_cmd(cmd->complete_buffer().raw());
 
 		// TODO: not sure, but max sounds correct:
-		update_next_time(std::numeric_limits<sample_t>::max());
+		update_next_time(std::numeric_limits<sample_no_t>::max());
 		w->update(get_handle());
 	}
 };
@@ -121,12 +121,12 @@ struct rtosc_in_port_t : PortType
 	{
 	}
 
-	void on_read(sample_t time); // see below
+	void on_read(sample_no_t time); // see below
 //	rtosc_in_port_t(effect_t& ef) : PortType(ef) {}
 };
 
 template<class T>
-void rtosc_in_port_t<T>::on_read(sample_t time)
+void rtosc_in_port_t<T>::on_read(sample_no_t time)
 {
 	// mark as changed
 	if(cmd->set_changed())
