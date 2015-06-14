@@ -194,6 +194,7 @@ public: // TODO! (protected)
 	bool is_dependency() const { return IsDep; }
 
 	const T& get() const { return data; }
+	T& get() { return data; } // TODO? needed currently for ringbuffer_reader_t
 
 	using type = T;
 protected:

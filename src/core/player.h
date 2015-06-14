@@ -25,6 +25,7 @@
 #include "sample.h"
 #include "bars.h"
 #include "spinlock.h"
+#include "audio.h"
 #include "io.h"
 
 namespace mini {
@@ -61,6 +62,24 @@ public:
 };*/
 
 using loaded_project_t = project_t;
+
+struct audio_sink : effect_t, public audio_in
+{
+	audio_sink() : // TODO: lfo base class?
+		effect_t("audio sink"),
+		audio_in((effect_t&)*this)
+	{
+		set_next_time(std::numeric_limits<float>::max());
+	}
+
+	void instantiate() {}
+	void clean_up() {}
+
+	bool _proceed(sample_t ) {
+		// nothing to do, the engine will read from us
+		return true;
+	}
+};
 
 class _player_t : public work_queue_t // TODO: own header
 {
@@ -140,7 +159,7 @@ class _player_t : public work_queue_t // TODO: own header
 				b_other(o_effect->cur_threads, o_effect->max_threads);
 			
 			io::mlog << "bars: " << b_self << " vs " << b_other << ": " <<
-					(b_self == b_other) << ", " << (b_self > b_other) << std::endl;
+					(b_self == b_other) << ", " << (b_self > b_other) << io::endl;
 
 			// strict ordering is guaranteed (!)
 			return (b_self == b_other) // don't bother about b_other?
@@ -160,6 +179,8 @@ class _player_t : public work_queue_t // TODO: own header
 
 	void init();
 public:
+	audio_sink sink;
+
 	_player_t() = default;
 	void set_project(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
@@ -173,14 +194,16 @@ public:
 	}
 };
 
+using player_t = _player_t;
+/*
 //! template type of @a _player_t
 template<class SinkType>
 class player_t : public _player_t
 {
-	const SinkType* sink;
+	SinkType sink;
 public:
 	using _player_t::_player_t;
-};
+};*/
 
 // TODO: class audio_stereo_project will set sink to mult<ringbuffer_t>
 

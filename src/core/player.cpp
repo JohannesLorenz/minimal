@@ -264,6 +264,8 @@ void _player_t::play_until(sample_t dest)
 			<< ((task_effect*)peek_next_task())->effect->id() << io::endl;
 	}
 
+	io::mlog << "Finishing, since nothing to do at " << pos << io::endl;
+
 	// no more tasks possible, so:
 	// pos = final_pos; // dangerous for subsequent calls
 }
@@ -271,8 +273,10 @@ void _player_t::play_until(sample_t dest)
 //! the "heart" of minimal
 void REALTIME _player_t::process(sample_t work)
 {
-	(void)work; // TODO
-
+	if(work == 0) {
+	 std::cerr << "WARNING: work = 0" << std::endl;
+	 work = 1024;
+	}
 //	const auto& has_active_tasks = []() -> bool {
 //
 //	}
@@ -336,6 +340,7 @@ void REALTIME _player_t::process(sample_t work)
 
 
 		io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
+		io::mlog << "next effect work now: " << work << io::endl;
 
 		task_e->proceed(/*pos*/ work); // will also update the next-time event
 
@@ -404,6 +409,8 @@ void REALTIME _player_t::process(sample_t work)
 		else
 		 io::mlog << "NOT REACHED MAX TASKS!" << io::endl;
 	} // while has active tasks at this time
+
+	io::mlog << "Nothing to do at " << pos << io::endl;
 }
 
 }

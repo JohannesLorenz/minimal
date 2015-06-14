@@ -18,11 +18,36 @@
 /*************************************************************************/
 
 #include "jack_engine.h"
+#include "io.h"
 
 namespace mini {
 
-jack_engine_t::jack_engine_t()
+jack_engine_t::jack_engine_t() :
+	jack::client_t("minimal"),
+	out{ register_port("outl", JACK_DEFAULT_AUDIO_TYPE,
+		JackPortIsOutput, 0),
+		register_port("outr", JACK_DEFAULT_AUDIO_TYPE,
+		JackPortIsOutput, 0)}
 {
+}
+
+void jack_engine_t::vrun()
+{
+	io::mlog << "Activating jack now..." << io::endl;
+	activate();
+
+	const char **outPorts = jack_get_ports(
+		client,
+		nullptr,
+		nullptr,
+		JackPortIsPhysical | JackPortIsInput);
+
+	if(!outPorts || !outPorts[0] || !outPorts[1])
+	 throw "Could not connect to stereo output";
+
+	// connect must be done after activate...
+	connect(out[0].name(), outPorts[0]);
+	connect(out[1].name(), outPorts[1]);
 }
 
 }

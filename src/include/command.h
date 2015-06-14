@@ -616,6 +616,8 @@ public:
 
 	~command();
 
+	//! executes f on all variables
+	//! this can be used, e.g., to initialize all ports
 	template<class Ftor>
 	void for_all_variables(Ftor& f) {
 		_for_all_variables<sizeof...(Args)>::exec(f, base::args);

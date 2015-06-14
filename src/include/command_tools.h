@@ -20,10 +20,19 @@
 #ifndef COMMAND_TOOLS_H
 #define COMMAND_TOOLS_H
 
+// I wrote this code once I had drunken two cups of coffee
+// now I have no idea how the classes interact :(
+
+// welcome to teplate-hell...
+// ^ teplate -> already the first strange word
+
 #include "command.h"
+#include "instrument.h" // TODO: -> cpp, including proceed() below?
+#include "io.h" // TODO
 
 namespace mini {
 
+//! task + priority
 struct prioritized_command_base : public work_queue_t::task_base_with_handle
 {
 	std::size_t priority;
@@ -38,14 +47,15 @@ struct prioritized_command_base : public work_queue_t::task_base_with_handle
 	}
 };
 
+//! ~ task + priority + instrument
 class prioritized_command : public prioritized_command_base
 {
 	bool changed = false;
 protected:
-	instrument_t** plugin; // TODO: single pointer would be cool...
+	instrument_t* plugin; // TODO: single pointer would be cool...
 public:
 	prioritized_command(std::size_t priority, sample_t next_time,
-		instrument_t** plugin) :
+		instrument_t* plugin) :
 		prioritized_command_base(priority, next_time),
 		plugin(plugin)
 	{
@@ -67,6 +77,7 @@ public:
 	}
 };
 
+//! task + priority + instrument + command
 //! for single command stuff
 class prioritized_command_cmd : public prioritized_command
 {
@@ -74,7 +85,7 @@ class prioritized_command_cmd : public prioritized_command
 public:
 	command_base* cmd; // TODO: does command_base suffice?
 	prioritized_command_cmd(work_queue_t* w,
-		std::size_t priority, sample_t next_time, instrument_t** plugin,
+		std::size_t priority, sample_t next_time, instrument_t* plugin,
 		command_base* cmd) :
 		prioritized_command(priority, next_time, plugin),
 		w(w),
@@ -85,7 +96,11 @@ public:
 	{
 		proceed_base(time);
 
-		(*plugin)->send_osc_cmd(cmd->complete_buffer().raw());
+		io::mlog << "osc msg to: " << plugin->name() << io::endl;
+
+		if(!plugin) throw "plugin";
+		if(!cmd) throw "not cmd";
+		plugin->send_osc_cmd(cmd->complete_buffer().raw());
 
 		// TODO: not sure, but max sounds correct:
 		update_next_time(std::numeric_limits<sample_t>::max());
@@ -93,6 +108,7 @@ public:
 	}
 };
 
+//! this extends a port (e.g. an in port) by cmd and ins pointers
 template<class PortType>
 struct rtosc_in_port_t : PortType
 {
@@ -109,6 +125,19 @@ struct rtosc_in_port_t : PortType
 //	rtosc_in_port_t(effect_t& ef) : PortType(ef) {}
 };
 
+template<class T>
+void rtosc_in_port_t<T>::on_read(sample_t time)
+{
+	// mark as changed
+	if(cmd->set_changed())
+	{
+		// update in pq
+		cmd->update_next_time(time);
+		ins->update(cmd->get_handle());
+	}
+}
+
+#if USELESS_OLD_CODE
 /*
 template<class Inst, class ...OtherTypes>
 struct rtosc_in_port_t<Inst, int, OtherTypes...> // TODO: int
@@ -116,21 +145,6 @@ struct rtosc_in_port_t<Inst, int, OtherTypes...> // TODO: int
 	int val;
 	operator int() { return val; }
 };*/
-
-// welcome to teplate-hell...
-
-template<class T, bool, class Ins> // true
-struct _type_of_rtosc_port {
-	using type = rtosc_in_port_t<T>;
-};
-
-template<class T, class Ins>
-struct _type_of_rtosc_port<T, false, Ins> {
-	using type = T;
-};
-
-template<class T, class Ins, class ...Other>
-using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), Ins>::type;
 
 template<std::size_t N, std::size_t I = 0>
 struct init_port {
@@ -152,19 +166,13 @@ struct init_port<N, N> {
 	static void exec(const InsType& , const CmdType& , const instrument_t** ) {}
 };
 
-template<class Ins, class Cmd>
-struct functor_init_ports
-{
-	Ins* ins;
-	Cmd& cmd;
-	template<class ...Args> void operator()(rtosc_in_port_t<Args...>& p)
-	{
-		p.set_trigger();
-		p.ins = ins;
-		p.cmd = &cmd;
-	}
+template <char ...Letters> class fixed_str {
+	static std::string make_str() { return std::string(Letters...); }
 };
+#endif
 
+//! prioritized_command_cmd + node
+//! all ports of the commands must be of type rtosc_in_port_t
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
 template<class /*InstClass*/, class... PortTypes>
@@ -179,21 +187,38 @@ struct _in_port_with_command : node_t<void>, util::non_copyable_t
 
 	using InstClass = instrument_t;
 
+	template<class Ins, class Cmd>
+	struct functor_init_ports
+	{
+		Ins* ins;
+		Cmd& cmd;
+		template<class ...Args> void operator()(rtosc_in_port_t<Args...>& p)
+		{
+			p.set_trigger(); // TODO!
+			p.ins = ins;
+			p.cmd = &cmd;
+		}
+	};
+
 public:
+	//! @param args the ports that will be moved into the command
 	template<class ...Args2>
 	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
 		node_t<void>(ins, base, ext),
 		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
-		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, &ins, cmd_ptr)
+		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins, cmd_ptr)
 	{
 		/*cmd.cmd->template port_at<0>().set_trigger();
 		cmd.cmd->template port_at<0>().ins = ins;
 		cmd.cmd->template port_at<0>().cmd = &cmd;*/
 		//init_port<sizeof...(PortTypes)>::exec(ins, cmd, &ins->lo_port); // TODO: ref instead of & ?
 
+		// pass pointer of cmd and ins to all ports
+		// (they're of type rtosc_in_port_t)
 		functor_init_ports<InstClass, cmd_type> f{ins, cmd};
 		cmd_ptr->for_all_variables(f);
 
+		// set update handle for work queue
 		cmd.set_handle(ins->add_task(&cmd)); // TODO: do this in cmd's ctor? possible??
 	}
 
@@ -210,6 +235,22 @@ public:
 	}*/
 };
 
+
+template<class T, bool, class Ins> // true
+struct _type_of_rtosc_port {
+	using type = rtosc_in_port_t<T>;
+};
+
+template<class T, class Ins>
+struct _type_of_rtosc_port<T, false, Ins> {
+	using type = T;
+};
+
+template<class T, class Ins, class ...Other>
+using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), Ins>::type;
+
+//! wrapper: only wraps ports to rtosc_in_port_t<ports>,
+//! a class that extends these ports by pointers to instrument and command
 template<class InstClass, class... PortTypes>
 struct in_port_with_command : _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>
 {
@@ -219,21 +260,6 @@ struct in_port_with_command : _in_port_with_command<InstClass, type_of_rtosc_por
 		_in_port_with_command;
 };
 
-template <char ...Letters> class fixed_str {
-	static std::string make_str() { return std::string(Letters...); }
-};
-
-template<class T>
-void rtosc_in_port_t<T>::on_read(sample_t time)
-{
-	// mark as changed
-	if(cmd->set_changed())
-	{
-		// update in pq
-		cmd->update_next_time(time);
-		ins->update(cmd->get_handle());
-	}
-}
 
 
 /*template<class Cmd, class ...Args>

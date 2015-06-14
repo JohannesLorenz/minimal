@@ -108,7 +108,7 @@ void client_t::init(const char *clientname)
 
 void client_t::activate()
 {
-	if(! client)
+	if(!client)
 		throw "Can not activate non-opened client";
 	if( jack_activate(client) )
 		throw "Could not activate jack client";

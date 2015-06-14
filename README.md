@@ -13,7 +13,8 @@ Welcome! Thank you for considering the README file.
 It is basically an **RT compatible, text based sequencer**. It supports **OSC**.
 
 The project files are C++ code, which is very easy to generate with a suited
-C++ editor.
+C++ editor. A collection of project files can be found in the
+[minimal-demos](https://github.com/JohannesLorenz/minimal-demos) repo.
 
 In the future, you will be able to create music, videos, computer games,
 mathematical graphics etc.
@@ -25,10 +26,12 @@ minimal is practical:
     an **effect graph**.
   * minimal is (assumably) **RT compatible**.
   * minimal supports **open souce** and has **no windows only plugins**.
+
 minimal is minimal:
   * minimal is designed for **instant compiling and startup**.
   * **short and human readable project files**
   * minimal can be used **without any X server**.
+
 minimal is developper-friendly:
   * minimal lets you **easily write plugins**, e.g. for any **OSC** plugin.
   * In minimal, coders can use **C++11**.

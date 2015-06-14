@@ -85,7 +85,15 @@ int main(int argc, char** argv)
 
 		jack_engine_t eng;
 		eng.load_project(pro);
-		eng.play_until(5_1);
+		//eng.play_until(5_1);
+		eng.activate();
+		eng.run();
+
+		while(eng.is_running()) {
+			usleep(500000); // 0.5 s (hopefully!)
+		}
+
+		no_rt::mlog << "Main thread exiting normally..." << std::endl;
 
 	} catch(const char* msg) {
 		++errors; dump_error(msg);

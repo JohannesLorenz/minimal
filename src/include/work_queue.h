@@ -130,11 +130,11 @@ public:
 
 inline bool work_queue_t::cmp_func::operator() (const task_base* const& lhs, const task_base* const& rhs) const
 {
-	std::cerr << lhs->next_time() << " <-> " << rhs->next_time() << std::endl;
+/*	std::cerr << lhs->next_time() << " <-> " << rhs->next_time() << std::endl;
 	if(lhs->next_time() == rhs->next_time())
 	{
 		std::cerr << " -> " << lhs->cmp(*rhs) << std::endl;
-	}
+	}*/
 	return (lhs->next_time() == rhs->next_time())
 		? lhs->cmp(*rhs)
 		: lhs->next_time() > rhs->next_time(); // should be <, but we start with small values

@@ -136,7 +136,7 @@ public:
 
 	effect_t(const char* name = "unnamed") : named_t(name) {}
 
-//	effect_t(effect_t&& ) = default;
+	effect_t(effect_t&& ) = delete;
 
 	virtual ~effect_t() {}
 };
