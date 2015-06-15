@@ -22,7 +22,7 @@
 namespace mini {
 
 recorder_t::recorder_t(const char* filename, int format) :
-	audio_in((effect_t&)*this, rb_size, rb_size),
+	audio_in((effect_t&)*this),
 	fp(SndfileHandle(filename, SFM_WRITE, format
 		, 2 // channels
 		, 48000 // srate

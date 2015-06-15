@@ -29,8 +29,10 @@
 namespace mini
 {
 
+using sample_t = jack_default_audio_sample_t;
+
 constexpr std::size_t buffer_size = 1 << 14;
-constexpr std::size_t sample_size = sizeof(jack_default_audio_sample_no_t);
+constexpr std::size_t sample_size = sizeof(jack_default_audio_sample_t);
 constexpr std::size_t rb_size = buffer_size * sample_size;
 
 //template<class T, std::size_t N = 2>
@@ -96,11 +98,15 @@ void operator<<(in_port_templ<multiplex<ringbuffer_reader_t>, IsDep>& ipt,
 	ipt.data[1].connect(opt.data[1]);
 }
 
+struct m_reader_t : public ringbuffer_reader_t {
+	m_reader_t() : ringbuffer_reader_t(global_samplerate) {}
+};
 
-struct audio_in : in_port_templ<multiplex<ringbuffer_reader_t>, true /*TODO?*/>
+struct audio_in : in_port_templ<multiplex<m_reader_t>, true /*TODO?*/>
 {
 	void on_read(sample_no_t ) {} // TODO??
-	using base::in_port_templ;
+	audio_in(effect_t& e) : in_port_templ(e) {}
+	//using base::in_port_templ;
 };
 
 }

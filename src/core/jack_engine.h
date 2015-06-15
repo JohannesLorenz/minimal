@@ -27,37 +27,12 @@ namespace mini {
 
 class jack_engine_t : public engine_t, public jack::client_t
 {
-	virtual int process(jack::frames_t samples)
-	{
-		engine_t::proceed(samples);
-		for(int side = 0; side < 1; ++side)
-		{
-			ringbuffer_reader_t& reader = player.sink.get().data[side];
-			if(reader.read_space() < samples)
-			 throw "not enough read space";
-			else
-			{
-				float* buffer = out[0].get_buffer(samples);
-				if(buffer)
-				{
-					auto rs = reader.read_max(samples);
-					if(rs.size() < samples)
-					 throw "not enough space in rs";
-					for(int i = 0; i < rs.size(); ++i)
-					 buffer[i] = rs[i];
-				}
-				else
-				 throw "could not get buffer";
-			}
-		}
-
-		return 0; // 0 = no error, 1 = error
-	}
+	virtual int process(jack::frames_t samples);
 	virtual void shutdown() {
 		throw "shutdown not implemented :P";
 	}
 
-	virtual void get_sample_rate() { return sample_rate(); }
+	sample_no_t get_sample_rate() { return sample_rate(); }
 
 	jack::port_t out[2];
 

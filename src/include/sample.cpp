@@ -17,39 +17,6 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef SAMPLE_H
-#define SAMPLE_H
-
-#include <cstdint>
-
-namespace mini {
-
-//! signed int of at least 64 bit
-using sample_no_t = int_least64_t;
-using sample_rate_t = sample_no_t;
+#include "sample.h"
 
 extern sample_no_t global_samplerate;
-
-inline sample_no_t operator"" _smps(unsigned long long int n) { return n; }
-
-// enough samples for one day
-static_assert(sizeof(sample_no_t) >= 8,
-	"need 64 bit ints");
-
-// TODO: not here?
-// 1 bar = 2 seconds
-// 1000 samples per second
-
-// fixed constants
-constexpr sample_no_t samples_per_sec = 1024;
-constexpr sample_no_t useconds_per_lfo_intv = 1024;
-
-// constants depending on others
-constexpr sample_no_t samples_per_bar = samples_per_sec * 2;
-constexpr sample_no_t usecs_per_sample = 1000000 / samples_per_sec;
-
-//constexpr sample_no_t samples_per_lfo_intv = ;
-
-}
-
-#endif // SAMPLE_H

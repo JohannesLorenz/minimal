@@ -18,6 +18,7 @@
 /*************************************************************************/
 
 #include "jack_engine.h"
+#include "audio.h"
 #include "io.h"
 
 namespace mini {
@@ -31,19 +32,47 @@ jack_engine_t::jack_engine_t() :
 {
 }
 
+int jack_engine_t::process(jack::frames_t samples)
+{
+	engine_t::proceed(samples);
+	for(int side = 0; side < 1; ++side)
+	{
+		ringbuffer_reader_t& reader = player.sink.get().data[side];
+		if(reader.read_space() < samples)
+			throw "not enough read space";
+		else
+		{
+			sample_t* buffer = out[side].get_buffer<sample_t>(samples);
+			if(buffer)
+			{
+				auto rs = reader.read_max(samples);
+				if(rs.size() < samples)
+				 throw "not enough space in rs";
+				// TODO: memcpy
+				for(std::size_t i = 0; i < rs.size(); ++i)
+				 buffer[i] = rs[i];
+			}
+			else
+			 throw "could not get buffer";
+		}
+	}
+
+	return 0; // 0 = no error, 1 = error
+}
+
 void jack_engine_t::vrun()
 {
 	io::mlog << "Activating jack now..." << io::endl;
 	activate();
 
 	const char **outPorts = jack_get_ports(
-		client,
-		nullptr,
-		nullptr,
-		JackPortIsPhysical | JackPortIsInput);
+				client,
+				nullptr,
+				nullptr,
+				JackPortIsPhysical | JackPortIsInput);
 
 	if(!outPorts || !outPorts[0] || !outPorts[1])
-	 throw "Could not connect to stereo output";
+		throw "Could not connect to stereo output";
 
 	// connect must be done after activate...
 	connect(out[0].name(), outPorts[0]);

@@ -63,7 +63,7 @@ class engine_t
 	//! the processing callback
 	virtual void vrun() = 0;
 
-	virtual void get_sample_rate() = 0;
+	virtual sample_no_t get_sample_rate() = 0;
 protected:
 	player_t player;
 

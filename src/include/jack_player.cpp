@@ -23,7 +23,7 @@
 namespace mini {
 
 jack_player_t::jack_player_t() :
-	audio_in((effect_t&)*this, rb_size, rb_size)
+	audio_in((effect_t&)*this)
 {
 	// TODO: error prone that programmer can forget this:
 	set_next_time(std::numeric_limits<sample_no_t>::max());
