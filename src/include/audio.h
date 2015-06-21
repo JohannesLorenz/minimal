@@ -20,6 +20,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <array>
 #include <jack/types.h>
 #include <ringbuffer/ringbuffer.h>
 
@@ -38,9 +39,24 @@ constexpr std::size_t rb_size = buffer_size * sample_size;
 //template<class T, std::size_t N = 2>
 //using multiplex = std::array<T, N>;
 
+//! not my favorite solution, but new fails for float[2]
+template<class T, std::size_t Channels = 2>
+struct Stereo {
+	T ch[Channels];
+	T& operator[](std::size_t idx) { return ch[idx]; }
+	const T& operator[](std::size_t idx) const { return ch[idx]; }
+};
+
 template<class T, std::size_t N = 2>
 struct multiplex
 {
+	/*struct test {
+		test(test&& ) = default;
+		test(const test& ) = delete;
+		test(std::size_t ) {}
+	};
+	using T = test;
+*/
 	T data[N];
 
 	template<class ...Args>
@@ -75,34 +91,41 @@ public:
 	T& operator[](std::size_t i) { return data[i]; }
 };
 
-struct audio_out : out_port_templ<multiplex<ringbuffer_t>>
+class m_ringbuffer_t : public ringbuffer_t<Stereo<float>>, util::non_movable_t
+{
+	using ringbuffer_t<Stereo<float>>::ringbuffer_t;
+};
+
+struct audio_out : out_port_templ<m_ringbuffer_t>
 {
 	using base::out_port_templ;
 };
 
+class m_reader_t : public ringbuffer_reader_t<Stereo<float>> {
+public:
+	m_reader_t() : ringbuffer_reader_t(rb_size) {}
+};
+
 //! redefinition for the port, since there is nothing to assign
+// TODO: general version for multiplex<T>
 template<bool IsDep>
-struct in_port_templ<multiplex<ringbuffer_reader_t>, IsDep> : public in_port_templ_noassign<multiplex<ringbuffer_reader_t>, IsDep>
+struct in_port_templ<m_reader_t, IsDep> : public in_port_templ_noassign<m_reader_t, IsDep>
 {
 public:
-	using in_port_templ_noassign<multiplex<ringbuffer_reader_t>, IsDep>::in_port_templ_noassign;
+	using in_port_templ_noassign<m_reader_t, IsDep>::in_port_templ_noassign;
+	// TODO: noassign is incorrect, use foreach...
 };
 
 //! redefinition of connection
 template<bool IsDep>
-void operator<<(in_port_templ<multiplex<ringbuffer_reader_t>, IsDep>& ipt,
-	out_port_templ<multiplex<ringbuffer_t>>& opt)
+void operator<<(in_port_templ<m_reader_t, IsDep>& ipt,
+	out_port_templ<m_ringbuffer_t>& opt)
 {
 	internal_connect(ipt, opt);
-	ipt.data[0].connect(opt.data[0]);
-	ipt.data[1].connect(opt.data[1]);
+	ipt.data.connect(opt.data);
 }
 
-struct m_reader_t : public ringbuffer_reader_t {
-	m_reader_t() : ringbuffer_reader_t(global_samplerate) {}
-};
-
-struct audio_in : in_port_templ<multiplex<m_reader_t>, true /*TODO?*/>
+struct audio_in : in_port_templ<m_reader_t, true /*TODO?*/>
 {
 	void on_read(sample_no_t ) {} // TODO??
 	audio_in(effect_t& e) : in_port_templ(e) {}

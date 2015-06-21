@@ -65,6 +65,7 @@ class engine_t
 
 	virtual sample_no_t get_sample_rate() = 0;
 protected:
+	void stop() { _is_running.store(false); }
 	player_t player;
 
 public:
@@ -85,8 +86,8 @@ public:
 		} else {
 			_is_running.store(true);
 			vrun();
-			_is_running.store(false);
-			io::mlog << "Engine finished..." << io::endl;
+			//_is_running.store(false);
+			//io::mlog << "Engine finished..." << io::endl;
 		}
 	}
 

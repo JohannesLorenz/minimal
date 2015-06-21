@@ -57,7 +57,7 @@ public:
 	}
 
 	virtual const void* get_value() const = 0; // void* is not good...
-	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
+//	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
 
 	//virtual void connect(const in_port_base& ) ;
 };
@@ -112,13 +112,11 @@ public:
 // TODO: abstract port base
 class in_port_base : public util::non_copyable_t, public port_base
 {
-public: // TODO!! protected
 	effect_t* e;
 private:
 	bool _is_trigger = false;
 	bool _is_precomputable;
-//protected:
-public: // TODO
+protected:
 	sample_no_t change_stamp = -1;
 	std::size_t id;
 
@@ -135,6 +133,11 @@ protected:
 	template<class T, bool IsDep>
 	friend void operator<<(in_port_templ<const T*, IsDep>& ipt, out_port_templ<T>& opt);
 public:
+
+
+	std::size_t get_id() const { return id; }
+	void init_id(std::size_t new_id) { id = new_id; }
+	const effect_t* get_effect() const { return e; }
 
 	in_port_base(in_port_base&& ) noexcept = default;
 
@@ -156,9 +159,9 @@ public:
 	template<class P>
 	in_port_base(port_ctor<P> pc) : in_port_base(*pc.effect()) {}
 
-	sample_no_t get_outs_next_time() const {
+/*	sample_no_t get_outs_next_time() const {
 		return source->next_time;
-	}
+	}*/
 
 	virtual bool update() = 0;
 
@@ -266,6 +269,16 @@ public:
 	using in_port_templ_noassign<T*, IsDep>::in_port_templ_noassign;
 };
 
+/*class m_reader_t;
+
+template<bool IsDep>
+struct in_port_templ<m_reader_t, IsDep> : public in_port_templ_noassign<m_reader_t, IsDep>
+{
+public:
+	using in_port_templ_noassign<m_reader_t, IsDep>::in_port_templ_noassign;
+};*/
+
+
 template<class T1, class T2, bool IsDep>
 void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt)
 {
@@ -313,10 +326,10 @@ class self_port_base : public port_base
 {
 public:
 	bool unread_changes = false; // initally send values - TODO
-	sample_no_t get_outs_next_time() const {
+/*	sample_no_t get_outs_next_time() const {
 		// who knows :-)) (bad validation of protocol...)
 		return std::numeric_limits<sample_no_t>::max();
-	}
+	}*/
 	virtual const void* get_value() const = 0;
 };
 

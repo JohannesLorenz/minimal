@@ -68,7 +68,8 @@ SOURCES += src/core/main.cpp \
 	src/core/jack_engine.cpp \
 	src/include/fraction.cpp \
 	src/songs/debug_proj.cpp \
-	src/core/player.cpp
+	src/core/player.cpp \
+	src/include/sample.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \

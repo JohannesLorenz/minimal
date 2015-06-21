@@ -43,10 +43,10 @@ void effect_t::init_next_time(sample_no_t next)
 }
 
 void effect_t::add_in_port(mini::in_port_base *ipb) {
-	ipb->id = in_ports.size();
+	ipb->init_id(in_ports.size());
 	io::mlog << "Adding in port: " << ipb
-		 << ", stamp: " << ipb->change_stamp
-		 << ", id: " << ipb->id << io::endl;
+	//	 << ", stamp: " << ipb->change_stamp
+		 << ", id: " << ipb->get_id() << io::endl;
 	in_ports.push_back(ipb);
 }
 

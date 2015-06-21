@@ -32,11 +32,11 @@ class atomic
 {
 	std::atomic<T> at;
 public:
-	T load() const { return at.load(std::memory_order_relaxed); }
-	T load() const volatile { return at.load(std::memory_order_relaxed); }
+	T load() const { return at.load(std::memory_order_acquire); }
+	T load() const volatile { return at.load(std::memory_order_acquire); }
 
-	void store(T x) { at.store(x, std::memory_order_relaxed); }
-	void store(T x) volatile { at.store(x, std::memory_order_relaxed); }
+	void store(T x) { at.store(x, std::memory_order_release); }
+	void store(T x) volatile { at.store(x, std::memory_order_release); }
 
 	operator T() const { return at.operator T(); }
 	operator T() const volatile { return at.operator T(); }

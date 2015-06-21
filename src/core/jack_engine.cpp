@@ -37,7 +37,7 @@ int jack_engine_t::process(jack::frames_t samples)
 	engine_t::proceed(samples);
 	for(int side = 0; side < 1; ++side)
 	{
-		ringbuffer_reader_t& reader = player.sink.get().data[side];
+		m_reader_t& reader = player.sink.get();
 		if(reader.read_space() < samples)
 			throw "not enough read space";
 		else
@@ -50,7 +50,7 @@ int jack_engine_t::process(jack::frames_t samples)
 				 throw "not enough space in rs";
 				// TODO: memcpy
 				for(std::size_t i = 0; i < rs.size(); ++i)
-				 buffer[i] = rs[i];
+				 buffer[i] = rs[i][side];
 			}
 			else
 			 throw "could not get buffer";

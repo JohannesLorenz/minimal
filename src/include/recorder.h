@@ -41,7 +41,7 @@ namespace mini
 class recorder_t : public effect_t, public audio_in
 {
 	SndfileHandle fp;
-	ringbuffer_t rb;
+	m_ringbuffer_t rb;
 	float* framebuf;
 public:
 	recorder_t(const char *filename,

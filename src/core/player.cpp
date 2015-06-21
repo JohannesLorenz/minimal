@@ -180,7 +180,7 @@ void _player_t::init()
 		for(const out_port_base* op  : e->get_out_ports())
 		for(in_port_base* target_ip : op->readers)
 		{
-			effect_t* target_ef = target_ip->e;
+			const effect_t* target_ef = target_ip->get_effect();
 			//changed_ports[target_ef->id()][target_ip->id] = true;
 
 			//handle_type h = handles.at(target_ef);
@@ -380,9 +380,9 @@ void REALTIME _player_t::process(sample_no_t work)
 				for(in_port_base* target_ip : op->readers)
 				{
 				//	TODO: check this!!!
-					effect_t* target_ef = target_ip->e;
+					const effect_t* target_ef = target_ip->get_effect();
 
-					changed_ports[target_ef->id()][target_ip->id] = true;
+					changed_ports[target_ef->id()][target_ip->get_id()] = true;
 					// TODO: use a vector in task_effect, too? like in_efcs, out_efcs?
 
 					//handle_type h = handles.at(target_ef);

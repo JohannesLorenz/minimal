@@ -19,4 +19,8 @@
 
 #include "sample.h"
 
-extern sample_no_t global_samplerate;
+namespace mini {
+
+sample_no_t global_samplerate;
+
+}

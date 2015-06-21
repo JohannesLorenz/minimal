@@ -29,7 +29,8 @@ class jack_engine_t : public engine_t, public jack::client_t
 {
 	virtual int process(jack::frames_t samples);
 	virtual void shutdown() {
-		throw "shutdown not implemented :P";
+		stop();
+		//throw "shutdown not implemented :P";
 	}
 
 	sample_no_t get_sample_rate() { return sample_rate(); }

@@ -81,7 +81,7 @@ _shutdown (void *arg)
 
 audio_instrument_t::audio_instrument_t(const char *name) :
 	instrument_t(name),
-	audio_out((effect_t&)*this, rb_size, rb_size)
+	audio_out((effect_t&)*this, rb_size)
 {
 	add_out_port(static_cast<audio_out*>(this));
 }
