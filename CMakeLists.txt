@@ -77,6 +77,10 @@ endmacro()
 #find_submodules("${submodules}")
 
 #MESSAGE("ALD now: ${AUDIO_LIBRARY_DIRS}")
+
+include_directories("submodules/ringbuffer/include")
+
+
 link_directories(${AUDIO_LIBRARY_DIRS})
 
 #add_custom_target(init "git" "submodule" "init" "--" ${COMPILED_SUBMODULES})

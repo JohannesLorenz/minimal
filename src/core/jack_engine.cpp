@@ -45,6 +45,8 @@ int jack_engine_t::process(jack::frames_t samples)
 			sample_t* buffer = out[side].get_buffer<sample_t>(samples);
 			if(buffer)
 			{
+				std::cerr << "jack engine reading "
+					<< samples << " samples" << std::endl;
 				auto rs = reader.read_max(samples);
 				if(rs.size() < samples)
 				 throw "not enough space in rs";
