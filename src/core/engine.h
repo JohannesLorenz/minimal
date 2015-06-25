@@ -64,7 +64,11 @@ class engine_t
 	virtual void vrun() = 0;
 
 	virtual sample_no_t get_sample_rate() = 0;
+
 protected:
+	//! processes all fx of the player
+	void proceed(sample_no_t samples);
+
 	void stop() { _is_running.store(false); }
 	player_t player;
 
@@ -72,8 +76,6 @@ public:
 	virtual ~engine_t();
 
 	void load_project(project_t &pro);
-
-	void proceed(sample_no_t samples);
 
 	void play_until(bars_t end);
 

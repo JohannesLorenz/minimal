@@ -17,6 +17,7 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <algorithm>
 #include "jack_engine.h"
 #include "audio.h"
 #include "io.h"
@@ -35,7 +36,7 @@ jack_engine_t::jack_engine_t() :
 int jack_engine_t::process(jack::frames_t samples)
 {
 	engine_t::proceed(samples);
-	for(int side = 0; side < 1; ++side)
+	for(int side = 0; side < 2; ++side)
 	{
 		m_reader_t& reader = player.sink.get();
 		if(reader.read_space() < samples)
@@ -50,9 +51,14 @@ int jack_engine_t::process(jack::frames_t samples)
 				auto rs = reader.read_max(samples);
 				if(rs.size() < samples)
 				 throw "not enough space in rs";
-				// TODO: memcpy
-				for(std::size_t i = 0; i < rs.size(); ++i)
-				 buffer[i] = rs[i][side];
+				std::size_t first_sz = rs.first_half_size();
+				std::copy_n(rs.first_half_buffer(),
+					first_sz, buffer);
+				std::copy_n(rs.second_half_buffer(),
+					rs.second_half_size(),
+					buffer + first_sz);
+				//for(std::size_t i = 0; i < rs.size(); ++i)
+				// buffer[i] = rs[i][side];
 			}
 			else
 			 throw "could not get buffer";

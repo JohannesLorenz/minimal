@@ -274,6 +274,7 @@ void _player_t::play_until(sample_no_t dest)
 void REALTIME _player_t::process(sample_no_t work)
 {
 	if(work == 0) {
+		throw "Error: work = 0";
 	 std::cerr << "WARNING: work = 0" << std::endl;
 	 work = 1024;
 	}
@@ -289,8 +290,9 @@ void REALTIME _player_t::process(sample_no_t work)
 		<< " vs "
 		<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
-	// the author of this function must be proud of the functions name...
-	auto try_get_task = [this](sample_no_t pos) -> task_effect* {
+	// only used in while loop's condition
+	auto try_get_task = [this](sample_no_t pos) -> task_effect*
+	{
 		task_effect* ret = nullptr;
 		work_queue_lock.lock();
 		task_base* next_task = peek_next_task();
@@ -333,9 +335,9 @@ void REALTIME _player_t::process(sample_no_t work)
 			//  1. we are exclusively in this if
 			//  2. all other threads have left this effect
 		}*/
-		++this_ef->cur_threads;
-
-		this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
+		
+		if(++this_ef->cur_threads == 1)
+		 this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
 
 
 

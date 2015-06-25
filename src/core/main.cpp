@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 		jack_engine_t eng;
 		eng.load_project(pro);
 		//eng.play_until(5_1);
-		eng.activate();
+		//eng.activate(); <- currently called by run
 		eng.run();
 
 		while(eng.is_running()) {
