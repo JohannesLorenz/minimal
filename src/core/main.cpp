@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 		eng.load_project(pro);
 		//eng.play_until(5_1);
 		//eng.activate(); <- currently called by run
-		eng.run();
+		eng.run_until(10_1);
 
 		while(eng.is_running()) {
 			usleep(500000); // 0.5 s (hopefully!)

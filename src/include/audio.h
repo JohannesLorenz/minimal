@@ -125,7 +125,7 @@ void operator<<(in_port_templ<m_reader_t, IsDep>& ipt,
 	ipt.data.connect(opt.data);
 }
 
-struct audio_in : in_port_templ<m_reader_t, true /*TODO?*/>
+struct audio_in : public in_port_templ<m_reader_t, true /*TODO?*/>
 {
 	void on_read(sample_no_t ) {} // TODO??
 	audio_in(effect_t& e) : in_port_templ(e) {}

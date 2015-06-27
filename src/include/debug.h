@@ -63,7 +63,7 @@ struct start_t : public debug_effect_base, public int_out
 	void clean_up() {}
 
 	// this will only be called on startup
-	bool _proceed(sample_no_t );
+	bool _proceed();
 };
 
 class pipe_t : public debug_effect_base, public int_in_1, public int_out
@@ -83,7 +83,7 @@ public:
 	std::atomic<int> sum_this;
 
 	// this will be only called on startup
-	bool _proceed(sample_no_t );
+	bool _proceed();
 };
 
 struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
@@ -94,7 +94,7 @@ struct in2_t : public debug_effect_base, public int_in_1, public int_in_2
 	void clean_up() {}
 
 	// this will be only called on startup // -> ??
-	bool _proceed(sample_no_t );
+	bool _proceed();
 };
 
 }

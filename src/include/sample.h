@@ -28,8 +28,6 @@ namespace mini {
 using sample_no_t = int_least64_t;
 using sample_rate_t = sample_no_t;
 
-extern sample_no_t global_samplerate;
-
 inline sample_no_t operator"" _smps(unsigned long long int n) { return n; }
 
 // enough samples for one day
@@ -40,15 +38,24 @@ static_assert(sizeof(sample_no_t) >= 8,
 // 1 bar = 2 seconds
 // 1000 samples per second
 
-// fixed constants
-constexpr sample_no_t samples_per_sec = 1024;
-constexpr sample_no_t useconds_per_lfo_intv = 1024;
+struct info_t
+{
+	info_t() { recompute(); }
 
-// constants depending on others
-constexpr sample_no_t samples_per_bar = samples_per_sec * 2;
-constexpr sample_no_t usecs_per_sample = 1000000 / samples_per_sec;
+	sample_no_t global_samplerate = 48000; // TODO: read this from jack!
+	// fixed constants
+	//sample_no_t samples_per_sec;// = 1024;
+	const sample_no_t useconds_per_lfo_intv = 1024;
 
-//constexpr sample_no_t samples_per_lfo_intv = ;
+	// constants depending on others
+	sample_no_t samples_per_bar; //= global_samplerate * 2;
+	sample_no_t usecs_per_sample; //= 1000000 / samples_per_sec;
+
+	void recompute();
+	//constexpr sample_no_t samples_per_lfo_intv = ;
+};
+
+extern info_t info;
 
 }
 

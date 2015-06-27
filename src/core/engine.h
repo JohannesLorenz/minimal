@@ -30,7 +30,7 @@
 
 namespace mini {
 
-class main_tp : public threadpool::threadpool_t
+/*class main_tp : public threadpool::threadpool_t
 {
 };
 
@@ -46,7 +46,7 @@ class multi_tp : public main_tp, other_tp
 	virtual bool callback() {
 		return true;
 	}
-};
+};*/
 
 //! There must be a class containing player and threadpool, and this one
 //! volunteered for it.
@@ -54,14 +54,14 @@ class engine_t
 {
 	atomic_def<bool, false> _is_running;
 
-	multi_tp tp;
+	//multi_tp tp;
 
 	//mini::loaded_project_t lpro;
 	//mini::project_t lpro;
 
 	//! should start the engine, such that it will repeatedly call
 	//! the processing callback
-	virtual void vrun() = 0;
+	virtual void vrun(bars_t limit) = 0;
 
 	virtual sample_no_t get_sample_rate() = 0;
 
@@ -77,17 +77,17 @@ public:
 
 	void load_project(project_t &pro);
 
-	void play_until(bars_t end);
+	//void play_until(bars_t end); // deprecated?
 
 	bool is_running() const { return _is_running; }
 
-	void run()
+	void run_until(bars_t limit)
 	{
 		if(_is_running) {
 			throw "engine already running";
 		} else {
 			_is_running.store(true);
-			vrun();
+			vrun(limit);
 			//_is_running.store(false);
 			//io::mlog << "Engine finished..." << io::endl;
 		}

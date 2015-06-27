@@ -112,6 +112,7 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 		{
 			const note_t& cur_note = *n2.second;
 			const note_geom_t next_offs = cur_offs + n2.first;
+			std::cerr << "emplacing: " << next_visit_id << std::endl;
 			note_events.emplace(next_offs,
 				m_note_event{true, cur_note.velocity(), next_visit_id}); // TODO: 1
 			note_events.emplace(next_offs + note_geom_t(cur_note.length(), 0),
@@ -123,7 +124,7 @@ public:
 
 	note_line_impl(note_line_t *nl);
 
-	sample_no_t _proceed(sample_no_t time); /* {
+	sample_no_t _proceed(sample_no_t amnt); /* {
 		return run_tasks(time);
 	}*/
 };
@@ -148,7 +149,7 @@ public:
 		impl_t::instantiate();
 		set_next_time(
 			as_samples_floor(impl->note_events.begin()->first.start,
-				samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
+				info.samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
 	}
 
 	void clean_up() {}
@@ -159,10 +160,10 @@ public:
 	}
 
 
-	bool _proceed(sample_no_t )
+	bool _proceed()
 	{
 		//io::mlog << "proceeding with note line... " << io::endl;
-		set_next_time(impl->_proceed(pos));
+		set_next_time(impl->_proceed(time()));
 		return true;
 	}
 };

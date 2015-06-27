@@ -19,6 +19,7 @@
 
 #include <stack>
 #include "project.h"
+#include "audio_sink.h"
 
 namespace mini {
 
@@ -34,6 +35,9 @@ project_t::~project_t()
 
 void project_t::finalize()
 {
+	if(!sink)
+	 throw "Project misses a sink";
+
 	for(effect_t* e : effects()) // TODO: -> initializer list
 	{
 		e->instantiate();
@@ -79,6 +83,13 @@ void project_t::finalize()
 
 	} while(ready_fx.size());
 	finalized = true;
+}
+
+audio_sink_t &project_t::add_sink()
+{
+	audio_sink_t& res = emplace<audio_sink_t>();
+	sink = &res;
+	return res;
 }
 
 /*track_t& project_t::add_track(const instrument_t &ins) {

@@ -117,7 +117,10 @@ void client_t::activate()
 client_t::~client_t()
 {
 	if(client)
-	 jack_client_close(client);
+	{
+		jack_deactivate(client);
+		jack_client_close(client);
+	}
 }
 
 const char *port_t::name() const { return jack_port_name(port); }

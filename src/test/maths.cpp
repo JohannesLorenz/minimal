@@ -17,6 +17,8 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
+#include <limits>
+#include <cstdint>
 #include "bars.h"
 #include "io.h"
 
@@ -54,6 +56,9 @@ int main()
 		throw_if_neq(1 + 1_3, bars_t(4, 3));
 
 		throw_if_neq(0_2, 0_3);
+
+		throw_if_neq(bars_t(std::numeric_limits<int_least64_t>::max(),1)
+			> bars_t(1,1), true);
 
 	} catch (const char* s)
 	{

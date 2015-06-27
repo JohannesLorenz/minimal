@@ -63,7 +63,7 @@ void jack_player_t::instantiate()
 #endif
 }
 
-bool jack_player_t::_proceed(sample_no_t /*samples*/)
+bool jack_player_t::_proceed()
 {
 #if 0
 	io::mlog << "JACKPLAYER" << io::endl;

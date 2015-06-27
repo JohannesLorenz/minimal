@@ -63,24 +63,6 @@ public:
 
 using loaded_project_t = project_t;
 
-struct audio_sink : effect_t, public audio_in
-{
-	audio_sink() : // TODO: lfo base class?
-		effect_t("audio sink"),
-		audio_in((effect_t&)*this)
-	{
-		set_next_time(std::numeric_limits<float>::max());
-	}
-
-	void instantiate() {}
-	void clean_up() {}
-
-	bool _proceed(sample_no_t ) {
-		// nothing to do, the engine will read from us
-		return true;
-	}
-};
-
 class _player_t : public work_queue_t // TODO: own header
 {
 	//array_stack<effect_t*> ready_fx;
@@ -99,7 +81,7 @@ class _player_t : public work_queue_t // TODO: own header
 		const command_base* cmd;
 		std::set<sample_no_t>::const_iterator itr;
 	public:
-		void proceed(sample_no_t); // TODO: really cpp?
+		void proceed(sample_no_t ); // TODO: really cpp?
 
 		//sample_no_t next() { return *itr; }
 		// TODO: no idea why I can not use initializer lists
@@ -131,9 +113,9 @@ class _player_t : public work_queue_t // TODO: own header
 		{
 		}
 
-		void proceed(sample_no_t time)
+		void proceed()
 		{
-			if(effect->proceed(time) && true)
+			if(effect->proceed() && true)
 			{
 				update_next_time(effect->get_next_time());
 			}
@@ -144,7 +126,7 @@ class _player_t : public work_queue_t // TODO: own header
 
 			
 
-			//update_next_time(effect->proceed(time));
+			//update_next_time(effect->proceed(amnt));
 		}
 
 		bool cmp(const task_base& other) const {
@@ -179,18 +161,19 @@ class _player_t : public work_queue_t // TODO: own header
 
 	void init();
 public:
-	audio_sink sink;
+	class audio_sink_t* sink() { return project->sink; }
 
 	_player_t() = default;
 	void set_project(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
-	void play_until(sample_no_t dest);
+	//void play_until(sample_no_t dest);
 
 	//! will be asking for the next nframes frames (i.e. samples for us)
 	//! and announce the following callback at @a pos + @a nframes samples
 	void callback(std::size_t nframes) {
 		if(next_task_time() <= pos + (sample_no_t)nframes)
 		 process(nframes);
+		pos += nframes;
 	}
 };
 

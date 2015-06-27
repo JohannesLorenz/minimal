@@ -60,7 +60,7 @@ public:
 class effect_t : util::non_copyable_t, public has_id, public named_t //: public port_chain
 {
 protected:
-	sample_no_t pos = 0; //!< number of samples played yet
+	//sample_no_t pos = 0; //!< number of samples processed yet
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports; // TODO: not public
 private:
@@ -78,8 +78,16 @@ private:
 protected:
 	//! should advance the effect s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool _proceed(sample_no_t samples) = 0; // TODO: private?
+	virtual bool _proceed() = 0; // TODO: private?
+	// TODO: deprecated?
 	void set_next_time(sample_no_t next);
+	//! time while @a _proceed is being called
+	sample_no_t time() { return get_next_time(); }
+	//! increases the next time
+	void add_next_time(sample_no_t add) {
+		set_next_time(time() + add);
+	}
+
 public:
 	void init_next_time(sample_no_t next);
 
@@ -103,11 +111,11 @@ public:
 	// returns the next time when the effect must be started
 
 	void proceed_message();
-	sample_no_t proceed(sample_no_t samples) {
+	sample_no_t proceed() {
 		proceed_message();
 		//return next_time = _proceed(time);
-		_proceed(samples);
-		pos += samples;
+		_proceed();
+		//pos += samples;
 		return get_next_time();
 	}
 
@@ -150,7 +158,7 @@ public:
 		set_id(id);
 		init_next_time(std::numeric_limits<sample_no_t>::max());
 	}
-	bool _proceed(sample_no_t ) { throw "impossible"; return true; }
+	bool _proceed() { throw "impossible"; return true; }
 	void instantiate() {}
 	void clean_up() {}
 };

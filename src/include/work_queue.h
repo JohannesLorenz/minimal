@@ -45,7 +45,7 @@ public:
 		void update_next_time(sample_no_t new_value) {
 			_next_time = new_value;
 		}
-		virtual void proceed(sample_no_t time) = 0;
+		virtual void proceed() = 0;
 		sample_no_t next_time() const { return _next_time; }
 		task_base(sample_no_t next_time) : _next_time(next_time) {}
 		virtual bool cmp(const task_base& other) const { return this < &other; }
@@ -66,9 +66,9 @@ public:
 private:
 	pq_type pq;
 public:
-	sample_no_t run_tasks(sample_no_t pos)
+	sample_no_t run_tasks(sample_no_t limit)
 	{
-		while(pq.top()->next_time() <= pos)
+		while(pq.top()->next_time() <= limit)
 		{
 
 			task_base* top = std::move(pq.top());
@@ -78,20 +78,21 @@ public:
 			/*const bool reinsert = top->proceed(pos);
 			if(reinsert)
 			 pq.push(top);*/
-			top->proceed(pos); // will update the next-time event
+			top->proceed(); // will update the next-time event
 			pq.push(top);
 
 		}
 		return pq.top()->next_time();
 	}
 
-	sample_no_t run_tasks_keep(sample_no_t pos)
+	//! @param limit limit until tasks should be run
+	sample_no_t run_tasks_keep(sample_no_t limit)
 	{
-		while(pq.top()->next_time() <= pos)
+		while(pq.top()->next_time() <= limit)
 		{
 
 			task_base* top = std::move(pq.top());
-			top->proceed(pos);
+			top->proceed();
 			update(top->get_handle());
 
 			/*const bool reinsert = top->proceed(pos);
@@ -110,9 +111,8 @@ public:
 		return pq.push(new_task);
 	}
 
-	task_base* peek_next_task() {
-		return pq.top();
-	}
+	task_base* peek_next_task() { return pq.top(); }
+	const task_base* peek_next_task() const { return pq.top(); }
 
 	task_base* pop_next_task() {
 		task_base* ret_val = peek_next_task();
@@ -120,7 +120,7 @@ public:
 		return ret_val;
 	}
 
-	bool has_active_tasks(sample_no_t at_time) {
+	bool has_active_tasks(sample_no_t at_time) const {
 		//io::mlog << "active? " << pq.top()->next_time() << " <= "<< at_time << " ? " << (pq.top()->next_time() <= at_time) << io::endl;
 		return pq.top()->next_time() <= at_time;
 	}

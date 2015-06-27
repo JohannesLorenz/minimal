@@ -234,6 +234,7 @@ _player_t::_player_t(loaded_project_t &_project) :
 	#define REALTIME // replace with "nothing"
 #endif
 
+#if 0
 // TODO: deprecated!?!?!?
 void _player_t::play_until(sample_no_t dest)
 {
@@ -249,11 +250,11 @@ void _player_t::play_until(sample_no_t dest)
 		{
 			auto duration = std::chrono::system_clock::now().time_since_epoch() - start_time;
 			auto useconds_right_now = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-			sample_no_t samples_right_now = useconds_right_now / usecs_per_sample;
+			sample_no_t samples_right_now = useconds_right_now / info.usecs_per_sample;
 
 			// do not sleep longer than dest, but at least 0
 			sample_no_t sleep_time = std::max(std::min(next_task_time() - samples_right_now,
-					dest - samples_right_now) * usecs_per_sample, 0_smps);
+					dest - samples_right_now) * info.usecs_per_sample, 0_smps);
 			usleep((useconds_t)sleep_time);
 		}
 
@@ -269,6 +270,7 @@ void _player_t::play_until(sample_no_t dest)
 	// no more tasks possible, so:
 	// pos = final_pos; // dangerous for subsequent calls
 }
+#endif
 
 //! the "heart" of minimal
 void REALTIME _player_t::process(sample_no_t work)
@@ -291,17 +293,23 @@ void REALTIME _player_t::process(sample_no_t work)
 		<< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads << io::endl;
 
 	// only used in while loop's condition
-	auto try_get_task = [this](sample_no_t pos) -> task_effect*
+	auto try_get_task = [this](sample_no_t limit) -> task_effect*
 	{
 		task_effect* ret = nullptr;
 		work_queue_lock.lock();
 		task_base* next_task = peek_next_task();
-		io::mlog << "next task: " << dynamic_cast<task_effect*>(next_task)->effect->id() << io::endl
+
+		task_effect* te = dynamic_cast<task_effect*>(next_task);
+
+		io::mlog << "next task: " << te->effect->id() << io::endl
 			<< "at time: " << next_task->next_time() << io::endl;
-		if(next_task->next_time() <= pos
-			&& dynamic_cast<task_effect*>(next_task)->effect->cur_threads
-			< dynamic_cast<task_effect*>(next_task)->effect->max_threads)
-		 ret = dynamic_cast<task_effect*>(next_task);
+		io::mlog << "limit: " << limit << io::endl;
+
+		io::mlog << "cur threads: " << te->effect->cur_threads
+			<< "of " << te->effect->max_threads << io::endl;
+		if(next_task->next_time() <= limit
+			&& te->effect->cur_threads < te->effect->max_threads)
+		 ret = te;
 		work_queue_lock.unlock();
 		io::mlog << "acceptable? "
 			<< ret << io::endl;
@@ -313,15 +321,18 @@ void REALTIME _player_t::process(sample_no_t work)
 	/*while(peek_next_task()->next_time() <= pos &&
 		dynamic_cast<task_effect*>(peek_next_task())->effect->cur_threads
 		< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )*/
-	while((task_e = try_get_task(pos)))
+	while((task_e = try_get_task(pos + work)))
 	{
+		io::mlog << "pos, work: "
+			<< pos << ", " << work << io::endl;
+
 		// TODO: simple reinsert??
 
 		//task_base* top = peek_next_task();
 //			task_effect* task_e = dynamic_cast<task_effect*>(top);
 		effect_t* this_ef = task_e->effect;
 
-		/*const bool reinsert = top->proceed(pos);
+		/*const bool reinsert = top->proceed(pos <- time!!!);
 		if(reinsert)
 		 pq.push(top);*/
 		const sample_no_t cur_next_time = task_e->next_time();
@@ -337,14 +348,14 @@ void REALTIME _player_t::process(sample_no_t work)
 		}*/
 		
 		if(++this_ef->cur_threads == 1)
-		 this_ef->pass_changed_ports(changed_ports[this_ef->id()]);
+		 this_ef->pass_changed_ports(changed_ports[this_ef->id()]); // TODO: unsafe!!!
 
 
 
 		io::mlog << "next effect threads now: " << this_ef->cur_threads << io::endl;
 		io::mlog << "next effect work now: " << work << io::endl;
 
-		task_e->proceed(/*pos*/ work); // will also update the next-time event
+		task_e->proceed(); // will also update the next-time event
 
 		//handles.at(this_ef) = add_task(top);
 

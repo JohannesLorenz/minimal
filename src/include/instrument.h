@@ -176,7 +176,7 @@ private:
 
 	//! should advance the instrument s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool advance(sample_no_t samples) = 0;
+	virtual bool advance() = 0;
 public:
 	using effect_t::effect_t;
 
@@ -205,11 +205,11 @@ public:
 	virtual std::string make_start_command() const = 0;
 	
 	//! shall send the OSC string @a cmd to the plugin
-    virtual void send_osc_cmd(const char* cmd) = 0;
+	virtual void send_osc_cmd(const char* cmd) = 0;
 
 	void clean_up();
 
-	bool _proceed(sample_no_t samples) final;
+	bool _proceed() final;
 	
 	// this will be instantiated before the instrument will be
 	virtual void instantiate_first() = 0;

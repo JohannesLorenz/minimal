@@ -28,7 +28,6 @@
 
 #include "command.h"
 #include "instrument.h" // TODO: -> cpp, including proceed() below?
-#include "io.h" // TODO
 
 namespace mini {
 
@@ -62,8 +61,7 @@ public:
 
 	}
 
-	void proceed_base(sample_no_t) { // TODO: call virtual from here?
-	//	io::mlog << "PROCEEDING: " << this << io::endl;
+	void proceed_base() { // TODO: call virtual from here?
 		if(!changed)
 		 throw "proceeding with unchanged command...";
 		changed = false;
@@ -71,7 +69,6 @@ public:
 
 	bool set_changed() {
 		bool had_effect = (changed == false);
-	//	io::mlog << "SETCHANGED: " << this << io::endl;
 		changed = true;
 		return had_effect;
 	}
@@ -92,11 +89,12 @@ public:
 		cmd(cmd)
 		{}
 
-	void proceed(sample_no_t time)
+	void proceed()
 	{
-		proceed_base(time);
+		proceed_base();
 
-		io::mlog << "osc msg to: " << plugin->name() << io::endl;
+	//	io::mlog << "osc msg to: " << plugin->name() << ": " << io::endl
+	//		<< "osc: " << cmd->complete_buffer() << io::endl;
 
 		if(!plugin) throw "plugin";
 		if(!cmd) throw "not cmd";
@@ -234,6 +232,7 @@ public:
 		return cmd.cmd->port_at<I>();
 	}*/
 };
+// TODO: make cast if port_at is obvious (e.g. only 1 port)
 
 
 template<class T, bool, class Ins> // true

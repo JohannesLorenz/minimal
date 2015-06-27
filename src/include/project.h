@@ -114,11 +114,13 @@ class effect_root_t : public effect_t
 {
 	void instantiate() {}
 	void clean_up() {}
-	bool _proceed(sample_no_t ) { return true; }
+	bool _proceed() { return true; }
 public:
 	effect_root_t(effect_root_t&& ) = default;
 	effect_root_t() : effect_t("effect root") {}
 };
+
+class audio_sink_t;
 
 //! Consists of all data which is needed to serialize a project.
 //! This class will never be instantiated in an so file
@@ -202,6 +204,10 @@ public:
 //	track_t& add_track(const instrument_t& ins);
 
 	void invalidate() { valid = false; }
+
+	audio_sink_t* sink;
+
+	audio_sink_t& add_sink();
 };
 
 }

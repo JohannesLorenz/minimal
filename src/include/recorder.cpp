@@ -32,7 +32,7 @@ recorder_t::recorder_t(const char* filename, int format) :
 {
 }
 
-bool recorder_t::_proceed(sample_no_t time)
+bool recorder_t::_proceed()
 { // TODO: separate IO thread?
 	// TODO: read multiple at a time
 #if 0
@@ -46,7 +46,8 @@ bool recorder_t::_proceed(sample_no_t time)
 		}
 	}
 #endif
-	set_next_time(time + 0.1f); // TODO!!
+	//add_next_time(amnt);
+	set_next_time(std::numeric_limits<sample_no_t>::max());
 	return true;
 }
 

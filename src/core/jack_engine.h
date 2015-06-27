@@ -36,8 +36,9 @@ class jack_engine_t : public engine_t, public jack::client_t
 	sample_no_t get_sample_rate() { return sample_rate(); }
 
 	jack::port_t out[2];
+	sample_no_t limit = 0, samples_until_now = 0;
 
-	void vrun();
+	void vrun(bars_t _limit);
 public:
 	jack_engine_t();
 	const char* type_hint() { return "audio"; }

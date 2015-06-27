@@ -103,11 +103,9 @@ void instrument_t::clean_up()
 	 delete cb;
 }
 
-bool instrument_t::_proceed(sample_no_t samples)
+bool instrument_t::_proceed()
 {
-	std::cerr << "Proceeding with effect no " << id() << std::endl;
-
-	if(work_queue_t::has_active_tasks(pos))
+	if(work_queue_t::has_active_tasks(time()))
 	 throw "should not have active tasks yet";
 
 	// read all changed ports to put new commands on queue
@@ -117,16 +115,17 @@ bool instrument_t::_proceed(sample_no_t samples)
 		//io::mlog << "in port: " << i << io::endl;
 		if(in_ports[i]->update())
 		{
-			in_ports[i]->on_read(pos);
+			in_ports[i]->on_read(time());
 		}
 	}
 
 	// send changed osc parameters
-	work_queue_t::run_tasks_keep(pos);
+	// e.g. run all tasks at this time
+	work_queue_t::run_tasks_keep(time());
 
 	// actually do the work
 	//return plugin->proceed(samples);
-	return advance(samples);
+	return advance();
 
 //	// all ports are triggers, so sleep
 //	return std::numeric_limits<sample_no_t>::max();

@@ -21,6 +21,12 @@
 
 namespace mini {
 
-sample_no_t global_samplerate;
+info_t info;
+
+void info_t::recompute()
+{
+	samples_per_bar = global_samplerate << 1; // TODO: depends on tempo
+	usecs_per_sample = 1000000 / global_samplerate;
+}
 
 }

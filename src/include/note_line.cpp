@@ -28,18 +28,20 @@ note_line_impl::note_line_impl(note_line_t *nl) : is_impl_of_t<note_line_t>(nl)
 	// insert notes
 	visit(ref->notes, note_geom_t(bars_t(0, 1), 0));
 	// insert sentinel
-	note_events.emplace(note_geom_t(bars_t(std::numeric_limits<sample_no_t>::max(), 1), 1),
+	note_events.emplace(note_geom_t(bars_t(100000, 1), 1), // TODO: this number...
 		m_note_event{true, 0, std::numeric_limits<int>::max()});
 
 	itr = note_events.begin();
 }
 
-sample_no_t note_line_impl::_proceed(sample_no_t time)
+sample_no_t note_line_impl::_proceed(sample_no_t amnt)
 {
 	note_signal_t& notes_out = ref->notes_out::data;
 	std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
 
-	while(as_samples_floor(itr->first.start, samples_per_bar) <= time) // TODO! 0.1f 0.1f 0.1f
+	// itr points to note_events
+	while(
+		as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt) // TODO! 0.1f 0.1f 0.1f
 	{
 		const note_geom_t& geom = itr->first;
 		const m_note_event& event = itr->second;
@@ -79,10 +81,10 @@ sample_no_t note_line_impl::_proceed(sample_no_t time)
 
 	recently_changed_ptr->first = -1;
 	++notes_out.changed_stamp;
-	ref->notes_out::change_stamp = time;
+	ref->notes_out::change_stamp = amnt;
 
-	last_time = time;
-	return as_samples_floor(itr->first.start, samples_per_bar); // TODO! 0.1f 0.1f 0.1f
+	last_time = amnt;
+	return as_samples_floor(itr->first.start, info.samples_per_bar); // TODO! 0.1f 0.1f 0.1f
 }
 
 }

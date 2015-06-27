@@ -17,44 +17,33 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <thread>
-#include <threadpool/src/include/thread.h>
+#ifndef AUDIO_SINK_H
+#define AUDIO_SINK_H
 
-#include "engine.h"
+#include "effect.h"
+#include "audio.h"
 
 namespace mini {
 
-#if 0
-other_tp::other_tp()
-	: threads(/*std::thread::hardware_concurrency() - 1*/ 0) // TODO!!!
-	 // TODO: allow custom number of threads
+class audio_sink_t : public effect_t, public audio_in
 {
-	for(threadpool::thread_t& t : threads)
-	{
-		t = threadpool::thread_t(*this);
+	void instantiate() {}
+	void clean_up() {}
+
+	bool _proceed() {
+		// nothing to do, the engine will read from us
+		set_next_time(std::numeric_limits<sample_no_t>::max());
+		return true;
 	}
-}
-#endif
-
-engine_t::~engine_t()
-{
-}
-
-// TODO: && or & ? can multiple player access one project?
-void engine_t::load_project(project_t& pro)
-{
-	player.set_project(pro);
-}
-
-void engine_t::proceed(sample_no_t samples)
-{
-	player.callback(samples);
-}
-
-/*void engine_t::play_until(bars_t end)
-{
-	player.play_until(as_samples_floor(end, info.samples_per_bar));
-}*/
+public:
+	audio_sink_t() : // TODO: lfo base class?
+		effect_t("audio sink"),
+		audio_in((effect_t&)*this)
+	{
+		set_next_time(std::numeric_limits<sample_no_t>::max());
+	}
+};
 
 }
 
+#endif // AUDIO_SINK_H

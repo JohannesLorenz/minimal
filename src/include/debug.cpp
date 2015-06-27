@@ -30,7 +30,7 @@ start_t::start_t() : debug_effect_base("start"), int_out((effect_t&)*this)
 	init_next_time(0);
 }
 
-bool start_t::_proceed(sample_no_t ) {
+bool start_t::_proceed() {
 	io::mlog << "proceed: start_t" << io::endl;
 	set_next_time(std::numeric_limits<sample_no_t>::max());
 	return true;
@@ -59,7 +59,7 @@ pipe_t::~pipe_t()
 		}
 }
 
-bool pipe_t::_proceed(sample_no_t ) {
+bool pipe_t::_proceed() {
 
 	sum_this += (++counter);
 
@@ -80,7 +80,7 @@ in2_t::in2_t() : debug_effect_base("sink"),
 	init_next_time(std::numeric_limits<sample_no_t>::max());
 }
 
-bool in2_t::_proceed(sample_no_t ) {
+bool in2_t::_proceed() {
 	io::mlog << "proceed: in2_t" << io::endl;
 	//set_next_time(t + 1);
 	set_next_time(std::numeric_limits<sample_no_t>::max());

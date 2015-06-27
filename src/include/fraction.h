@@ -61,6 +61,7 @@ class fraction_t
 	using num_t = Numerator;
 	using denom_t = Denominator;
 
+	// TODO: assure that n will always carry the minus?
 	num_t n;
 	denom_t d;
 
@@ -85,7 +86,7 @@ public:
 	fraction_t(const fraction_t& ) = default;
 
 	const fraction_t operator+(const fraction_t& rhs) const {
-		std::size_t l = lcm(d, rhs.d);
+		num_t l = lcm(d, rhs.d);
 		return fraction_t(n * l / d + rhs.n * l / rhs.d, l);
 	}
 
@@ -106,7 +107,7 @@ public:
 	denom_t denominator() const { return d; }
 
 	bool operator<(const fraction_t& other) const {
-		num_t l = lcm(d, other.d);
+		denom_t l = lcm(d, other.d);
 		// TODO: shortening for if d>o.d && n<o.n and the opposite?
 		return n * (l/d) < other.n * (l/other.d);
 	}
@@ -150,7 +151,7 @@ inline fraction_t<N, D> operator*(
 	return fraction_t<N, D>(bar.numerator(), bar.denominator(), val);
 }
 
-std::ostream & print_fraction(std::ostream& os, unsigned long long n, unsigned long long d);
+std::ostream & print_fraction(std::ostream& os, signed long long n, signed long long d);
 
 template<class N, class D>
 inline std::ostream& operator<<(std::ostream& os,

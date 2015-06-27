@@ -21,6 +21,7 @@
 #include "jack_engine.h"
 #include "audio.h"
 #include "io.h"
+#include "audio_sink.h"
 
 namespace mini {
 
@@ -36,40 +37,53 @@ jack_engine_t::jack_engine_t() :
 int jack_engine_t::process(jack::frames_t samples)
 {
 	engine_t::proceed(samples);
+
+	m_reader_t& reader = player.sink()->get();
+
+	if(reader.read_space() < samples)
+		throw "not enough read space";
+
+	auto rs = reader.read_max(samples);
+	if(rs.size() < samples)
+	 throw "not enough space in rs";
+
 	for(int side = 0; side < 2; ++side)
 	{
-		m_reader_t& reader = player.sink.get();
-		if(reader.read_space() < samples)
-			throw "not enough read space";
-		else
+		sample_t* buffer =
+			out[side].get_buffer<sample_t>(samples);
+		if(buffer)
 		{
-			sample_t* buffer = out[side].get_buffer<sample_t>(samples);
-			if(buffer)
-			{
-				std::cerr << "jack engine reading "
-					<< samples << " samples" << std::endl;
-				auto rs = reader.read_max(samples);
-				if(rs.size() < samples)
-				 throw "not enough space in rs";
-				std::size_t first_sz = rs.first_half_size();
-				std::copy_n(rs.first_half_buffer(),
-					first_sz, buffer);
-				std::copy_n(rs.second_half_buffer(),
-					rs.second_half_size(),
-					buffer + first_sz);
-				//for(std::size_t i = 0; i < rs.size(); ++i)
-				// buffer[i] = rs[i][side];
-			}
-			else
-			 throw "could not get buffer";
+
+
+
+			/*std::size_t first_sz = rs.first_half_size();
+			std::copy_n(rs.first_half_ptr(),
+				first_sz, buffer);
+			std::copy_n(rs.second_half_ptr(),
+				rs.second_half_size(),
+				buffer + first_sz);*/
+			// std::copy does not work because we have
+			// ringbuffer<Stereo<float>>, and must output
+			// buffer<float>
+			for(std::size_t i = 0; i < rs.size(); ++i)
+			 buffer[i] = rs[i][side];
 		}
+		else
+		 throw "could not get buffer";
+
 	}
 
-	return 0; // 0 = no error, 1 = error
+	if((samples_until_now += samples) > limit)
+	 stop();
+
+	// jack's return philosophy: 0 = no error, 1 = error
+	return 0;
 }
 
-void jack_engine_t::vrun()
+void jack_engine_t::vrun(bars_t _limit)
 {
+	limit = as_samples_floor(_limit, info.samples_per_bar);
+
 	io::mlog << "Activating jack now..." << io::endl;
 	activate();
 
@@ -85,6 +99,8 @@ void jack_engine_t::vrun()
 	// connect must be done after activate...
 	connect(out[0].name(), outPorts[0]);
 	connect(out[1].name(), outPorts[1]);
+
+	io::mlog << "jack samplerate: " << sample_rate() << io::endl;
 }
 
 }
