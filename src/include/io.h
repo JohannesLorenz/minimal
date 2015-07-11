@@ -21,7 +21,7 @@
 #define IO_H
 
 //! enable this for debugging - it will print messages in realtime context
-//#define ENABLE_IO
+// #define ENABLE_IO
 
 #ifdef ENABLE_IO
 #include <iostream>

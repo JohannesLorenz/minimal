@@ -21,11 +21,10 @@ mathematical graphics etc.
 
 # 2 Why using minimal?
 minimal is practical:
-  * You can easily **license your projects**, since they are in plain text.
-  * In minimal, you have a clear overview on your effects. You can even dump
-    an **effect graph**.
+  * you can easily **license your projects**, since they are in plain text.
+  * a clear overview on your effects. You can even dump an **effect graph**.
   * minimal is (assumably) **RT compatible**.
-  * minimal supports **open souce** and has **no windows only plugins**.
+  * minimal supports **open souce** and has **no windows-only plugins**.
 
 minimal is minimal:
   * minimal is designed for **instant compiling and startup**.
@@ -35,7 +34,7 @@ minimal is minimal:
 minimal is developper-friendly:
   * minimal lets you **easily write plugins**, e.g. for any **OSC** plugin.
   * In minimal, coders can use **C++11**.
-  * **Good support** for developping issues.
+  * **good support** for developping issues.
 
 # 3 Documentation
 Type `make doc` for doxygen. TODO: more stuff here...
@@ -51,7 +50,7 @@ The author thanks:
 Feel free to give feedback. My e-mail address is shown if you execute this in
 a shell:
 ```sh
-printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f
+printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f\
 \x72\x65\x6e\x7a\x2d\x68\x6f\x2e\x6d\x65\x0a"
 ```
 

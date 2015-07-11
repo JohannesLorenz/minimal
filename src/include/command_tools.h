@@ -202,7 +202,7 @@ public:
 	//! @param args the ports that will be moved into the command
 	template<class ...Args2>
 	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
-		node_t<void>(ins, base, ext),
+		node_t<void>(base, ext),
 		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
 		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins, cmd_ptr)
 	{

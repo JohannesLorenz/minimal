@@ -107,19 +107,20 @@ public:
 
 class instrument_t;
 
+// TODO: make independent of instrument?
 template<class >
 class node_t : public node_t_base
 {
 	using InstClass = instrument_t;
 public: // TODO
-	InstClass* ins;
+//	InstClass* ins;
 // the inheriting class must define the sub-nodes
 
 	//! if no node with ext exists, adds it. always returns the ref
-	template<class NodeT> NodeT& add_if_new(const std::string& ext)
+	template<class PortT> PortT& add_if_new(const std::string& ext)
 	{
-		return static_cast<NodeT&>(
-			*used_ch.emplace(ext, new NodeT(ins, name(), ext)).
+		return static_cast<PortT&>(
+			*used_ch.emplace(ext, new PortT(/*ins, */name(), ext)).
 			first->second);
 	}
 
@@ -135,26 +136,28 @@ protected:
 		return NodeT(ins, name(), std::string{Lttrs...});
 	}*/
 
-	template<class NodeT>
-	NodeT& spawn(const std::string& ext) {
-		return add_if_new<NodeT>(ext);
+	template<class PortT>
+	PortT& spawn(const std::string& ext) {
+		return add_if_new<PortT>(ext);
 	}
 
-	template<class NodeT>
-	NodeT& spawn(const std::string& ext, std::size_t id) {
-		return spawn<NodeT>(ext + std::to_string(id));
+	template<class PortT>
+	PortT& spawn(const std::string& ext, std::size_t id) {
+		return spawn<PortT>(ext + std::to_string(id));
 	}
 
-	template<class NodeT, std::size_t Id>
-	NodeT& spawn(const std::string& ext) {
-		return spawn<NodeT>(ext + std::to_string(Id));
+	template<class PortT, std::size_t Id>
+	PortT& spawn(const std::string& ext) {
+		return spawn<PortT>(ext + std::to_string(Id));
 	}
 public:
-	node_t(InstClass* ins, const std::string& base, const std::string& ext)
+	node_t(/*InstClass* ins, */const std::string& base, const std::string& ext)
 		// base is assumed to already end on '/'
-		: node_t_base(base + ext + "/"), ins(ins) {}
+		: node_t_base(base + ext + "/") /*, ins(ins)*/ {}
 
-
+	node_t(InstClass* , const std::string& base, const std::string& ext)
+		// base is assumed to already end on '/'
+		: node_t_base(base + ext + "/") /*, ins(ins)*/ {}
 
 	//node(std::string base, std::string ext, std::size_t id)
 	//	: node(base, ext + std::to_string(id)) {}

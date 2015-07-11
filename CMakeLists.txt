@@ -35,7 +35,7 @@ find_package(Boost 1.49.0
 	REQUIRED
 	COMPONENTS graph)
 
-pkg_check_modules(JACK jack)
+pkg_check_modules(JACK jack REQUIRED)
 SET (JackEnable ${JACK_FOUND} CACHE BOOL
 	"Enable support for JACK Audio Connection toolKit")
 if(JackEnable)
@@ -44,7 +44,7 @@ if(JackEnable)
 	add_definitions(-DJACK=1)
 endif(JackEnable)
 
-pkg_check_modules(SNDFILE sndfile)
+pkg_check_modules(SNDFILE sndfile REQUIRED)
 list(APPEND AUDIO_LIBRARIES ${SNDFILE_LIBRARIES})
 list(APPEND AUDIO_LIBRARY_DIRS ${SNDFILE_LIBRARY_DIRS})
 
