@@ -58,3 +58,4 @@ printf "\x6a\x6f\x68\x61\x6e\x6e\x65\x73\x40\x6c\x6f\
  * [FAQ](FAQ.md)
  * [installation](INSTALL.md)
  * [license](LICENSE.txt)
+ * Some [coding rules and guidelines](RULES.md), mostly for coders

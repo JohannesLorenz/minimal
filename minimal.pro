@@ -45,7 +45,8 @@ HEADERS += src/include/plugin.h \
 	src/include/atomic.h \
 	src/include/spinlock.h \
 	src/include/mports.h \
-	src/include/audio_sink.h
+	src/include/audio_sink.h \
+	src/include/scales.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \

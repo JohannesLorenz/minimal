@@ -26,6 +26,7 @@
 #include "tuple_helpers.h"
 //#include "command.h" // TODO: forward declare?
 #include "bars.h"
+#include "scales.h" // TODO: only chromatic.h ?
 
 namespace mini {
 
@@ -46,12 +47,14 @@ namespace daw
 		}
 	};
 
+	using note_offset_t = unsigned char;
+
 	class note_geom_t
 	{
 	public:
 		bars_t start;
-		int offs;
-		note_geom_t(bars_t start, int offs) : start(start), offs(offs) {}
+		note_offset_t offs;
+		note_geom_t(bars_t start, note_offset_t offs) : start(start), offs(offs) {}
 		static note_geom_t zero() noexcept { return note_geom_t(bars_t(0, 1), 0); }
 		bool operator<(const note_geom_t& rhs) const
 		{
@@ -66,6 +69,9 @@ namespace daw
 			return note_geom_t(start - rhs.start, offs - rhs.offs);
 		}
 	};
+
+	inline note_offset_t operator"" _1(scales::chromatic c) { return
+		note_geom_t() }
 
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
