@@ -55,6 +55,7 @@ namespace daw
 		bars_t start;
 		note_offset_t offs;
 		note_geom_t(bars_t start, note_offset_t offs) : start(start), offs(offs) {}
+		note_geom_t(bars_t start, scales::note offs) : start(start), offs((scales::key_t)offs) {}
 		static note_geom_t zero() noexcept { return note_geom_t(bars_t(0, 1), 0); }
 		bool operator<(const note_geom_t& rhs) const
 		{
@@ -69,14 +70,6 @@ namespace daw
 			return note_geom_t(start - rhs.start, offs - rhs.offs);
 		}
 	};
-
-	constexpr unsigned operator^(scales::chromatic c, unsigned i) {
-		return ((unsigned)c) + i * scales::chromatic::octave_size;
-	}
-
-	static_assert((scales::chromatic::A^1) ==
-		12 + (int)scales::chromatic::A,
-		"chromatic shifting failed");
 
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t

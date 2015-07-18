@@ -69,15 +69,15 @@ public:
 	//! TODO: should be private?
 	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
 	//! however, gcd(m,d) = 1 is not required
-	fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
+	constexpr fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
 		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
 	{
-		if(!d)
-		 throw("d must not be zero in n/d");
+		//if(!d)
+		// throw("d must not be zero in n/d");
 	}
 
 public:
-	fraction_t(num_t _n, denom_t _d) :
+	constexpr fraction_t(num_t _n, denom_t _d) :
 		//n(_n/gcd(_d,_n)), d(_d*n/_n)
 		fraction_t(1, _d, _n)
 	{
@@ -90,9 +90,14 @@ public:
 		return fraction_t(n * l / d + rhs.n * l / rhs.d, l);
 	}
 
-	bool operator==(const fraction_t& other) const {
+	constexpr bool operator==(const fraction_t& other) const {
 		return other.n == n && other.d == d;
 	}
+
+	constexpr bool operator!=(const fraction_t& other) const {
+		return ! operator==(other);
+	}
+
 	//! prints a fraction as "z+n/d"	
 	template<class N, class D>
 	friend std::ostream& operator<<(std::ostream& os, const fraction_t<N, D>& b);

@@ -42,7 +42,7 @@ using key_note_t = octave_t; // TODO: class!
 	a,
 	h,
 };*/
-
+/*
 class key_t
 {
 	int key;
@@ -53,7 +53,7 @@ public:
 	{
 	}
 	operator int() const { return key; }
-};
+};*/
 
 class timeline_t
 {

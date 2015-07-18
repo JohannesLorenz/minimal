@@ -31,11 +31,19 @@ namespace bars
 {
 
 using num_t = unsigned long long int;
-inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
-inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
-inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
-inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
-inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
+constexpr inline bars_t operator"" _1(num_t n) { return bars_t(n, 1); }
+constexpr inline bars_t operator"" _2(num_t n) { return bars_t(n, 2); }
+constexpr inline bars_t operator"" _4(num_t n) { return bars_t(n, 4); }
+constexpr inline bars_t operator"" _8(num_t n) { return bars_t(n, 8); }
+constexpr inline bars_t operator"" _16(num_t n) { return bars_t(n, 16); }
+constexpr inline bars_t operator"" _32(num_t n) { return bars_t(n, 32); }
+constexpr inline bars_t operator"" _64(num_t n) { return bars_t(n, 64); }
+
+constexpr inline bars_t operator"" _3(num_t n) { return bars_t(n, 3); }
+constexpr inline bars_t operator"" _6(num_t n) { return bars_t(n, 6); }
+constexpr inline bars_t operator"" _12(num_t n) { return bars_t(n, 12); }
+constexpr inline bars_t operator"" _24(num_t n) { return bars_t(n, 24); }
+constexpr inline bars_t operator"" _48(num_t n) { return bars_t(n, 48); }
 
 }
 

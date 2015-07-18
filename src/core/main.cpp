@@ -22,12 +22,23 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include <csignal>
+#include <cstdlib>
+
 #include "plugin.h"
 #include "io.h"
 #include "project.h"
 #include "jack_engine.h"
 
 using namespace mini;
+
+bool got_killed = false; // global variable
+
+void my_signal_handler(int s) {
+	no_rt::mlog << "Caught signal " << s <<
+		", requesting orderly exit..." << std::endl;
+	got_killed = true;
+}
 
 void main_init()
 {
@@ -40,6 +51,15 @@ void main_init()
 	// turn off canonical mode => input unbuffered
 	ctrl.c_lflag &= ~ICANON;
 	tcsetattr(STDIN_FILENO, TCSANOW, &ctrl);
+
+
+	struct sigaction sigIntHandler;
+
+	sigIntHandler.sa_handler = my_signal_handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
 /*project_t main_load_project(const char* lib_name)
@@ -89,7 +109,7 @@ int main(int argc, char** argv)
 		//eng.activate(); <- currently called by run
 		eng.run_until(10_1);
 
-		while(eng.is_running()) {
+		while(eng.is_running() && !got_killed) {
 			usleep(500000); // 0.5 s (hopefully!)
 		}
 
