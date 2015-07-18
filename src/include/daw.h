@@ -70,8 +70,13 @@ namespace daw
 		}
 	};
 
-	inline note_offset_t operator"" _1(scales::chromatic c) { return
-		note_geom_t() }
+	constexpr unsigned operator^(scales::chromatic c, unsigned i) {
+		return ((unsigned)c) + i * scales::chromatic::octave_size;
+	}
+
+	static_assert((scales::chromatic::A^1) ==
+		12 + (int)scales::chromatic::A,
+		"chromatic shifting failed");
 
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
