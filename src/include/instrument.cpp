@@ -147,21 +147,6 @@ bool instrument_t::_proceed()
 	//return work_queue_t::run_tasks(time);*/
 }
 
-void node_t_base::print_all_used(std::ostream &os) const
-{
-	os << name() << std::endl;
-	for(const auto& pr : used_ch) {
-			pr.second->print_all_used(os);
-		}
-}
-
-void node_t_base::preinit() {
-	on_preinit();
-	for(const auto& pr : used_ch) {
-			pr.second->on_preinit();
-		}
-}
-
 #if 0
 void plugin_instrument::instantiate_first()
 {

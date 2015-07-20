@@ -46,7 +46,8 @@ HEADERS += src/include/plugin.h \
 	src/include/spinlock.h \
 	src/include/mports.h \
 	src/include/audio_sink.h \
-	src/include/scales.h
+	src/include/scales.h \
+	src/include/node.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
@@ -71,7 +72,8 @@ SOURCES += src/core/main.cpp \
 	src/include/fraction.cpp \
 	src/songs/debug_proj.cpp \
 	src/core/player.cpp \
-	src/include/sample.cpp
+	src/include/sample.cpp \
+	src/include/node.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \

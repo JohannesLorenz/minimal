@@ -86,31 +86,69 @@ void dump_error(const char* error_str)
 		<< error_str << std::endl;
 }
 
+void usage(const char* argv_0)
+{
+	no_rt::mlog << "Usage: " << argv_0 << " [diag]" << std::endl;
+}
+
 int main(int argc, char** argv)
 {
+	enum class action_t
+	{
+		diag,
+		run,
+		exit
+	};
+
 	int errors = 0;
 	try {
+
+		action_t action = action_t::run;
+		const char* plugin_path;
+
 		main_init();
 
-		assert(argc == 2);
+		switch(argc)
+		{
+			case 3:
+				if(!strcmp(argv[2], "diag"))
+				 action = action_t::diag;
+				else
+				 usage(argv[0]);
+			case 2:
+				plugin_path = argv[1];
+				break; // ok, go on
+			default:
+				action = action_t::exit;
+				usage(argv[0]);
+		}
 
 		//std::cout << "main:" << main_load_project(argv[1]).title() << std::endl;
 
-		plugin_t plugin(argv[1]);
-		project_t pro;
+		if(action != action_t::exit)
+		{
 
-		plugin.load_project(pro);
-		no_rt::mlog << pro.effects().size() << std::endl;
-		pro.finalize(); // TODO: in plugin.load... ?
+			plugin_t plugin(argv[1]);
+			project_t pro;
 
-		jack_engine_t eng;
-		eng.load_project(pro);
-		//eng.play_until(5_1);
-		//eng.activate(); <- currently called by run
-		eng.run_until(10_1);
+			plugin.load_project(pro);
+			no_rt::mlog << pro.effects().size() << std::endl;
+			pro.finalize(); // TODO: in plugin.load... ?
 
-		while(eng.is_running() && !got_killed) {
-			usleep(500000); // 0.5 s (hopefully!)
+			if(action == action_t::run)
+			{
+
+				jack_engine_t eng;
+				eng.load_project(pro);
+				//eng.play_until(5_1);
+				//eng.activate(); <- currently called by run
+				eng.run_until(10_1);
+
+				while(eng.is_running() && !got_killed) {
+					usleep(500000); // 0.5 s (hopefully!)
+				}
+
+			}
 		}
 
 		no_rt::mlog << "Main thread exiting normally..." << std::endl;

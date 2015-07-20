@@ -26,7 +26,9 @@
 // welcome to teplate-hell...
 // ^ teplate -> already the first strange word
 
+#include "io.h" // TODO
 #include "command.h"
+#include "node.h"
 #include "instrument.h" // TODO: -> cpp, including proceed() below?
 
 namespace mini {
@@ -93,8 +95,11 @@ public:
 	{
 		proceed_base();
 
-	//	io::mlog << "osc msg to: " << plugin->name() << ": " << io::endl
-	//		<< "osc: " << cmd->complete_buffer() << io::endl;
+		io::mlog << "osc msg to: " << plugin->name() << ": " << io::endl
+			<< "osc: " << cmd->complete_buffer() << io::endl;
+
+		//no_rt::mlog << "osc msg to: " << plugin->name() << ": " << std::endl
+		//	<< "osc: " << cmd->complete_buffer() << std::endl;
 
 		if(!plugin) throw "plugin";
 		if(!cmd) throw "not cmd";
@@ -174,7 +179,7 @@ template <char ...Letters> class fixed_str {
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
 template<class /*InstClass*/, class... PortTypes>
-struct _in_port_with_command : node_t<void>, util::non_copyable_t
+struct _in_port_with_command : nnode, util::non_copyable_t
 { // TODO: instrument.h -> ?
 
 	//using rtosc_in_ports = rtosc_in_port<PortTypes>;
@@ -200,10 +205,11 @@ struct _in_port_with_command : node_t<void>, util::non_copyable_t
 
 public:
 	//! @param args the ports that will be moved into the command
+	// TODO: discard base string?
 	template<class ...Args2>
-	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext, Args2&&... args) :
-		node_t<void>(base, ext),
-		cmd_ptr(new command<PortTypes...>((base + ext).c_str(), std::forward<Args2>(args)...)),
+	_in_port_with_command(nnode* parent, InstClass* ins, const std::string& ext, Args2&&... args) :
+		nnode(ext.c_str(), parent),
+		cmd_ptr(new command<PortTypes...>(nnode::full_path().c_str(), std::forward<Args2>(args)...)),
 		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins, cmd_ptr)
 	{
 		/*cmd.cmd->template port_at<0>().set_trigger();
@@ -222,8 +228,8 @@ public:
 
 	//! should only be called if all args are ports
 	//! otherwise, one has to initialize the fixed args on one's own
-	_in_port_with_command(InstClass* ins, const std::string& base, const std::string& ext) :
-		_in_port_with_command(ins, base, ext, port_ctor<PortTypes>(ins)...)
+	_in_port_with_command(nnode* parent, InstClass* ins, const std::string& ext) :
+		_in_port_with_command(parent, ins, ext, port_ctor<PortTypes>(ins)...)
 	{
 	}
 
