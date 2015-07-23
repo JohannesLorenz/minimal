@@ -30,10 +30,21 @@ There are four components:
 ? Only the core really needs the LD_LIBRARY_PATH, however, it can be useful to
 set it for other components, e.g. to run ldd.
 
-The PKG_CONFIG_PATH is needed by all except the core in order to be built.
+All components need the PKG_CONFIG_PATH - either for compiling (song, plugin),
+or for getting the LD_LIBRARY_PATH before running (minimal-core).
 
-song: PKG_CONFIG_PATH: libminimal, plugin
-plugin: PKG_CONFIG_PATH: minimal, LD_LIBRARY_PATH: minimal => src/env script
+song: PKG_CONFIG_PATH: libminimal, plugin (both for building)
+  => LD_LIBRARY_PATH: like PKG
+plugin: PKG_CONFIG_PATH: minimal (for building)
+  => LD_LIBRARY_PATH: like PKG => src/env script
+minimal-core: PKG_CONFIG_PATH: libminimal (LD before running),
+  => LD_LIBRARY_PATH: like PKG
+libminimal: no paths at all
 
+If a component needs to know the LD library path, you need to specify it once
+in CMAKE. Then, it will be known.
 
+The paths that you specify, are, of course, the ones of installed libraries.
+It is currently not possible to have different LD paths for builds and
+installations.
 
