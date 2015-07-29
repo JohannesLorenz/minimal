@@ -30,11 +30,12 @@ class instrument_t;
 
 class nnode : public named_t
 {
-private:
+	virtual void on_preinit() {}
 	void register_as_child(nnode* child);
 public: // TODO?
 	// TODO: call this the other way in the future?
-	virtual instrument_t* get_ins() {
+	virtual instrument_t* get_ins()
+	{
 		if(parent)
 		 return parent->get_ins();
 		else
@@ -62,7 +63,7 @@ public:
 	std::string full_path() const {
 		return parent
 			? parent->full_path() + "/" + name()
-			: /*"/" +*/ name(); // TODO: why does this work??
+			: name();
 	}
 
 	template<class PortT> PortT& add_if_new(const std::string& ext)
@@ -78,8 +79,6 @@ public:
 	PortT& spawn(const std::string& ext) {
 		return add_if_new<PortT>(ext);
 	}
-
-	virtual void on_preinit() {}
 
 	void preinit();
 };

@@ -29,7 +29,6 @@
 #include "utils.h"
 #include "effect.h"
 #include "work_queue.h"
-//#include "minimal_plugin.h"
 #include "port_fwd.h"
 
 namespace mini
@@ -94,10 +93,6 @@ public:
 
 class instrument_t : public effect_t, public work_queue_t
 {
-	multi_plugin_t plugin_creator;
-protected:
-	//minimal_plugin* plugin = nullptr; // TODO: nullptr... auto_ptr?
-private:
 	std::vector<const command_base*> const_commands;
 
 	const std::vector<bool>* cp;
@@ -108,8 +103,6 @@ private:
 	virtual bool advance() = 0;
 public:
 	using effect_t::effect_t;
-
-	//minimal_plugin** get_plugin_ptr() { return &plugin; }
 
 	virtual void init_2() = 0;
 	void instantiate();

@@ -32,11 +32,21 @@ namespace mini {
 
 using namespace daw; // TODO
 
+template<class T>
 class note_line_t;
 
-class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
+class music_note_properties
 {
-	friend class note_line_t;
+	char volume = 64;
+	char valocity() const { return volume; }
+};
+
+template<class NoteProperties>
+class note_line_impl : public is_impl_of_t<note_line_t<NoteProperties>>//, public work_queue_t
+{
+	friend class note_line_t<NoteProperties>;
+	using m_note_line_t = note_line_t<NoteProperties>;
+	using impl_t = is_impl_of_t<m_note_line_t>;
 
 	sample_no_t last_time = -1.0f;
 	//std::map<int, std::map<sample_no_t, note_t>> note_lines;
@@ -58,15 +68,15 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 		}
 	};*/
 
-	struct m_note_event
+	struct m_note_event : public NoteProperties
 	{
 		bool on;
-		int volume;
 		int id; // TODO: unused?
 	};
 
-	std::map<note_geom_t, m_note_event> note_events;
-	std::map<note_geom_t, m_note_event>::const_iterator itr;
+	using event_map_t = std::map<note_geom_t, m_note_event>;
+	event_map_t note_events;
+	typename event_map_t::const_iterator itr;
 
 	/*struct note_task_t : public task_base
 	{
@@ -102,15 +112,19 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 
 	int next_visit_id = 0;
 
-	void visit(const notes_t& n, const note_geom_t offset)
+	void visit(const notes_t<NoteProperties>& n, const note_geom_t offset)
 	{
 		note_geom_t cur_offs = offset + n.geom;
-		for(const std::pair<const note_geom_t, const notes_t*>& n2 : n.get<notes_t>()) {
+		for(const std::pair<const note_geom_t,
+			const notes_t<NoteProperties>*>& n2 :
+			n.template get<notes_t<NoteProperties>>()) {
 			visit(*n2.second, cur_offs + n2.first);
 		}
-		for(const std::pair<const note_geom_t, const note_t*>& n2 : n.get<note_t>())
+		for(const std::pair<const note_geom_t,
+			const note_t<NoteProperties>*>& n2 :
+			n.template get<note_t<NoteProperties>>())
 		{
-			const note_t& cur_note = *n2.second;
+			const note_t<NoteProperties>& cur_note = *n2.second;
 			const note_geom_t next_offs = cur_offs + n2.first;
 			std::cerr << "emplacing: " << next_visit_id << std::endl;
 			note_events.emplace(next_offs,
@@ -121,26 +135,84 @@ class note_line_impl : public is_impl_of_t<note_line_t>//, public work_queue_t
 	}
 
 public:
+	note_line_impl(m_note_line_t *nl) : is_impl_of_t<m_note_line_t>(nl)
+	{
+		// insert notes
+		visit(impl_t::ref->notes, note_geom_t(bars_t(0, 1), 0));
+		// insert sentinel
+		note_events.emplace(note_geom_t(bars_t(100000, 1), 1), // TODO: this number...
+			m_note_event{true, 0, std::numeric_limits<int>::max()});
 
-	note_line_impl(note_line_t *nl);
+		itr = note_events.begin();
+	}
 
-	sample_no_t _proceed(sample_no_t amnt); /* {
-		return run_tasks(time);
-	}*/
+	sample_no_t _proceed(sample_no_t amnt)
+	{
+		note_signal_t<NoteProperties>& notes_out = impl_t::ref->notes_out::data;
+		std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
+
+		// itr points to note_events
+		while(
+			as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt) // TODO! 0.1f 0.1f 0.1f
+		{
+			const note_geom_t& geom = itr->first;
+			const m_note_event& event = itr->second;
+			std::pair<int, int>* notes_at = notes_out.lines[geom.offs];
+			std::size_t id = 0;
+			if(event.on)
+			{
+				// skip used slots
+				for(; id < POLY_MAX && notes_at->first > 0; ++notes_at, ++id) ;
+
+				if(id >= POLY_MAX)
+				 throw "end of polyphony reached!";
+
+				notes_at->first = event.id;
+				notes_at->second = event.volume;
+				io::mlog << "note on: " << event.id << io::endl;
+			}
+			else
+			{
+				for(; id < POLY_MAX && notes_at->first != event.id; ++notes_at, ++id) ;
+
+				if(id >= POLY_MAX)
+				 throw "end of polyphony reached!";
+
+				notes_at->first = -1;
+
+				io::mlog << "note off: " << event.id << io::endl;
+			}
+
+			recently_changed_ptr->first = geom.offs;
+			(recently_changed_ptr++)->second = id;
+
+			io::mlog << "played one note: " << itr->first.start << io::endl;
+	
+			++itr;
+		}
+
+		recently_changed_ptr->first = -1;
+		++notes_out.changed_stamp;
+		impl_t::ref->notes_out::change_stamp = amnt;
+
+		last_time = amnt;
+		return as_samples_floor(itr->first.start, info.samples_per_bar); // TODO! 0.1f 0.1f 0.1f
+	}
 };
 
-class note_line_t : public effect_t, public notes_out, has_impl_t<note_line_impl, note_line_t> // TODO: which header?
+template<class T>
+class note_line_t : public effect_t, public notes_out<T>, has_impl_t<note_line_impl<T>, note_line_t<T>> // TODO: which header?
 {
-	friend class note_line_impl;
-	using impl_t = has_impl_t<note_line_impl, note_line_t>;
+	friend class note_line_impl<T>;
+	using impl_t = has_impl_t<note_line_impl<T>, note_line_t<T>>;
 
 	//! @note: one might need to store the notes_t blocks seperated for muting etc
-	notes_t notes;
+	notes_t<T> notes;
 
 public:
 	note_line_t() :
 //		port_chain<notes_out>((effect_t&)*this),
-		notes_out((effect_t&)*this),
+		notes_out<T>((effect_t&)*this),
 		impl_t(this)
 	{
 	}
@@ -148,13 +220,13 @@ public:
 	void instantiate() {
 		impl_t::instantiate();
 		set_next_time(
-			as_samples_floor(impl->note_events.begin()->first.start,
+			as_samples_floor(impl_t::impl->note_events.begin()->first.start,
 				info.samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
 	}
 
 	void clean_up() {}
 
-	void add_notes(const notes_t& n, const note_geom_t& ng) {
+	void add_notes(const notes_t<T>& n, const note_geom_t& ng) {
 		//note_events.emplace(ng, n);
 		notes.add_notes(n, ng);
 	}
@@ -163,7 +235,7 @@ public:
 	bool _proceed()
 	{
 		//io::mlog << "proceeding with note line... " << io::endl;
-		set_next_time(impl->_proceed(time()));
+		set_next_time(impl_t::impl->_proceed(time()));
 		return true;
 	}
 };
@@ -171,3 +243,4 @@ public:
 }
 
 #endif // NOTE_LINE_H
+

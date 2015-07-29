@@ -76,7 +76,7 @@ public:
 	}
 };
 
-//! task + priority + instrument + command
+//! task + priority + instrument& + command&
 //! for single command stuff
 class prioritized_command_cmd : public prioritized_command
 {
@@ -140,61 +140,20 @@ void rtosc_in_port_t<T>::on_read(sample_no_t time)
 	}
 }
 
-#if USELESS_OLD_CODE
-/*
-template<class Inst, class ...OtherTypes>
-struct rtosc_in_port_t<Inst, int, OtherTypes...> // TODO: int
-{
-	int val;
-	operator int() { return val; }
-};*/
-
-template<std::size_t N, std::size_t I = 0>
-struct init_port {
-	template<class InsType, class CmdType>
-	static void exec(InsType& ins, CmdType& cmd, instrument_t** plugin)
-	{
-		cmd.cmd->template port_at<I>().set_trigger();
-		cmd.cmd->template port_at<I>().ins = ins;
-		cmd.cmd->template port_at<I>().cmd = &cmd;
-		cmd.cmd->template port_at<I>().plugin = plugin; // TODO: redundant with ctor assignment?
-
-		init_port<N, I+1>(p);
-	}
-};
-
-template<std::size_t N>
-struct init_port<N, N> {
-	template<class InsType, class CmdType>
-	static void exec(const InsType& , const CmdType& , const instrument_t** ) {}
-};
-
-template <char ...Letters> class fixed_str {
-	static std::string make_str() { return std::string(Letters...); }
-};
-#endif
-
 //! prioritized_command_cmd + node
-//! all ports of the commands must be of type rtosc_in_port_t
+//! all ports (variables) of the commands must be of type rtosc_in_port_t
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
-template<class /*InstClass*/, class... PortTypes>
+template<class... PortTypes>
 struct _in_port_with_command : nnode, util::non_copyable_t
-{ // TODO: instrument.h -> ?
-
-	//using rtosc_in_ports = rtosc_in_port<PortTypes>;
-
-	using cmd_type = prioritized_command_cmd;
+{
 	command<PortTypes...>* cmd_ptr;
 	prioritized_command_cmd cmd;
 
-	using InstClass = instrument_t;
-
-	template<class Ins, class Cmd>
 	struct functor_init_ports
 	{
-		Ins* ins;
-		Cmd& cmd;
+		instrument_t* ins;
+		prioritized_command_cmd& cmd;
 		template<class ...Args> void operator()(rtosc_in_port_t<Args...>& p)
 		{
 			p.set_trigger(); // TODO!
@@ -205,21 +164,15 @@ struct _in_port_with_command : nnode, util::non_copyable_t
 
 public:
 	//! @param args the ports that will be moved into the command
-	// TODO: discard base string?
 	template<class ...Args2>
-	_in_port_with_command(nnode* parent, InstClass* ins, const std::string& ext, Args2&&... args) :
+	_in_port_with_command(nnode* parent, instrument_t* ins, const std::string& ext, Args2&&... args) :
 		nnode(ext.c_str(), parent),
 		cmd_ptr(new command<PortTypes...>(nnode::full_path().c_str(), std::forward<Args2>(args)...)),
 		cmd(static_cast<work_queue_t*>(ins), 1, 0.0f, ins, cmd_ptr)
 	{
-		/*cmd.cmd->template port_at<0>().set_trigger();
-		cmd.cmd->template port_at<0>().ins = ins;
-		cmd.cmd->template port_at<0>().cmd = &cmd;*/
-		//init_port<sizeof...(PortTypes)>::exec(ins, cmd, &ins->lo_port); // TODO: ref instead of & ?
-
 		// pass pointer of cmd and ins to all ports
 		// (they're of type rtosc_in_port_t)
-		functor_init_ports<InstClass, cmd_type> f{ins, cmd};
+		functor_init_ports f{ins, cmd};
 		cmd_ptr->for_all_variables(f);
 
 		// set update handle for work queue
@@ -228,7 +181,7 @@ public:
 
 	//! should only be called if all args are ports
 	//! otherwise, one has to initialize the fixed args on one's own
-	_in_port_with_command(nnode* parent, InstClass* ins, const std::string& ext) :
+	_in_port_with_command(nnode* parent, instrument_t* ins, const std::string& ext) :
 		_in_port_with_command(parent, ins, ext, port_ctor<PortTypes>(ins)...)
 	{
 	}
@@ -241,27 +194,27 @@ public:
 // TODO: make cast if port_at is obvious (e.g. only 1 port)
 
 
-template<class T, bool, class Ins> // true
+template<class T, bool> // true
 struct _type_of_rtosc_port {
 	using type = rtosc_in_port_t<T>;
 };
 
-template<class T, class Ins>
-struct _type_of_rtosc_port<T, false, Ins> {
+template<class T>
+struct _type_of_rtosc_port<T, false> {
 	using type = T;
 };
 
-template<class T, class Ins, class ...Other>
-using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>(), Ins>::type;
+template<class T, class ...Other>
+using type_of_rtosc_port = typename _type_of_rtosc_port<T, _is_variable<T>()>::type;
 
 //! wrapper: only wraps ports to rtosc_in_port_t<ports>,
 //! a class that extends these ports by pointers to instrument and command
-template<class InstClass, class... PortTypes>
-struct in_port_with_command : _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>
+template<class... PortTypes>
+struct in_port_with_command : _in_port_with_command<type_of_rtosc_port<PortTypes>...>
 {
 //	using base = _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>;
 //	using base::_in_port_with_command;
-	using _in_port_with_command<InstClass, type_of_rtosc_port<PortTypes, InstClass>...>::
+	using _in_port_with_command<type_of_rtosc_port<PortTypes>...>::
 		_in_port_with_command;
 };
 

@@ -385,13 +385,14 @@ constexpr std::size_t POLY_MAX = 16;
 // a few example ports
 //
 
+template<class NoteProperties>
 struct note_signal_t
 {
 	//! whether a note at height <int> is on or off
 	//! lines[x][y] : pair at height x, polymorphy y
 	//! first: a unique id for this note, or -1 for note off
 	//! second: volume
-	std::pair<int, int> lines[NOTES_MAX][POLY_MAX];
+	std::pair<int, NoteProperties> lines[NOTES_MAX][POLY_MAX];
 
 	int changed_stamp = 0;
 
@@ -405,14 +406,16 @@ struct note_signal_t
 	}
 };
 
-struct notes_out : out_port_templ<note_signal_t>
+template<class T>
+struct notes_out : out_port_templ<note_signal_t<T>>
 {
-	using base::out_port_templ;
+	using out_port_templ<note_signal_t<T>>::out_port_templ;
 };
 
-struct notes_in : in_port_templ<const note_signal_t*>
+template<class T>
+struct notes_in : in_port_templ<const note_signal_t<T>*>
 {
-	using base::in_port_templ;
+	using in_port_templ<const note_signal_t<T>*>::in_port_templ;
 };
 
 }

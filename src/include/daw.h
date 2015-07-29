@@ -123,12 +123,11 @@ namespace daw
 	};
 #endif
 
-	class note_t
+	template<class NoteProperties>
+	class note_t : public NoteProperties
 	{
-		char _velocity = 64;
 		bars_t _length = bars_t(1, 8); // TODO: //(1 bars::_8);
 	public:
-		char velocity() const { return _velocity; }
 		bars_t length() const { return _length; }
 	};
 
@@ -138,28 +137,55 @@ namespace daw
 		note_data_t n;
 		using seg_base::seg_base;
 	};*/
+	
+/*	class single_notes_t
+	{
+		bars_t& length;
+		note_t& info;
+		single_notes_t(const bars_t& length, const note_t& info) :
+			length(length), info(info)
+		{
+
+		}
+	};*/
 
 	//! just notes, not corresponding to any instrument
-	class notes_t : public seg_base<note_geom_t, notes_t, note_t>
+	template<class NoteProperties>
+	class notes_t : public seg_base<note_geom_t, notes_t<NoteProperties>,
+		note_t<NoteProperties>>
 	{
-		bars_t propagate(bars_t /*note*/) const { return geom.start; /*TODO: note*/ }
+		using mnotes_t = notes_t<NoteProperties>;
+		using mnote_t = note_t<NoteProperties>;
+		using base = seg_base<note_geom_t, notes_t<NoteProperties>,
+			note_t<NoteProperties>>;
+		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
 	public:
-		void add_notes(const notes_t& notes, geom_t other_geom)
+		void add_notes(const mnotes_t& notes, geom_t other_geom)
 		{
-			for(const auto pr : notes.get<note_t>())
+			for(const auto pr : notes.template get<mnote_t>())
 			{
-				add_note(*pr.second, other_geom - geom + pr.first);
+				add_note(*pr.second, other_geom - base::geom + pr.first);
 			}
 		}
 
-		void add_note(const note_t& n, geom_t geom = geom_t::zero()) { add<note_t>(n, geom); }
+		void add_note(const mnote_t& n, geom_t geom = geom_t::zero()) { base::template add<mnote_t>(n, geom); }
 		/*notes_t(const note_geom_t& geom) : seg_base(geom) {
 			add_note(note_t(), note_geom_t(std::numeric_limits<bars_t>::max(), 0));
 		}*/
-		using seg_base::seg_base;
+		using seg_base<note_geom_t, notes_t<NoteProperties>,
+			note_t<NoteProperties>>::seg_base;
 //		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
 //		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
+//		notes_t operator<<(notest_t&& n, 
 	};
+/*
+	operator*(const bars_t& b, const scales::note& n)
+	{
+		return single_notes_t(b, n);
+	}
+*/
+
+
 #if 0
 	template<class Child>
 	class note_event_propagator
