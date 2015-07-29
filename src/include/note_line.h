@@ -33,7 +33,7 @@ namespace mini {
 using namespace daw; // TODO
 
 template<class T>
-class note_line_t;
+class events_t;
 
 class music_note_properties
 {
@@ -42,11 +42,11 @@ class music_note_properties
 };
 
 template<class NoteProperties>
-class note_line_impl : public is_impl_of_t<note_line_t<NoteProperties>>//, public work_queue_t
+class line_impl : public is_impl_of_t<events_t<NoteProperties>>//, public work_queue_t
 {
-	friend class note_line_t<NoteProperties>;
-	using m_note_line_t = note_line_t<NoteProperties>;
-	using impl_t = is_impl_of_t<m_note_line_t>;
+	friend class events_t<NoteProperties>;
+	using m_events_t = events_t<NoteProperties>;
+	using impl_t = is_impl_of_t<m_events_t>;
 
 	sample_no_t last_time = -1.0f;
 	//std::map<int, std::map<sample_no_t, note_t>> note_lines;
@@ -82,7 +82,7 @@ class note_line_impl : public is_impl_of_t<note_line_t<NoteProperties>>//, publi
 	{
 		//const loaded_instrument_t* ins;
 		//const command_base* cmd;
-		note_line_impl* nl_ref;
+		line_impl* nl_ref;
 		//int* last_key;
 		const int note_height;
 		bool is_on = false;
@@ -91,7 +91,7 @@ class note_line_impl : public is_impl_of_t<note_line_t<NoteProperties>>//, publi
 
 		void proceed(sample_no_t time);
 
-		note_task_t(note_line_impl& nl_ref,
+		note_task_t(line_impl& nl_ref,
 			const int& note_height,
 			const std::map<sample_no_t, note_t>& values,
 			sample_no_t first_event = 0.0f) :
@@ -135,7 +135,7 @@ class note_line_impl : public is_impl_of_t<note_line_t<NoteProperties>>//, publi
 	}
 
 public:
-	note_line_impl(m_note_line_t *nl) : is_impl_of_t<m_note_line_t>(nl)
+	line_impl(m_events_t *nl) : is_impl_of_t<m_events_t>(nl)
 	{
 		// insert notes
 		visit(impl_t::ref->notes, note_geom_t(bars_t(0, 1), 0));
@@ -148,8 +148,8 @@ public:
 
 	sample_no_t _proceed(sample_no_t amnt)
 	{
-		note_signal_t<NoteProperties>& notes_out = impl_t::ref->notes_out::data;
-		std::pair<int, int>* recently_changed_ptr = notes_out.recently_changed.data();
+		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::data;
+		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
 
 		// itr points to note_events
 		while(
@@ -157,7 +157,7 @@ public:
 		{
 			const note_geom_t& geom = itr->first;
 			const m_note_event& event = itr->second;
-			std::pair<int, int>* notes_at = notes_out.lines[geom.offs];
+			std::pair<int, int>* notes_at = events_out.lines[geom.offs];
 			std::size_t id = 0;
 			if(event.on)
 			{
@@ -192,8 +192,8 @@ public:
 		}
 
 		recently_changed_ptr->first = -1;
-		++notes_out.changed_stamp;
-		impl_t::ref->notes_out::change_stamp = amnt;
+		++events_out.changed_stamp;
+		impl_t::ref->events_out_t<NoteProperties>::change_stamp = amnt;
 
 		last_time = amnt;
 		return as_samples_floor(itr->first.start, info.samples_per_bar); // TODO! 0.1f 0.1f 0.1f
@@ -201,18 +201,18 @@ public:
 };
 
 template<class T>
-class note_line_t : public effect_t, public notes_out<T>, has_impl_t<note_line_impl<T>, note_line_t<T>> // TODO: which header?
+class events_t : public effect_t, public events_out_t<T>, has_impl_t<line_impl<T>, events_t<T>> // TODO: which header?
 {
-	friend class note_line_impl<T>;
-	using impl_t = has_impl_t<note_line_impl<T>, note_line_t<T>>;
+	friend class line_impl<T>;
+	using impl_t = has_impl_t<line_impl<T>, events_t<T>>;
 
 	//! @note: one might need to store the notes_t blocks seperated for muting etc
 	notes_t<T> notes;
 
 public:
-	note_line_t() :
-//		port_chain<notes_out>((effect_t&)*this),
-		notes_out<T>((effect_t&)*this),
+	events_t() :
+//		port_chain<events_out_t>((effect_t&)*this),
+		events_out_t<T>((effect_t&)*this),
 		impl_t(this)
 	{
 	}

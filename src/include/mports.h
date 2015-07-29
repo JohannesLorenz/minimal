@@ -386,7 +386,7 @@ constexpr std::size_t POLY_MAX = 16;
 //
 
 template<class NoteProperties>
-struct note_signal_t
+struct event_signal_t
 {
 	//! whether a note at height <int> is on or off
 	//! lines[x][y] : pair at height x, polymorphy y
@@ -401,21 +401,21 @@ struct note_signal_t
 	//! if the pair is <x,y>, it marks lines[x][y]
 	std::array<std::pair<int, int>, POLY_MAX> recently_changed;
 
-	note_signal_t() {
+	event_signal_t() {
 		recently_changed[0].first = -1;
 	}
 };
 
 template<class T>
-struct notes_out : out_port_templ<note_signal_t<T>>
+struct events_out_t : out_port_templ<event_signal_t<T>>
 {
-	using out_port_templ<note_signal_t<T>>::out_port_templ;
+	using out_port_templ<event_signal_t<T>>::out_port_templ;
 };
 
 template<class T>
-struct notes_in : in_port_templ<const note_signal_t<T>*>
+struct events_in_t : in_port_templ<const event_signal_t<T>*>
 {
-	using in_port_templ<const note_signal_t<T>*>::in_port_templ;
+	using in_port_templ<const event_signal_t<T>*>::in_port_templ;
 };
 
 }
