@@ -138,11 +138,11 @@ namespace daw
 		using seg_base::seg_base;
 	};*/
 	
-/*	class single_notes_t
+/*	class single_events_t
 	{
 		bars_t& length;
 		note_t& info;
-		single_notes_t(const bars_t& length, const note_t& info) :
+		single_events_t(const bars_t& length, const note_t& info) :
 			length(length), info(info)
 		{
 
@@ -151,16 +151,16 @@ namespace daw
 
 	//! just notes, not corresponding to any instrument
 	template<class NoteProperties>
-	class notes_t : public seg_base<note_geom_t, notes_t<NoteProperties>,
+	class events_t : public seg_base<note_geom_t, events_t<NoteProperties>,
 		note_t<NoteProperties>>
 	{
-		using mnotes_t = notes_t<NoteProperties>;
+		using mevents_t = events_t<NoteProperties>;
 		using mnote_t = note_t<NoteProperties>;
-		using base = seg_base<note_geom_t, notes_t<NoteProperties>,
+		using base = seg_base<note_geom_t, events_t<NoteProperties>,
 			note_t<NoteProperties>>;
 		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
 	public:
-		void add_notes(const mnotes_t& notes, geom_t other_geom)
+		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
 			for(const auto pr : notes.template get<mnote_t>())
 			{
@@ -169,19 +169,19 @@ namespace daw
 		}
 
 		void add_note(const mnote_t& n, geom_t geom = geom_t::zero()) { base::template add<mnote_t>(n, geom); }
-		/*notes_t(const note_geom_t& geom) : seg_base(geom) {
+		/*events_t(const note_geom_t& geom) : seg_base(geom) {
 			add_note(note_t(), note_geom_t(std::numeric_limits<bars_t>::max(), 0));
 		}*/
-		using seg_base<note_geom_t, notes_t<NoteProperties>,
+		using seg_base<note_geom_t, events_t<NoteProperties>,
 			note_t<NoteProperties>>::seg_base;
 //		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
-//		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
-//		notes_t operator<<(notest_t&& n, 
+//		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
+//		events_t operator<<(notest_t&& n, 
 	};
 /*
 	operator*(const bars_t& b, const scales::note& n)
 	{
-		return single_notes_t(b, n);
+		return single_events_t(b, n);
 	}
 */
 
@@ -200,7 +200,7 @@ namespace daw
 	//! if you want to use multiple tracks with the same instrument, make them and set them in the ctor
 	//! if you want multiple instruments to play the same, make multiple tracks and use the same notes object
 
-	class track_t : public seg_base<note_geom_t, notes_t, command_base>, note_event_propagator<track_t>
+	class track_t : public seg_base<note_geom_t, events_t, command_base>, note_event_propagator<track_t>
 	{
 		using child_type = note_t;
 		//instrument_t::id_t ins_id;
@@ -208,12 +208,12 @@ namespace daw
 	public:
 		const instrument_t* instrument() const { return ins; }
 		using seg_base::seg_base;
-		void add_notes(const notes_t& n, note_geom_t geom = geom_t::zero()) { add<notes_t>(n, geom); }
+		void add_notes(const events_t& n, note_geom_t geom = geom_t::zero()) { add<events_t>(n, geom); }
 
 	//	template<class Command>
 	//	void add_command(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
 
-//		notes_t& notes(note_geom_t geom) { return make<notes_t>(geom); }
+//		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
 		track_t(instrument_t& ins) : /*ins_id(ins.id()),*/ ins(&ins) {}
 	};
 

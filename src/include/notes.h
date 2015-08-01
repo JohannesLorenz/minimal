@@ -27,8 +27,9 @@
 
 namespace mini {
 
+using notes_t = events_t<music_note_properties>;
 using note_signal_t = event_signal_t<music_note_properties>;
-using note_line_t = events_t<music_note_properties>;
+using note_line_t = event_line_t<music_note_properties>;
 using notes_in = events_in_t<music_note_properties>;
 using notes_out = events_out_t<music_note_properties>;
 

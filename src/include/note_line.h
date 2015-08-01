@@ -33,20 +33,21 @@ namespace mini {
 using namespace daw; // TODO
 
 template<class T>
-class events_t;
+class event_line_t;
 
 class music_note_properties
 {
 	char volume = 64;
-	char valocity() const { return volume; }
+public:
+	char velocity() const { return volume; }
 };
 
 template<class NoteProperties>
-class line_impl : public is_impl_of_t<events_t<NoteProperties>>//, public work_queue_t
+class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public work_queue_t
 {
-	friend class events_t<NoteProperties>;
-	using m_events_t = events_t<NoteProperties>;
-	using impl_t = is_impl_of_t<m_events_t>;
+	friend class event_line_t<NoteProperties>;
+	using m_event_line_t = event_line_t<NoteProperties>;
+	using impl_t = is_impl_of_t<m_event_line_t>;
 
 	sample_no_t last_time = -1.0f;
 	//std::map<int, std::map<sample_no_t, note_t>> note_lines;
@@ -112,12 +113,12 @@ class line_impl : public is_impl_of_t<events_t<NoteProperties>>//, public work_q
 
 	int next_visit_id = 0;
 
-	void visit(const notes_t<NoteProperties>& n, const note_geom_t offset)
+	void visit(const events_t<NoteProperties>& n, const note_geom_t offset)
 	{
 		note_geom_t cur_offs = offset + n.geom;
 		for(const std::pair<const note_geom_t,
-			const notes_t<NoteProperties>*>& n2 :
-			n.template get<notes_t<NoteProperties>>()) {
+			const events_t<NoteProperties>*>& n2 :
+			n.template get<events_t<NoteProperties>>()) {
 			visit(*n2.second, cur_offs + n2.first);
 		}
 		for(const std::pair<const note_geom_t,
@@ -135,7 +136,7 @@ class line_impl : public is_impl_of_t<events_t<NoteProperties>>//, public work_q
 	}
 
 public:
-	line_impl(m_events_t *nl) : is_impl_of_t<m_events_t>(nl)
+	line_impl(m_event_line_t *nl) : is_impl_of_t<m_event_line_t>(nl)
 	{
 		// insert notes
 		visit(impl_t::ref->notes, note_geom_t(bars_t(0, 1), 0));
@@ -201,16 +202,16 @@ public:
 };
 
 template<class T>
-class events_t : public effect_t, public events_out_t<T>, has_impl_t<line_impl<T>, events_t<T>> // TODO: which header?
+class event_line_t : public effect_t, public events_out_t<T>, has_impl_t<line_impl<T>, event_line_t<T>> // TODO: which header?
 {
 	friend class line_impl<T>;
-	using impl_t = has_impl_t<line_impl<T>, events_t<T>>;
+	using impl_t = has_impl_t<line_impl<T>, event_line_t<T>>;
 
-	//! @note: one might need to store the notes_t blocks seperated for muting etc
-	notes_t<T> notes;
+	//! @note: one might need to store the events_t blocks seperated for muting etc
+	events_t<T> notes;
 
 public:
-	events_t() :
+	event_line_t() :
 //		port_chain<events_out_t>((effect_t&)*this),
 		events_out_t<T>((effect_t&)*this),
 		impl_t(this)
@@ -226,7 +227,7 @@ public:
 
 	void clean_up() {}
 
-	void add_notes(const notes_t<T>& n, const note_geom_t& ng) {
+	void add_notes(const events_t<T>& n, const note_geom_t& ng) {
 		//note_events.emplace(ng, n);
 		notes.add_notes(n, ng);
 	}
