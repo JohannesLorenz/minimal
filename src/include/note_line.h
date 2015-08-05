@@ -24,6 +24,7 @@
 #include "daw.h"
 #include "mports.h"
 #include "impl.h"
+#include "simple.h"
 //#include "io.h"
 
 namespace mini {
@@ -35,11 +36,11 @@ using namespace daw; // TODO
 template<class T>
 class event_line_t;
 
-class music_note_properties
-{
-	char volume = 64;
+class music_note_properties : value_t<char, 64>
+{ // TODO: velocity -> value
 public:
-	char velocity() const { return volume; }
+	using value_t<char, 64>::value_t;
+	char velocity() const { return value(); }
 };
 
 template<class NoteProperties>
@@ -50,20 +51,20 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 	using impl_t = is_impl_of_t<m_event_line_t>;
 
 	sample_no_t last_time = -1.0f;
-	//std::map<int, std::map<sample_no_t, note_t>> note_lines;
+	//std::map<int, std::map<sample_no_t, event_t>> note_lines;
 	/*sample_no_t last_time = -1.0f;
 	struct notes_impl_t
 	{
-		std::map<note_geom_t, note_t>::const_iterator itr;
-		//std::vector<note_t_impl> children;
+		std::map<note_geom_t, event_t>::const_iterator itr;
+		//std::vector<event_t_impl> children;
 		typedef boost::heap::fibonacci_heap<notes_impl_t> pq_type;
-		std::pair<note_geom_t, note_t> next_elem; // todo: ptr?
+		std::pair<note_geom_t, event_t> next_elem; // todo: ptr?
 
 
 		pq_type pq;
 
 
-		std::pair<note_geom_t, note_t> next_note() {
+		std::pair<note_geom_t, event_t> next_note() {
 			next_elem =
 			return std::min(*itr, pq.top());
 		}
@@ -73,13 +74,18 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 	{
 		bool on;
 		int id; // TODO: unused?
+		template<class ...Args>
+		m_note_event(bool on, int id, Args... args) :
+			NoteProperties(args...), on(on), id(id)
+		{
+		}
 	};
 
 	using event_map_t = std::map<note_geom_t, m_note_event>;
 	event_map_t note_events;
 	typename event_map_t::const_iterator itr;
 
-	/*struct note_task_t : public task_base
+	/*struct event_task_t : public task_base
 	{
 		//const loaded_instrument_t* ins;
 		//const command_base* cmd;
@@ -92,9 +98,9 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 
 		void proceed(sample_no_t time);
 
-		note_task_t(line_impl& nl_ref,
+		event_task_t(line_impl& nl_ref,
 			const int& note_height,
-			const std::map<sample_no_t, note_t>& values,
+			const std::map<sample_no_t, event_t>& values,
 			sample_no_t first_event = 0.0f) :
 			task_base(first_event),
 			nl_ref(&nl_ref),
@@ -122,16 +128,17 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 			visit(*n2.second, cur_offs + n2.first);
 		}
 		for(const std::pair<const note_geom_t,
-			const note_t<NoteProperties>*>& n2 :
-			n.template get<note_t<NoteProperties>>())
+			const event_t<NoteProperties>*>& n2 :
+			n.template get<event_t<NoteProperties>>())
 		{
-			const note_t<NoteProperties>& cur_note = *n2.second;
+			const event_t<NoteProperties>& cur_note = *n2.second;
 			const note_geom_t next_offs = cur_offs + n2.first;
 			std::cerr << "emplacing: " << next_visit_id << std::endl;
+			// TODO: this does not work for all note propertoes
 			note_events.emplace(next_offs,
-				m_note_event{true, cur_note.velocity(), next_visit_id}); // TODO: 1
+				m_note_event(true, next_visit_id, cur_note.velocity())); // TODO: 1
 			note_events.emplace(next_offs + note_geom_t(cur_note.length(), 0),
-				m_note_event{false, cur_note.velocity(), next_visit_id++});
+				m_note_event(false, next_visit_id++, cur_note.velocity()));
 		}
 	}
 
@@ -142,7 +149,7 @@ public:
 		visit(impl_t::ref->notes, note_geom_t(bars_t(0, 1), 0));
 		// insert sentinel
 		note_events.emplace(note_geom_t(bars_t(100000, 1), 1), // TODO: this number...
-			m_note_event{true, 0, std::numeric_limits<int>::max()});
+			m_note_event(true, std::numeric_limits<int>::max(), 0));
 
 		itr = note_events.begin();
 	}
@@ -158,28 +165,28 @@ public:
 		{
 			const note_geom_t& geom = itr->first;
 			const m_note_event& event = itr->second;
-			std::pair<int, int>* notes_at = events_out.lines[geom.offs];
+			std::pair<int, NoteProperties>* events_at = events_out.lines[geom.offs];
 			std::size_t id = 0;
 			if(event.on)
 			{
 				// skip used slots
-				for(; id < POLY_MAX && notes_at->first > 0; ++notes_at, ++id) ;
+				for(; id < POLY_MAX && events_at->first > 0; ++events_at, ++id) ;
 
 				if(id >= POLY_MAX)
 				 throw "end of polyphony reached!";
 
-				notes_at->first = event.id;
-				notes_at->second = event.volume;
+				events_at->first = event.id;
+				events_at->second = event;
 				io::mlog << "note on: " << event.id << io::endl;
 			}
 			else
 			{
-				for(; id < POLY_MAX && notes_at->first != event.id; ++notes_at, ++id) ;
+				for(; id < POLY_MAX && events_at->first != event.id; ++events_at, ++id) ;
 
 				if(id >= POLY_MAX)
 				 throw "end of polyphony reached!";
 
-				notes_at->first = -1;
+				events_at->first = -1;
 
 				io::mlog << "note off: " << event.id << io::endl;
 			}

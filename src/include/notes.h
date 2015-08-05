@@ -27,6 +27,8 @@
 
 namespace mini {
 
+// TODO: -> namespace daw?
+using note_t = event_t<music_note_properties>;
 using notes_t = events_t<music_note_properties>;
 using note_signal_t = event_signal_t<music_note_properties>;
 using note_line_t = event_line_t<music_note_properties>;

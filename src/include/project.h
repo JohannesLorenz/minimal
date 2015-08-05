@@ -30,9 +30,9 @@ namespace mini
 {
 
 using octave_t = std::size_t;
-using key_note_t = octave_t; // TODO: class!
+using key_event_t = octave_t; // TODO: class!
 
-/*enum key_note_t // TODO: enum_class?
+/*enum key_event_t // TODO: enum_class?
 { // TODO: operator++?
 	c,
 	d,
@@ -48,7 +48,7 @@ class key_t
 	int key;
 	static const unsigned octave_len = 13;
 public:
-	key_t(const octave_t& o, const key_note_t& k)
+	key_t(const octave_t& o, const key_event_t& k)
 	: key(o*13 + k)
 	{
 	}
@@ -98,7 +98,7 @@ class track_t
 	const instrument_t::id_t instr_id;
 	std::map<key_t, line_t> lines;
 public:
-	void add_line(octave_t octave, key_note_t key, line_t&& line)
+	void add_line(octave_t octave, key_event_t key, line_t&& line)
 	{
 		add_line(key_t(octave, key), std::move(line));
 	}

@@ -124,14 +124,14 @@ namespace daw
 #endif
 
 	template<class NoteProperties>
-	class note_t : public NoteProperties
+	class event_t : public NoteProperties
 	{
 		bars_t _length = bars_t(1, 8); // TODO: //(1 bars::_8);
 	public:
 		bars_t length() const { return _length; }
 	};
 
-	/*class note_t : public seg_base<note_geom_t> {
+	/*class event_t : public seg_base<note_geom_t> {
 		sample_no_t propagate() const { return geom.start; } // TODO: also propagate end?
 	public:
 		note_data_t n;
@@ -141,8 +141,8 @@ namespace daw
 /*	class single_events_t
 	{
 		bars_t& length;
-		note_t& info;
-		single_events_t(const bars_t& length, const note_t& info) :
+		event_t& info;
+		single_events_t(const bars_t& length, const event_t& info) :
 			length(length), info(info)
 		{
 
@@ -152,29 +152,30 @@ namespace daw
 	//! just notes, not corresponding to any instrument
 	template<class NoteProperties>
 	class events_t : public seg_base<note_geom_t, events_t<NoteProperties>,
-		note_t<NoteProperties>>
+		event_t<NoteProperties>>
 	{
 		using mevents_t = events_t<NoteProperties>;
-		using mnote_t = note_t<NoteProperties>;
+		using mevent_t = event_t<NoteProperties>;
 		using base = seg_base<note_geom_t, events_t<NoteProperties>,
-			note_t<NoteProperties>>;
+			event_t<NoteProperties>>;
+		using geom_t = typename base::geom_t;
 		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
 	public:
 		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
-			for(const auto pr : notes.template get<mnote_t>())
+			for(const auto pr : notes.template get<mevent_t>())
 			{
 				add_note(*pr.second, other_geom - base::geom + pr.first);
 			}
 		}
 
-		void add_note(const mnote_t& n, geom_t geom = geom_t::zero()) { base::template add<mnote_t>(n, geom); }
+		void add_note(const mevent_t& n, geom_t geom = geom_t::zero()) { base::template add<mevent_t>(n, geom); }
 		/*events_t(const note_geom_t& geom) : seg_base(geom) {
-			add_note(note_t(), note_geom_t(std::numeric_limits<bars_t>::max(), 0));
+			add_note(event_t(), note_geom_t(std::numeric_limits<bars_t>::max(), 0));
 		}*/
 		using seg_base<note_geom_t, events_t<NoteProperties>,
-			note_t<NoteProperties>>::seg_base;
-//		note_t& note(note_geom_t geom) { return make<note_t>(geom); }
+			event_t<NoteProperties>>::seg_base;
+//		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
 //		events_t operator<<(notest_t&& n, 
 	};
@@ -202,7 +203,7 @@ namespace daw
 
 	class track_t : public seg_base<note_geom_t, events_t, command_base>, note_event_propagator<track_t>
 	{
-		using child_type = note_t;
+		using child_type = event_t;
 		//instrument_t::id_t ins_id;
 		instrument_t* ins;
 	public:

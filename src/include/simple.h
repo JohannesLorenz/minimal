@@ -34,6 +34,18 @@ public:
 	named_t(const std::string& _name) : _name(_name) {}
 };
 
+template<class T, T default_value>
+class value_t
+{
+	T t = default_value;
+public:
+	const T& value() const { return t; }
+	T& value() { return t; }
+	// TODO: std::forward
+	value_t(const T& t) : t(t) {}
+	value_t() = default;
+};
+
 }
 
 #endif // SIMPLE_H
