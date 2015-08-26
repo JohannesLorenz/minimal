@@ -65,6 +65,7 @@ class fraction_t
 	num_t n;
 	denom_t d;
 
+//	constexpr fraction_t(num_t _n, denom_t _d) : n(_n), d(_d) {}
 public:
 	//! TODO: should be private?
 	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
@@ -85,9 +86,13 @@ public:
 
 	fraction_t(const fraction_t& ) = default;
 
-	const fraction_t operator+(const fraction_t& rhs) const {
+	fraction_t operator+(const fraction_t& rhs) const {
 		num_t l = lcm(d, rhs.d);
 		return fraction_t(n * l / d + rhs.n * l / rhs.d, l);
+	}
+
+	fraction_t& operator+=(const fraction_t& rhs) {
+		return (*this = *this + rhs);
 	}
 
 	constexpr bool operator==(const fraction_t& other) const {
@@ -134,8 +139,26 @@ public:
 		typename fraction_t<N, D>::num_t val,
 		const fraction_t<N, D>& bar);
 
-	const fraction_t operator-(const fraction_t& rhs) const {
+	fraction_t operator-(const fraction_t& rhs) const {
 		return operator+(-rhs);
+	}
+	
+	fraction_t operator*(const fraction_t& other) const
+	{
+		// only need to calc gcd twice
+		fraction_t f1(n, other.d), f2(other.n, d);
+		return {f1.n * f2.n, f1.d * f2.d};
+	}
+
+	fraction_t& operator*=(const fraction_t& rhs) {
+		return (*this = *this * rhs);
+	}
+	
+	//! allows multiplication without multiplication sign
+	//! if you don't like this, inherit and overwrite
+	template<class T>
+	auto operator()(const T& t) -> decltype(*this * t) {
+		return *this * t;
 	}
 };
 
@@ -167,3 +190,4 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 #endif // FRACTION_H
+

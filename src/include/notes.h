@@ -27,9 +27,42 @@
 
 namespace mini {
 
-// TODO: -> namespace daw?
-using note_t = event_t<music_note_properties>;
+namespace daw {
+
+class note_t : public event_t<music_note_properties>
+{
+};
+
+using volume_t = unsigned char;
+
+inline note_t operator*(note_t&& n, volume_t& v)
+{
+	n.set(v);
+	return n;
+}
+
+/*class notes_t : public events_t<music_note_properties>
+{
+public:
+	using events_t<music_note_properties>::events_t;
+};*/
 using notes_t = events_t<music_note_properties>;
+
+notes_t operator+(const notes_t& no, const scales::note& n) {
+	notes_t copy = no;
+	/*for(auto& pr : get<note_t>())
+	 pr.first += n;*/
+	copy.geom += n;
+	return copy;
+}
+
+// swap multiplicands
+template<class T> // TODO: std::forward?
+T operator*(const T& other, const note_t& n) {
+	return n * other;
+}
+
+}
 using note_signal_t = event_signal_t<music_note_properties>;
 using note_line_t = event_line_t<music_note_properties>;
 using notes_in = events_in_t<music_note_properties>;

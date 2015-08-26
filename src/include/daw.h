@@ -63,6 +63,11 @@ namespace daw
 				? offs < rhs.offs
 				: start < rhs.start;
 		}
+		note_geom_t operator+=(const scales::note& n)
+		{
+			offs += n.value();
+			return *this;
+		}
 		note_geom_t operator+(const note_geom_t& rhs) const {
 			return note_geom_t(start + rhs.start, offs + rhs.offs);
 		}
@@ -85,12 +90,18 @@ namespace daw
 	protected:
 		template<class ChildType>
 		using map_t = std::multimap<geom_t, const ChildType*>;
+		// TODO: can the * be omitted?
 	public:
 		template<class ChildType>
 		using pair_t = typename map_t<ChildType>::value_type;
 
 		std::tuple<map_t<Children>...> _children;
+	private:
+		bars_t _end = bars_t(0, 1), _repeat_end = bars_t(0, 1);
 	public:
+		bars_t end() const { return _end; }
+		bars_t repeat_end() const { return _repeat_end; }
+
 		template<class T>
 		map_t<T>& get() {
 			return tuple_helpers::get<map_t<T>>(_children);
@@ -112,6 +123,7 @@ namespace daw
 		void add(const T& t, const geom_t& geom) {
 			map_t<StoreT>& m = get<StoreT>();
 			m.emplace(geom, new T(t)); // TODO: push back pointer, id, ... ?
+			_repeat_end = _end = std::max(_end, geom.start + t.length());
 		}
 	};
 
@@ -126,9 +138,11 @@ namespace daw
 	template<class NoteProperties>
 	class event_t : public NoteProperties
 	{
-		bars_t _length = bars_t(1, 8); // TODO: //(1 bars::_8);
+		bars_t _length = bars_t(1, 1); // TODO: //(1 bars::_1);
 	public:
 		bars_t length() const { return _length; }
+		event_t& operator*=(const bars_t& b) { _length *= b; return *this; }
+		event_t operator*(const bars_t& b) const { event_t r = *this; return r*=b; }
 	};
 
 	/*class event_t : public seg_base<note_geom_t> {
@@ -148,6 +162,19 @@ namespace daw
 
 		}
 	};*/
+
+	template<class T>
+	class insert_seq
+	{
+		T cur_e;
+		bars_t cur_pos = bars_t(0, 1);
+	public:
+		insert_seq& operator<<(const T& new_e) {
+			cur_e.add_notes(new_e, note_geom_t(cur_pos, 0));
+			cur_pos += new_e.repeat_end();
+			return *this;
+		}
+	};
 
 	//! just notes, not corresponding to any instrument
 	template<class NoteProperties>
@@ -175,17 +202,46 @@ namespace daw
 		}*/
 		using seg_base<note_geom_t, events_t<NoteProperties>,
 			event_t<NoteProperties>>::seg_base;
+		events_t operator*(const bars_t& b) const
+		{
+			events_t copy = *this;
+			
+			typename base::template map_t<mevent_t> new_e;
+			for(auto pr : copy.template get<mevent_t>())
+			 new_e.emplace(pr.first, new mevent_t((*pr.second) * b));
+			copy.template get<mevent_t>() = new_e;
+			
+			typename base::template map_t<mevents_t> new_es;
+			for(auto pr : copy.template get<mevents_t>())
+			 new_es.emplace(pr.first, new mevents_t((*pr.second) * b));
+			copy.template get<mevents_t>() = new_es;
+
+			return copy;
+		}
+
 //		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
-//		events_t operator<<(notest_t&& n, 
+		insert_seq<mevents_t> operator<<(const mevents_t& n) { // TODO: std::forward?
+			return insert_seq<mevents_t>() << *this << n;
+#if 0		
+			add_notes(std::move(n), geom_t(bars_t(0, 1), 0));
+			// TODO: recall last position
+			return *this;
+#endif
+		}
 	};
+	
+	// TODO: move?
+	template<class T>
+	events_t<T> operator*(const bars_t& b, const events_t<T>& e) {
+		return e * b;
+	}
 /*
 	operator*(const bars_t& b, const scales::note& n)
 	{
 		return single_events_t(b, n);
 	}
 */
-
 
 #if 0
 	template<class Child>
@@ -250,6 +306,7 @@ namespace daw
 	};
 #endif
 }
+
 
 }
 

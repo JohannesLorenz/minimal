@@ -36,7 +36,8 @@ using namespace daw; // TODO
 template<class T>
 class event_line_t;
 
-class music_note_properties : value_t<char, 64>
+// TODO: notes.h or note.h (whatever the name was)
+class music_note_properties : public value_t<char, 64>
 { // TODO: velocity -> value
 public:
 	using value_t<char, 64>::value_t;

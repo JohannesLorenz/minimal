@@ -65,7 +65,12 @@ public:
 			i * scales::note_detail::chromatic::octave_size);
 	}
 
+	constexpr note operator%(key_t i) const {
+		return operator^(i);
+	}
+	
 	explicit operator key_t() const { return key; }
+	key_t value() const { return key; }
 };
 
 // TODO:

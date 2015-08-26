@@ -42,6 +42,8 @@ public:
 	const T& value() const { return t; }
 	T& value() { return t; }
 	// TODO: std::forward
+	void set(const T& new_value) { t = new_value; }
+	// TODO: std::forward
 	value_t(const T& t) : t(t) {}
 	value_t() = default;
 };
