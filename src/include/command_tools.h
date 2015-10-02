@@ -145,7 +145,7 @@ void rtosc_in_port_t<T>::on_read(sample_no_t time)
 // TODO: make this a subclass of rtosc_instr and then remove get_impl() ?
 // TODO: make InstClass = effect_t? ???????????????????????????????????????????
 template<class... PortTypes>
-struct _in_port_with_command : nnode, util::non_copyable_t
+struct _in_port_with_command : nnode, util::non_copyable_t // TODO: rename: command_with_ports
 {
 	command<PortTypes...>* cmd_ptr;
 	prioritized_command_cmd cmd;

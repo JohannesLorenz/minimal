@@ -67,6 +67,7 @@ class fraction_t
 
 //	constexpr fraction_t(num_t _n, denom_t _d) : n(_n), d(_d) {}
 public:
+private:
 	//! TODO: should be private?
 	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
 	//! however, gcd(m,d) = 1 is not required

@@ -17,46 +17,45 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef SAMPLE_H
-#define SAMPLE_H
+#ifndef OS_ENGINE_H
+#define OS_ENGINE_H
 
-#include <cstdint>
+#include <thread>
+#include "engine.h"
 
 namespace mini {
 
-//! signed int of at least 64 bit
-using sample_no_t = int_least64_t; // TODO: why should they be signed?
-using sample_rate_t = sample_no_t;
-
-inline sample_no_t operator"" _smps(unsigned long long int n) { return n; }
-
-// enough samples for one day
-static_assert(sizeof(sample_no_t) >= 8,
-	"need 64 bit ints");
-
-// TODO: not here?
-// 1 bar = 2 seconds
-// 1000 samples per second
-
-struct info_t
+class os_engine_t : public engine_t
 {
-	info_t() { recompute(); }
+	std::thread run_thread;
+	const sample_no_t sample_rate;
 
-	sample_no_t global_samplerate = 48000; // TODO: read this from jack!
-	// fixed constants
-	//sample_no_t samples_per_sec;// = 1024;
-	const sample_no_t useconds_per_lfo_intv = 1024;
+	bool process(sample_no_t samples);
+/*	void shutdown() {
+		stop();
+		//throw "shutdown not implemented :P";
+	}
+*/
+	sample_no_t get_sample_rate() { return sample_rate; }
 
-	// constants depending on others
-	sample_no_t samples_per_bar; //= global_samplerate * 2;
-	sample_no_t usecs_per_sample; //= 1000000 / samples_per_sec;
+	sample_no_t limit = 0, samples_until_now = 0;
 
-	void recompute();
-	//constexpr sample_no_t samples_per_lfo_intv = ;
+	void vrun(bars_t _limit);
+
+	//! permanent function for @a run_thread
+	void run_loop();
+	
+	// TODO: can this be avoided with C++11 threads?
+	static void run_loop_static(os_engine_t* obj) { obj->run_loop(); }
+public:
+	const char* type_hint() { return "none"; }
+
+	//! @param sample_rate desired sample rate for this engine
+	os_engine_t(sample_no_t sample_rate = 1024)
+		: sample_rate(sample_rate) {
+	}
 };
-
-extern info_t info;
 
 }
 
-#endif // SAMPLE_H
+#endif // OS_ENGINE_H

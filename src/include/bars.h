@@ -49,7 +49,7 @@ constexpr inline bars_t operator"" _48(num_t n) { return bars_t(n, 48); }
 
 inline sample_no_t as_samples_floor(const bars_t& b, const sample_no_t& samples_per_bar)
 {
-	return bars_t(b.numerator(), b.denominator(), samples_per_bar).floor();
+	return (samples_per_bar * b).floor();
 }
 
 }

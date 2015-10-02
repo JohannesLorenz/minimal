@@ -1,0 +1,8 @@
+load <plugin>
+play <from> <to>
+debugger --set-type text|off
+debugger --set-rate 
+set-debugger text|off (TODO: hor? ver?)
+set-engine jack|os
+print graph|info
+TODO: render??

@@ -29,6 +29,7 @@
 #include "io.h"
 #include "project.h"
 #include "jack_engine.h"
+#include "os_engine.h"
 
 using namespace mini;
 
@@ -138,13 +139,13 @@ int main(int argc, char** argv)
 			if(action == action_t::run)
 			{
 
-				jack_engine_t eng;
-				eng.load_project(pro);
+				engine_t* eng = new os_engine_t; // jack_engine_t;
+				eng->load_project(pro);
 				//eng.play_until(5_1);
 				//eng.activate(); <- currently called by run
-				eng.run_until(10_1);
+				eng->run_until(10_1);
 
-				while(eng.is_running() && !got_killed) {
+				while(eng->is_running() && !got_killed) {
 					usleep(500000); // 0.5 s (hopefully!)
 				}
 
