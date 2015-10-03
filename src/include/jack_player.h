@@ -21,7 +21,6 @@
 #define JACK_PLAYER_H
 
 #include "audio.h"
-#include "jack.h" // TODO: filename...
 #include "effect.h"
 
 namespace mini
@@ -29,8 +28,6 @@ namespace mini
 
 class jack_player_t : public effect_t, public audio_in
 {
-	//jack::client_t client;
-	//multiplex<jack::port_t> ports;
 public:
 	jack_player_t();
 	void instantiate();

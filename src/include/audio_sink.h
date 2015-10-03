@@ -32,7 +32,6 @@ class audio_sink_t : public effect_t, public audio_in
 
 	bool _proceed() {
 		// nothing to do, the engine will read from us
-		set_next_time(std::numeric_limits<sample_no_t>::max());
 		return true;
 	}
 public:
