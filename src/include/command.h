@@ -348,34 +348,6 @@ public: // TODO?
 	mutable osc_string _buffer;
 
 private:
-
-
-
-/*	template<class ...Args2>
-	void _append(std::string& , Args2... )
-	{
-		// general case: can not be done
-	}
-
-	void _append(std::string& )
-	{
-		// end reached
-	}
-
-	template<class T, char sign, class ...Args2>
-	void _append(std::string& prefix, variable<no_port<T>, sign> v, Args2... more_args)
-	{
-
-		_append(prefix, more_args...);
-	}
-
-	template<class T, char sign, class ...Args2>
-	void _append(std::string& prefix, variable<no_port<T>, sign> v, Args2... more_args)
-	{
-
-		_append::exec(prefix, more_args...);
-	}*/
-
 	osc_string prefill_buffer() const
 	{
 		std::vector<char> res(base_t::_path.begin(), base_t::_path.end());
