@@ -49,7 +49,6 @@ public: // TODO!! protected
 	effect_t* e;
 	std::vector<in_port_base*> readers;
 public:
-//	bool changed = true; // TODO: stamp?
 	sample_no_t change_stamp = -1.0f;
 	out_port_base(effect_t& ef) :
 		e(&ef)

@@ -17,11 +17,8 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-// mostly a copy of jack's ringbuffer, however, with multiple readers
-
 #include <algorithm>
 //#include <jack/jack.h>
-//#include <jack/ringbuffer.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,34 +30,6 @@
 
 namespace mini {
 namespace jack {
-
-#if 0
-std::size_t ringbuffer_t::can_read_size() const {
-	return jack_ringbuffer_read_space(ring);
-}
-
-/*constexpr std::size_t ringbuffer_t::sample_size()
-{
-	return sizeof(jack_default_audio_sample_no_t);
-}*/
-
-std::size_t ringbuffer_t::read(char *framebuf, std::size_t size) {
-	return jack_ringbuffer_read(ring, framebuf, size);
-}
-
-std::size_t ringbuffer_t::write(const char *framebuf, std::size_t size) {
-	return jack_ringbuffer_write(ring, framebuf, size);
-}
-
-void ringbuffer_t::prepare() { std::fill_n(ring->buf, ring->size, 0); }
-
-ringbuffer_t::ringbuffer_t(std::size_t size)
-	: ring(jack_ringbuffer_create(size))
-{
-}
-
-ringbuffer_t::~ringbuffer_t() { jack_ringbuffer_free(ring); }
-#endif
 
 frames_t client_t::sample_rate() const
 {

@@ -32,8 +32,11 @@ namespace mini
 
 //! note: if binary gets too large, we might need to not use templates...
 
+//! subclasses of this class are recognized as "variables"
 class is_variable {};
 
+//! this class is not being used in minimal,
+//! but it can be used for other projects
 template</*class Input, */class T>
 class variable : is_variable
 {
@@ -57,6 +60,9 @@ public:
 //	bool update() { return _input->update(); }
 //	float get_next_time() const { return _input->get_outs_next_time(); }
 };
+
+using vint = variable<int>;
+using vfloat = variable<float>;
 
 #if 0
 // an SFINAE classic:
@@ -160,7 +166,6 @@ constexpr std::size_t pad(std::size_t pos) {
 template<std::size_t S>
 using has_pad_size = std::integral_constant<std::size_t, S>;
 
-//! TODO: assert if T is not a variable
 template<class T>
 struct _pad_size : _pad_size<type_of_variable<T>> {};
 
@@ -181,7 +186,6 @@ template<class T>
 constexpr std::size_t pad_size(const T& ) {
 	return _pad_size<T>::value;
 }
-
 
 #if 0
 template<class T>
@@ -408,9 +412,6 @@ class oint<false> : public variable<int, 'i'>
 	using variable::variable;
 };*/
 
-
-using vint = variable<int>;
-using vfloat = variable<float>;
 
 #if 0
 template<class InputPort>
