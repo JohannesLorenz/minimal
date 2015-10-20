@@ -39,13 +39,13 @@ bool are_equal(const std::vector<char>& v, const char* ptr, std::size_t n)
 int main()
 {
 /*	zynaddsubfx_t::note_on<> note_on(1, 2, 3);
-	inspect_rtosc_string(note_on.buffer);
+	inspect_osc_string(note_on.buffer);
 	note_on.complete_buffer();
-	inspect_rtosc_string(note_on.buffer);*/
+	inspect_osc_string(note_on.buffer);*/
 
 	try {
 		command<osc_float, self_port_templ<int>> fl("/float", 42.0, self_port_templ<int>{});
-		//inspect_rtosc_string(fl.buffer);
+		//inspect_osc_string(fl.buffer);
 
 		fl.buffer().inspect(no_rt::mlog);
 
@@ -83,7 +83,7 @@ int main()
 
 	{
 		command<osc_float, bool, bool, self_port_templ<bool>, osc_int> has_bool("/bool", 42.0, false, true, self_port_templ<bool>{}, 42);
-		//inspect_rtosc_string(fl.buffer);
+		//inspect_osc_string(fl.buffer);
 
 		has_bool.buffer().inspect(no_rt::mlog);
 

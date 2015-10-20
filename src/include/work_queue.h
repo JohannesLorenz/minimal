@@ -20,7 +20,7 @@
 #ifndef WORK_QUEUE_H
 #define WORK_QUEUE_H
 
-#include <iostream> // TODO
+//#include <iostream>
 #include <boost/heap/fibonacci_heap.hpp>
 #include "sample.h"
 
@@ -39,7 +39,6 @@ public:
 
 	class task_base // TODO: make this crtp when possible?
 	{
-//		const command_base* cmd;
 		sample_no_t _next_time;
 	public:
 		void update_next_time(sample_no_t new_value) {
@@ -50,15 +49,18 @@ public:
 		task_base(sample_no_t next_time) : _next_time(next_time) {}
 		virtual bool cmp(const task_base& other) const { return this < &other; }
 		virtual handle_type& get_handle() { throw "not implemented"; }
-
-//		virtual sample_no_t next() = 0;
 	};
 
 	class task_base_with_handle : public task_base
 	{
 		handle_type handle;
 	public:
-		using task_base::task_base;
+		//using task_base::task_base;
+		task_base_with_handle(sample_no_t next_time,
+			handle_type handle = handle_type()) :
+			task_base(next_time),
+			handle(handle)
+			{}
 		handle_type& get_handle() final { return handle; }
 		void set_handle(handle_type h) { handle = h; }
 	};
@@ -94,11 +96,6 @@ public:
 			task_base* top = std::move(pq.top());
 			top->proceed();
 			update(top->get_handle());
-
-			/*const bool reinsert = top->proceed(pos);
-			if(reinsert)
-			 pq.push(top);*/
-
 		}
 		return pq.top()->next_time();
 	}

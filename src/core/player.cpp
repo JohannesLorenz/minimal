@@ -50,7 +50,7 @@ void _player_t::init()
 		task_effect* te = static_cast<task_effect*>(*pr.second);
 		effect_t* e = te->effect;
 		for(const out_port_base* op  : e->get_out_ports())
-		for(in_port_base* target_ip : op->readers)
+		for(in_port_base* target_ip : op->readers())
 		{
 			const effect_t* target_ef = target_ip->get_effect();
 			//changed_ports[target_ef->id()][target_ip->id] = true;
@@ -262,7 +262,7 @@ void REALTIME _player_t::process(sample_no_t work)
 			// TODO! only dependencys...
 			if(op->change_stamp <= pos)
 			{
-				for(in_port_base* target_ip : op->readers)
+				for(in_port_base* target_ip : op->readers())
 				{
 				//	TODO: check this!!!
 					const effect_t* target_ef = target_ip->get_effect();
@@ -285,7 +285,7 @@ void REALTIME _player_t::process(sample_no_t work)
 				}
 			}
 			else
-			 count +=op->readers.size();
+			 count +=op->readers().size();
 			}
 
 			this_ef->finished_threads.store(0);

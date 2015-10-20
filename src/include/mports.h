@@ -45,9 +45,9 @@ class port_base : public is_variable
 
 class out_port_base : public port_base
 {
-public: // TODO!! protected
+protected:
 	effect_t* e;
-	std::vector<in_port_base*> readers;
+	std::vector<in_port_base*> _readers;
 public:
 	sample_no_t change_stamp = -1.0f;
 	out_port_base(effect_t& ef) :
@@ -55,10 +55,18 @@ public:
 	{
 	}
 
+	const std::vector<in_port_base*>& readers() const { return _readers; }
+	std::vector<in_port_base*>& readers() { return _readers; }
+	// TODO: std::forward
+	const effect_t* effect() const { return e; }
+
 	virtual const void* get_value() const = 0; // void* is not good...
 //	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
 
 	//virtual void connect(const in_port_base& ) ;
+
+
+
 };
 
 template<class T, bool IsDep>
@@ -104,6 +112,10 @@ public:
 
 	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
 
+	template<class T1, class T2, bool IsDep>
+	friend void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt);
+
+
 //	friend
 //	void operator<<(in_port_templ<T>& ipt, const out_port_templ<T>& opt);
 };
@@ -112,14 +124,13 @@ public:
 class in_port_base : public util::non_copyable_t, public port_base
 {
 	effect_t* e;
-private:
 	bool _is_trigger = false;
-	bool _is_precomputable;
+//	bool _is_precomputable;
 protected:
 	sample_no_t change_stamp = -1;
 	std::size_t id;
 
-	//bool unread_changes = false; // initally send values - TODO??
+	//bool unread_changes = false; initally send values ... is this good? 
 protected:
 	const out_port_base* source = nullptr;
 
@@ -167,9 +178,9 @@ public:
 	bool is_trigger() const { return _is_trigger; }
 	void set_trigger(bool is_trigger = true) { _is_trigger = is_trigger; } // TODO: ctor?
 
-	bool is_precomputable() const { return _is_precomputable; } // TODO: can those be removed?
+/*	bool is_precomputable() const { return _is_precomputable; }
 	void set_precomputable(bool is_precomputable = true) { _is_precomputable = is_precomputable; }
-
+*/
 	virtual void on_read(sample_no_t time) = 0;
 
 	virtual const void* get_value() const = 0;
@@ -284,7 +295,7 @@ void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt)
 	if(ipt.source != nullptr)
 	 throw "double connect to in port";
 	ipt.source = &opt;
-	opt.readers.push_back(&ipt);
+	opt._readers.push_back(&ipt);
 	if(ipt.is_dependency()) // TODO: via template matching
 	 opt.e->deps.push_back(ipt.e);
 	else

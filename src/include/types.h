@@ -37,28 +37,19 @@ class is_variable {};
 
 //! this class is not being used in minimal,
 //! but it can be used for other projects
-template</*class Input, */class T>
+template<class T>
 class variable : is_variable
 {
 	T data;
 public:
 	const T& get() const { return data; }
 	T& get() { return data; }
-	void set(const T& new_data) { data = new_data; } // TODO: && alternative
+	void set(const T& new_data) { data = new_data; } // TODO: std::forward alternative
 
 	using type = T;
 
-	/*variable(InputPort& input) : _input(&input) {}
-	variable(InputPort* input) : _input(input) {}*/
-
 	variable(const T& data) : data(data) { }
 	variable() = default;
-
-
-
-//	const type& value() const { return _input->get(); }
-//	bool update() { return _input->update(); }
-//	float get_next_time() const { return _input->get_outs_next_time(); }
 };
 
 using vint = variable<int>;
