@@ -47,14 +47,13 @@ public:
 	std::size_t size() const { return data.size(); }
 };*/
 
-using loaded_project_t = project_t;
-
 class _player_t : public work_queue_t // TODO: own header
 {
 	//array_stack<effect_t*> ready_fx;
 
 	sample_no_t pos = 0; //!< number of samples played until now
-	loaded_project_t* project; // TODO! must be const
+	
+	_project_t* project; // TODO! must be const
 
 	spinlock_t work_queue_lock;
 
@@ -123,8 +122,6 @@ class _player_t : public work_queue_t // TODO: own header
 
 	void init();
 public:
-	class audio_sink_t* sink() { return project->sink; }
-
 	_player_t() = default;
 	void set_project(loaded_project_t& _project);
 	_player_t(loaded_project_t& _project);
@@ -139,8 +136,8 @@ public:
 	}
 };
 
-using player_t = _player_t;
-/*
+//using player_t = _player_t;
+
 //! template type of @a _player_t
 template<class SinkType>
 class player_t : public _player_t
@@ -148,7 +145,10 @@ class player_t : public _player_t
 	SinkType sink;
 public:
 	using _player_t::_player_t;
-};*/
+	SinkType* sink { return project->sink; }
+
+	_player_t<SinkType player_t>
+};
 
 // TODO: class audio_stereo_project will set sink to mult<ringbuffer_t>
 
