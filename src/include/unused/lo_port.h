@@ -44,9 +44,9 @@ public:
 	void clean_up();
 
 	// TODO: does const make sense
-//	bool send_rtosc_msg(const char *path, const char *msg_args, ...) const;
+//	bool send_osc_msg(const char *path, const char *msg_args, ...) const;
 	bool send_raw(const char *buffer, std::size_t len) const;
-	//bool send_rtosc_msg(const char *path) const;
+	//bool send_osc_msg(const char *path) const;
 };
 
 class lo_server_t : util::non_copyable_t

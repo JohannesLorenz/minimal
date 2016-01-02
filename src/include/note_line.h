@@ -31,25 +31,16 @@ namespace mini {
 
 //constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
-using namespace daw; // TODO
-
 template<class T>
 class event_line_t;
 
-// TODO: notes.h or note.h (whatever the name was)
-class music_note_properties : public value_t<char, 64>
-{ // TODO: velocity -> value
-public:
-	using value_t<char, 64>::value_t;
-	char velocity() const { return value(); }
-};
-
 template<class NoteProperties>
-class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public work_queue_t
+class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 {
 	friend class event_line_t<NoteProperties>;
 	using m_event_line_t = event_line_t<NoteProperties>;
 	using impl_t = is_impl_of_t<m_event_line_t>;
+	using m_geom_t = daw::note_geom_t;
 
 	sample_no_t last_time = -1.0f;
 	//std::map<int, std::map<sample_no_t, event_t>> note_lines;
@@ -74,7 +65,7 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 	struct m_note_event : public NoteProperties
 	{
 		bool on;
-		int id; // TODO: unused?
+		int id;
 		template<class ...Args>
 		m_note_event(bool on, int id, Args... args) :
 			NoteProperties(args...), on(on), id(id)
@@ -82,64 +73,35 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>//, public wo
 		}
 	};
 
-	using event_map_t = std::map<note_geom_t, m_note_event>;
+	//  TODO: rename m_note_event -> m_event, allow subclasses of it via NoteProperties?
+	using event_map_t = std::map<m_geom_t, m_note_event>;
 	event_map_t note_events;
 	typename event_map_t::const_iterator itr;
-
-	/*struct event_task_t : public task_base
-	{
-		//const loaded_instrument_t* ins;
-		//const command_base* cmd;
-		line_impl* nl_ref;
-		//int* last_key;
-		const int note_height;
-		bool is_on = false;
-		std::map<note_geom_t, m_note_event>::const_iterator itr;
-
-
-		void proceed(sample_no_t time);
-
-		event_task_t(line_impl& nl_ref,
-			const int& note_height,
-			const std::map<sample_no_t, event_t>& values,
-			sample_no_t first_event = 0.0f) :
-			task_base(first_event),
-			nl_ref(&nl_ref),
-			//last_key(nl_ref.notes_pressed.get()),
-			note_height(note_height),
-			itr(nl_ref.note_events.begin())
-		{
-			(void)values; // TODO
-			if(note_height < 0 || note_height >= (int)NOTES_MAX)
-			 throw "invalid note height";
-		}
-	};*/
-
 
 //	notes_impl_t root;
 
 	int next_visit_id = 0;
 
-	void visit(const events_t<NoteProperties>& n, const note_geom_t offset)
+	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset)
 	{
-		note_geom_t cur_offs = offset + n.geom;
-		for(const std::pair<const note_geom_t,
-			const events_t<NoteProperties>*>& n2 :
-			n.template get<events_t<NoteProperties>>()) {
+		m_geom_t cur_offs = offset + n.geom;
+		for(const std::pair<const daw::note_geom_t,
+			const daw::events_t<NoteProperties>*>& n2 :
+			n.template get<daw::events_t<NoteProperties>>()) {
 			visit(*n2.second, cur_offs + n2.first);
 		}
-		for(const std::pair<const note_geom_t,
-			const event_t<NoteProperties>*>& n2 :
-			n.template get<event_t<NoteProperties>>())
+		for(const std::pair<const m_geom_t,
+			const daw::event_t<NoteProperties>*>& n2 :
+			n.template get<daw::event_t<NoteProperties>>())
 		{
-			const event_t<NoteProperties>& cur_note = *n2.second;
-			const note_geom_t next_offs = cur_offs + n2.first;
+			const daw::event_t<NoteProperties>& cur_note = *n2.second;
+			const m_geom_t next_offs = cur_offs + n2.first;
 			std::cerr << "emplacing: " << next_visit_id << std::endl;
-			// TODO: this does not work for all note propertoes
+			// TODO: this does not work for all note properties
 			note_events.emplace(next_offs,
-				m_note_event(true, next_visit_id, cur_note.velocity())); // TODO: 1
-			note_events.emplace(next_offs + note_geom_t(cur_note.length(), 0),
-				m_note_event(false, next_visit_id++, cur_note.velocity()));
+				m_note_event(true, next_visit_id, cur_note.value())); // TODO: 1
+			note_events.emplace(next_offs + m_geom_t(cur_note.length(), 0),
+				m_note_event(false, next_visit_id++, cur_note.value()));
 		}
 	}
 
@@ -147,9 +109,9 @@ public:
 	line_impl(m_event_line_t *nl) : is_impl_of_t<m_event_line_t>(nl)
 	{
 		// insert notes
-		visit(impl_t::ref->notes, note_geom_t(bars_t(0, 1), 0));
+		visit(impl_t::ref->notes, m_geom_t(bars_t(0, 1), 0));
 		// insert sentinel
-		note_events.emplace(note_geom_t(bars_t(100000, 1), 1), // TODO: this number...
+		note_events.emplace(m_geom_t(bars_t(100000, 1), 1), // TODO: this number...
 			m_note_event(true, std::numeric_limits<int>::max(), 0));
 
 		itr = note_events.begin();
@@ -162,9 +124,9 @@ public:
 
 		// itr points to note_events
 		while(
-			as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt) // TODO! 0.1f 0.1f 0.1f
+			as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt)
 		{
-			const note_geom_t& geom = itr->first;
+			const m_geom_t& geom = itr->first;
 			const m_note_event& event = itr->second;
 			std::pair<int, NoteProperties>* events_at = events_out.lines[geom.offs];
 			std::size_t id = 0;
@@ -205,7 +167,7 @@ public:
 		impl_t::ref->events_out_t<NoteProperties>::change_stamp = amnt;
 
 		last_time = amnt;
-		return as_samples_floor(itr->first.start, info.samples_per_bar); // TODO! 0.1f 0.1f 0.1f
+		return as_samples_floor(itr->first.start, info.samples_per_bar);
 	}
 };
 
@@ -216,7 +178,7 @@ class event_line_t : public effect_t, public events_out_t<T>, has_impl_t<line_im
 	using impl_t = has_impl_t<line_impl<T>, event_line_t<T>>;
 
 	//! @note: one might need to store the events_t blocks seperated for muting etc
-	events_t<T> notes;
+	daw::events_t<T> notes;
 
 public:
 	event_line_t() :
@@ -230,12 +192,12 @@ public:
 		impl_t::instantiate();
 		set_next_time(
 			as_samples_floor(impl_t::impl->note_events.begin()->first.start,
-				info.samples_per_bar)); // TODO! 0.1f 0.1f 0.1f
+				info.samples_per_bar));
 	}
 
 	void clean_up() {}
 
-	void add_notes(const events_t<T>& n, const note_geom_t& ng) {
+	void add_notes(const daw::events_t<T>& n, const daw::note_geom_t& ng) {
 		//note_events.emplace(ng, n);
 		notes.add_notes(n, ng);
 	}

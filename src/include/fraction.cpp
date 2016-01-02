@@ -23,10 +23,10 @@
 namespace mini
 {
 
-// TODO: print as x+n/d or x_n/d
-std::ostream & print_fraction(std::ostream &os, signed long long n, signed long long d)
+std::ostream & print_fraction(std::ostream &os, long long z,
+	signed long long n, signed long long d)
 {
-	return os << n << '/' << d;
+	return os << z << '+' << n << '/' << d;
 }
 
 }

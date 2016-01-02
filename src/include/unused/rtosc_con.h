@@ -1,8 +1,8 @@
 
 
-#ifndef RTOSC_CON_H
-#define RTOSC_CON_H
+#ifndef OSC_CON_H
+#define OSC_CON_H
 
 void msg();
 
-#endif // RTOSC_CON_H
+#endif // OSC_CON_H

@@ -41,7 +41,7 @@ struct znode_t : public node_t<zyn_tree_t>
 };
 
 template<class PortT>
-using port = in_port_with_command<zyn_tree_t, PortT>;
+using port = command_with_ports<zyn_tree_t, PortT>;
 
 class amp_env : public znode_t
 {
@@ -134,9 +134,9 @@ public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
-	class note_on : public in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
+	class note_on : public command_with_ports<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
-		using base = in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
+		using base = command_with_ports<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
 		note_on(zyn_tree_t* zyn, port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& velocity) // TODO: rvals
 			: base(zyn, "/", "noteOn", chan, note, std::forward<port_type_of<Port3, int>>(velocity)) // TODO: forward instead of move?
@@ -147,9 +147,9 @@ public:
 	template<template<class , bool> class Port1 = use_no_port,
 		template<class , bool> class Port2 = use_no_port,
 		template<class , bool> class Port3 = use_no_port>
-	class note_off : public in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
+	class note_off : public command_with_ports<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>
 	{
-		using base = in_port_with_command<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
+		using base = command_with_ports<zyn_tree_t, port_type_of<Port1, int>, port_type_of<Port2, int>, port_type_of<Port3, int>>;
 	public:
 		note_off(zyn_tree_t* zyn, port_type_of<Port1, int> chan, port_type_of<Port2, int> note, port_type_of<Port3, int>&& id)
 			: base(zyn, "/", "noteOff", chan, note, std::forward<port_type_of<Port3, int>>(id))
@@ -161,7 +161,7 @@ private:
 	using c_note_off = note_off<use_no_port, use_no_port, self_port_templ>;
 
 	template<class InstClass>
-	struct notes_t_port_t : node_t<InstClass>, rtosc_in_port_t<notes_in>
+	struct notes_t_port_t : node_t<InstClass>, osc_in_port_t<notes_in>
 	{
 		command_base* cmd;
 		InstClass* ins;
@@ -173,7 +173,7 @@ private:
 	public:
 		notes_t_port_t(InstClass* ins, const std::string& base, const std::string& ext) : // todo: base, ext does not make sense here?
 			node_t<InstClass>(ins, base, ext),
-			rtosc_in_port_t<notes_in>(*ins),
+			osc_in_port_t<notes_in>(*ins),
 			ins(ins)
 		{
 			note_ons.reserve(NOTES_MAX);

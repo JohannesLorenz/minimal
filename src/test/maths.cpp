@@ -60,6 +60,9 @@ int main()
 		throw_if_neq(bars_t(std::numeric_limits<int_least64_t>::max(),1)
 			> bars_t(1,1), true);
 
+		constexpr bars_t b(2, 4);
+		(void)b;
+
 	} catch (const char* s)
 	{
 		no_rt::mlog << s << std::endl;

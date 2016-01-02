@@ -75,13 +75,13 @@ std::ostream& operator<<(std::ostream& stream,
 	stream << std::endl;
 
 	if(str[0] != '/')
-	 throw "rtosc string invalid: does not start with `/'";
-	stream << "rtosc msg: \"" << str.data() << "\"" << std::endl;
+	 throw "osc string invalid: does not start with `/'";
+	stream << "osc msg: \"" << str.data() << "\"" << std::endl;
 	std::vector<char>::const_iterator itr = str.begin() + strlen(str.data());
 	++itr;
 	itr += pad_next<4>(std::distance(str.begin(), itr));
 	if(*(itr++)!=',')
-	 throw "rtosc string invalid: type string does not start with `,'";
+	 throw "osc string invalid: type string does not start with `,'";
 	const char* args = &*itr;
 	itr += strlen(&*itr);
 	++itr;
@@ -120,9 +120,9 @@ std::ostream& operator<<(std::ostream& stream,
 	}
 
 	if(*args) // i.e. itr reached end too early
-	 stream << " -> rtosc string not terminated here." << std::endl;
+	 stream << " -> osc string not terminated here." << std::endl;
 	else if(itr != str.end())
-	 stream << " -> rtosc string has overfluent bytes." << std::endl;
+	 stream << " -> osc string has overfluent bytes." << std::endl;
 
 	// TODO
 

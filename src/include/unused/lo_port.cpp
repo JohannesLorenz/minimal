@@ -23,7 +23,7 @@
 #include <lo/lo.h>
 
 #include "osc_string.h"
-//#include "rtosc/rtosc.h"
+//#include "osc/osc.h"
 #include "lo_port.h"
 #include "io.h"
 
@@ -147,15 +147,15 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 	return true;
 }
 
-/*bool lo_port_t::send_rtosc_msg(const char *path, const char *msg_args, ...) const
+/*bool lo_port_t::send_osc_msg(const char *path, const char *msg_args, ...) const
 {
 	va_list va;
 	va_start(va, msg_args);
 	char buffer[2048];
-	size_t len = rtosc_vmessage(buffer, 2048, path, msg_args, va);
+	size_t len = osc_vmessage(buffer, 2048, path, msg_args, va);
 	if(!len)
 	{
-		throw "rtosc_vmessage";
+		throw "osc_vmessage";
 	}
 	va_end(va);
 
@@ -163,7 +163,7 @@ bool lo_port_t::send_raw(const char *buffer, std::size_t len) const
 }*/
 
 
-/*bool lo_port_t::send_rtosc_msg(const char *path) const
+/*bool lo_port_t::send_osc_msg(const char *path) const
 {
 	char buffer[2048];
 	strncpy(buffer, path, 2048);

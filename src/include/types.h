@@ -32,31 +32,28 @@ namespace mini
 
 //! note: if binary gets too large, we might need to not use templates...
 
+//! subclasses of this class are recognized as "variables"
 class is_variable {};
 
-template</*class Input, */class T>
+//! this class is not being used in minimal,
+//! but it can be used for other projects
+template<class T>
 class variable : is_variable
 {
 	T data;
 public:
 	const T& get() const { return data; }
 	T& get() { return data; }
-	void set(const T& new_data) { data = new_data; } // TODO: && alternative
+	void set(const T& new_data) { data = new_data; } // TODO: std::forward alternative
 
 	using type = T;
 
-	/*variable(InputPort& input) : _input(&input) {}
-	variable(InputPort* input) : _input(input) {}*/
-
 	variable(const T& data) : data(data) { }
 	variable() = default;
-
-
-
-//	const type& value() const { return _input->get(); }
-//	bool update() { return _input->update(); }
-//	float get_next_time() const { return _input->get_outs_next_time(); }
 };
+
+using vint = variable<int>;
+using vfloat = variable<float>;
 
 #if 0
 // an SFINAE classic:
@@ -120,20 +117,6 @@ struct _type_of_variable<T, false> {
 template<class T>
 using type_of_variable = typename _type_of_variable<T, _is_variable<T>()>::type;
 
-/*
-template<class T, char _sign> // TODO: should be constexpr
-class variable<no_port<T>, _sign> : public par_base<T, _sign>, util::dont_instantiate_me<T>
-{
-	const T _value;
-public:
-//	constexpr static bool is_const() { return true; }
-//	using type = T;
-//	const T& value() const { return _value; }
-	variable(const T& value) : _value(value) {
-	}
-};*/
-
-
 /*template<class T>
 struct pad_size// : util::dont_instantiate_me<T>
 {
@@ -160,7 +143,6 @@ constexpr std::size_t pad(std::size_t pos) {
 template<std::size_t S>
 using has_pad_size = std::integral_constant<std::size_t, S>;
 
-//! TODO: assert if T is not a variable
 template<class T>
 struct _pad_size : _pad_size<type_of_variable<T>> {};
 
@@ -181,26 +163,6 @@ template<class T>
 constexpr std::size_t pad_size(const T& ) {
 	return _pad_size<T>::value;
 }
-
-
-#if 0
-template<class T>
-bool _value(const typename T::type& elem) { return elem.get(); }
-
-template<class T, bool b>
-bool _value(const typename _type_and_bool<T, b>::type& elem) { return elem; }
-
-template<class T>
-bool value(const T& elem) { return _value<type_and_bool<T>>(elem); }
-#endif
-
-/*
-
-template<class T, bool>
-bool value(const variable<T>& v) { return v.get(); }
-
-template<class T>
-bool value(const T& elem) { return elem; }*/
 
 /*
 	is_const
@@ -247,19 +209,6 @@ struct size_fix<float> : std::true_type {};
 
 template<>
 struct size_fix<bool> : std::true_type {};
-
-/*
-template<class T>
-struct get_type
-{
-	using type = T; // TODO: without struct?
-};
-
-template<class T>
-struct get_type<variable<T>>
-{
-	using type = typename variable<T>::type; // TODO: without struct?
-};*/
 
 /*
 	get_value
@@ -375,74 +324,6 @@ template<class T>
 std::vector<char> to_osc_string(const T& elem) {
 	return to_osc_string(get_value<T>::exec(elem));
 }
-
-/*
-template<class Input, class InputId, char _sign>
-class variable : public par_base<decltype(Input().get(InputId())), _sign>
-{
-	const Input& _input;
-	using T = decltype(_input.get(InputId()));
-public:
-	variable(const Input& input) : _input(input) {}
-	const T& value() const { return _input.get(InputId()); }
-};
-
-template<class T, char _sign>
-class fixed : public par_base<T, _sign>
-{
-	const T _value;
-public:
-	const T& value() const { return _value; }
-	fixed(const T& value) : _value(value) {}
-};
-
-template<bool Fixed>
-class oint : public fixed<int, 'i'>
-{
-	using fixed::fixed;
-};
-
-template<>
-class oint<false> : public variable<int, 'i'>
-{
-	using variable::variable;
-};*/
-
-
-using vint = variable<int>;
-using vfloat = variable<float>;
-
-#if 0
-template<class InputPort>
-class oint : public variable<InputPort, 'i'>
-{
-	using base = variable<InputPort, 'i'>;
-public:
-	using variable<InputPort, 'i'>::variable;
-	//constexpr static bool size_fix() { return true; }
-
-	std::vector<char> to_osc_string() const {
-		return store_int32_t(base::value());
-	}
-};
-
-template<class InputPort>
-class ofloat : public variable<InputPort, 'f'>
-{
-	using base = variable<InputPort, 'f'>;
-public:
-	using variable<InputPort, 'f'>::variable;
-	//constexpr static bool size_fix() { return true; }
-
-	std::vector<char> to_osc_string() const {
-		return store_int32_t(base::value());
-	}
-
-
-
-
-};
-#endif
 
 using osc_int = int; // TODO: int32?
 using osc_float = float;

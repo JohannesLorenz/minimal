@@ -24,14 +24,10 @@
 #include <map>
 #include "utils.h"
 #include "tuple_helpers.h"
-//#include "command.h" // TODO: forward declare?
 #include "bars.h"
-#include "scales.h" // TODO: only chromatic.h ?
+#include "scales.h" // TODO: only chromatic.h
 
 namespace mini {
-
-//template<class Impl>
-class instrument_t;
 
 namespace daw
 {
@@ -243,68 +239,6 @@ namespace daw
 	}
 */
 
-#if 0
-	template<class Child>
-	class note_event_propagator
-	{
-	protected:
-		note_event_t propagate(note_event_t ne, Child c) {
-			return note_event(ne.inst_id, ne.pos + c.geom.start);
-		}
-	};
-
-	//! notes, corresponding to single instruments
-	//! if you want to use multiple tracks with the same instrument, make them and set them in the ctor
-	//! if you want multiple instruments to play the same, make multiple tracks and use the same notes object
-
-	class track_t : public seg_base<note_geom_t, events_t, command_base>, note_event_propagator<track_t>
-	{
-		using child_type = event_t;
-		//instrument_t::id_t ins_id;
-		instrument_t* ins;
-	public:
-		const instrument_t* instrument() const { return ins; }
-		using seg_base::seg_base;
-		void add_notes(const events_t& n, note_geom_t geom = geom_t::zero()) { add<events_t>(n, geom); }
-
-	//	template<class Command>
-	//	void add_command(const Command& cb) { add<Command, command_base>(cb, note_geom_t(0, 0)); }
-
-//		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
-		track_t(instrument_t& ins) : /*ins_id(ins.id()),*/ ins(&ins) {}
-	};
-
-/*	class inst_list_t : seg_base<inst_list_t, inst_t>, note_event_propagator<inst_t>
-	{
-		using child_type = inst_t;
-		note_event_t propagate(note_event_t ne, inst_t i) {
-			return note_event_t(ne.inst_id, ne.pos + i.geom.start);
-		}
-		using seg_base::seg_base;
-	public:
-		inst_t& make_inst(geom_t geom) { return make<inst_t>(geom); }
-	};
-
-	class chunk_list_t : seg_base<chunk_list_t, inst_list_t>, note_event_propagator<inst_list_t>
-	{
-		using child_type = inst_list_t;
-		using seg_base::seg_base;
-	public:
-		inst_list_t& make_inst_list(geom_t geom) { return make<inst_list_t>(geom); }
-	};*/
-
-	//! a pattern of instruments. e.g., different drum patterns are different globals
-	class global_t : public seg_base<geom_t, global_t, track_t>, note_event_propagator<track_t>
-	{
-		using child_type = track_t; // TODO: unused?
-	public:
-		using seg_base::seg_base;
-		void add_track(const track_t& t) { add<track_t>(t, geom); }
-//		track_t& track(geom_t geom) { return make<track_t>(geom); }
-//		global_t& global(geom_t geom) { return make<global_t>(geom); }
-		global_t(geom_t  = geom_t{0}) /*: seg_base(g)*/ {}
-	};
-#endif
 }
 
 

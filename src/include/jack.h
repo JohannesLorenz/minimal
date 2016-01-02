@@ -25,46 +25,9 @@
 
 //#include <sys/types.h> // for size_t
 
-/*// forward declaration of internal type
-typedef struct {
-	char *buf;
-	volatile size_t write_ptr;
-	volatile size_t read_ptr;
-	size_t size;
-	size_t size_mask;
-	int mlocked;
-} jack_ringbuffer_t ;
-*/
-
 #include <jack/jack.h> // TODO: types.h?
-//#include <jack/ringbuffer.h>
 
 namespace mini {
-
-/*class ringbuffer_old_t
-{
-	jack_ringbuffer_t *ring;
-	std::size_t channels = 2;
-public:
-	std::size_t can_read_size() const;
-
-	constexpr static std::size_t sample_size() { return sizeof(jack_default_audio_sample_no_t); }
-
-	// TODO: audio_ringbuffer_t?
-	std::size_t bytes_per_frame() const { return channels * sample_size(); }
-
-	bool can_read() const { return can_read_size() <= bytes_per_frame(); }
-
-	std::size_t read(char* framebuf, std::size_t size);
-
-	std::size_t write(const char* framebuf, std::size_t size);
-
-	void prepare();
-
-	ringbuffer_t(std::size_t size);
-
-	~ringbuffer_t();
-};*/
 
 namespace jack
 {

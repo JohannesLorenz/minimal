@@ -17,8 +17,8 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef RTOSC_STRING_H
-#define RTOSC_STRING_H
+#ifndef OSC_STRING_H
+#define OSC_STRING_H
 
 #include <vector>
 #include <cstring>
@@ -47,7 +47,7 @@ public:
 		++itr;
 		itr += pad_next<4>(std::distance(_data.begin(), itr));
 		if(*(itr++)!=',')
-		 throw "rtosc string invalid: type string does not start with `,'";
+		 throw "osc string invalid: type string does not start with `,'";
 		return itr;
 	}
 
@@ -81,4 +81,4 @@ public:
 
 }
 
-#endif // RTOSC_STRING_H
+#endif // OSC_STRING_H

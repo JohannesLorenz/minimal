@@ -10,7 +10,8 @@ add_executable(minimal-bin ${main_src} ${main_hdr})
 set_target_properties(minimal-bin
 	PROPERTIES OUTPUT_NAME minimal)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ldl")
-target_link_libraries(minimal-bin minimal threadpool ${AUDIO_LIBRARIES})
+target_link_libraries(minimal-bin minimal ${AUDIO_LIBRARIES})
+# target_link_libraries(minimal-bin minimal threadpool ${AUDIO_LIBRARIES})
 
 install(TARGETS minimal-bin
 	RUNTIME DESTINATION bin)

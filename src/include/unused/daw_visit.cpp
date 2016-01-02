@@ -66,20 +66,20 @@ bool get_input(const char* shell_command, pid_t* _childs_pid)
 	return true;
 }
 
-pid_t rtosc_con::make_fork(const char* start_cmd)
+pid_t osc_con::make_fork(const char* start_cmd)
 {
 	pid_t pid = 0; // TODO: use return value, make pid class with operator bool
 	get_input(start_cmd, &pid);
 	return pid;
 }
 
-rtosc_con::~rtosc_con()
+osc_con::~osc_con()
 {
 	//sleep(2); // TODO
 //	kill(pid, SIGTERM);
-//	lo_port.send_rtosc_msg("/noteOn", "ccc", 0, 54, 20);
+//	lo_port.send_osc_msg("/noteOn", "ccc", 0, 54, 20);
 	no_rt::mlog << "Closing zasf now... " << std::endl;
-	lo_port.send_rtosc_msg("/close-ui", "");
+	lo_port.send_osc_msg("/close-ui", "");
 	sleep(2);
 	no_rt::mlog << "zasf should be closed now... " << std::endl;
 	// TODO: kill() if this did not work
@@ -96,7 +96,7 @@ rtosc_con::~rtosc_con()
 	sleep(3);
 }
 
-rtosc_con::rtosc_con(const instrument_t &ins) :
+osc_con::osc_con(const instrument_t &ins) :
 	pid(make_fork(ins.make_start_command().c_str())),
 	fd(0), // TODO
 	port(ins.get_port(pid, fd)),
@@ -104,17 +104,17 @@ rtosc_con::rtosc_con(const instrument_t &ins) :
 {
 }
 
-void rtosc_con::send_osc_msg(const char *path, const char *msg_args, ...)
+void osc_con::send_osc_msg(const char *path, const char *msg_args, ...)
 const {
 	va_list argptr;
 	va_start(argptr, msg_args);
-	bool ret = lo_port.send_rtosc_msg(path, msg_args, argptr);
+	bool ret = lo_port.send_osc_msg(path, msg_args, argptr);
 	va_end(argptr);
 	//return ret;
 	(void)ret; // :-(
 }
 
-void rtosc_con::send_osc_str(const osc_string& rt_str) const
+void osc_con::send_osc_str(const osc_string& rt_str) const
 {
 	lo_port.send_raw(rt_str.raw(), rt_str.size());
 }

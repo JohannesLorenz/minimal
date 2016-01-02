@@ -48,7 +48,7 @@ void init(project_t& p)
 	(int_in_1&)sink << p1; // -2 is global
 	(int_in_2&)sink << p2;
 
-//	p.sink << sink;
+//	p.sink << sink; // TODO
 //	player << sine_bass;
 
 	// PEnable

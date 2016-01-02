@@ -30,20 +30,6 @@
 
 namespace mini {
 
-/*class loaded_instrument
-{
-	rtosc_con make_rtosc_con() const;
-public:
-	const instrument_t& instrument;
-	rtosc_con con;
-	loaded_instrument(const instrument_t& instrument) :
-		instrument(instrument),
-		con(make_rtosc_con())
-	{
-	}
-};*/
-
-
 /*
 //! rt-safe stack, once reserved
 template<class T>
@@ -73,30 +59,6 @@ class _player_t : public work_queue_t // TODO: own header
 	spinlock_t work_queue_lock;
 
 //	std::set<sample_no_t> end_set = { std::numeric_limits<sample_no_t>::max() };
-
-/*	class task_events : public task_base
-	{
-	//	const loaded_project_t& project;
-		const loaded_instrument_t* ins;
-		const command_base* cmd;
-		std::set<sample_no_t>::const_iterator itr;
-	public:
-		void proceed(sample_no_t ); // TODO: really cpp?
-
-		//sample_no_t next() { return *itr; }
-		// TODO: no idea why I can not use initializer lists
-		task_events(//const loaded_project_t& project,
-			const loaded_instrument_t* ins,
-			const command_base* cmd,
-			const std::set<sample_no_t>::const_iterator& itr) :
-			task_base(*itr),
-			//project(project),
-			ins(ins),
-			cmd(cmd),
-			itr(itr)
-		{
-		}
-	};*/
 
 	class task_effect : public task_base_with_handle
 	{
@@ -189,38 +151,6 @@ public:
 };*/
 
 // TODO: class audio_stereo_project will set sink to mult<ringbuffer_t>
-
-#if 0
-//! this class takes a project and then does some things to handle it
-class loaded_project_t : util::non_copyable_t
-{
-	friend class _player_t;
-
-	// project
-	project_t project;
-
-	// connections
-//	const std::vector<rtosc_con> _cons;
-//	std::vector<rtosc_con> make_cons() const;
-#if 0
-	/*const*/ std::vector<loaded_instrument_t> _ins;
-	std::vector<loaded_instrument_t> make_ins() const;
-#endif
-
-//	static mini::rtosc_con make_rtosc_con(const instrument_t &instrument);
-
-	// commands
-//	command_table commands;
-	void init();
-
-public:
-//	const std::vector<loaded_instrument_t>& ins() const { return _ins; }
-	loaded_project_t() = default;
-	loaded_project_t& operator=(project_t&& _project) noexcept;
-	loaded_project_t(project_t&& _project) noexcept;
-	~loaded_project_t();
-};
-#endif
 
 }
 

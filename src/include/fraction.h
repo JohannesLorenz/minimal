@@ -41,6 +41,7 @@ inline constexpr T1 gcd(T1 a, T2 b) {
 	}
 }*/
 
+
 template<class T1, class T2>
 inline constexpr T1 lcm(T1 a, T2 b, T1 tmp = 0)
 {
@@ -68,15 +69,25 @@ class fraction_t
 //	constexpr fraction_t(num_t _n, denom_t _d) : n(_n), d(_d) {}
 public:
 private:
-	//! TODO: should be private?
-	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
+	//! creates a fraction from n*m/d, where _gcd = gcd(n,d) != 1
 	//! however, gcd(m,d) = 1 is not required
-	constexpr fraction_t(num_t _n, denom_t _d, num_t _m, num_t tmp = 0) :
-		n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
+	constexpr fraction_t(num_t _n, denom_t _d, num_t _m, num_t _gcd) :
+		n(_n * _m/_gcd), d(_d/_gcd)
 	{
 		//if(!d)
 		// throw("d must not be zero in n/d");
 	}
+
+	//! creates a fraction from n*m/d, whereas gcd(n,d) must be 1
+	//! however, gcd(m,d) = 1 is not required
+	constexpr fraction_t(num_t _n, denom_t _d, num_t _m) :
+		//n(_n * _m/(tmp = gcd(_d, _m))), d(_d/tmp)
+		fraction_t(_n, _d, _m, gcd(_d, _m))
+	{
+		//if(!d)
+		// throw("d must not be zero in n/d");
+	}
+
 
 public:
 	constexpr fraction_t(num_t _n, denom_t _d) :
@@ -126,7 +137,6 @@ public:
 	// TODO: code duplication, see above
 	bool operator>(const fraction_t& other) const {
 		num_t l = lcm(d, other.d);
-		// TODO: shortening for if d>o.d && n<o.n and the opposite?
 		return n * (l/d) > other.n * (l/other.d);
 	}
 
@@ -180,12 +190,16 @@ inline fraction_t<N, D> operator*(
 	return fraction_t<N, D>(bar.numerator(), bar.denominator(), val);
 }
 
-std::ostream & print_fraction(std::ostream& os, signed long long n, signed long long d);
+std::ostream & print_fraction(std::ostream& os,
+	long long z,
+	signed long long n, signed long long d);
 
 template<class N, class D>
 inline std::ostream& operator<<(std::ostream& os,
 		const fraction_t<N, D>& f) {
-	return print_fraction(os, f.numerator(), f.denominator());
+	typename fraction_t<N, D>::num_t floor = f.floor();
+	typename fraction_t<N, D>::num_t rest = f.numerator() - f.floor() * f.denominator();
+	return print_fraction(os, floor, rest, f.denominator());
 }
 
 }

@@ -27,7 +27,14 @@
 
 namespace mini {
 
-namespace daw {
+namespace daw { // TODO: namespace daw correct here?
+
+//! value() = velocity
+class music_note_properties : public value_t<char, 64>
+{
+public:
+	using value_t<char, 64>::value_t;
+};
 
 class note_t : public event_t<music_note_properties>
 {
@@ -63,11 +70,12 @@ T operator*(const T& other, const note_t& n) {
 }
 
 }
-using note_signal_t = event_signal_t<music_note_properties>;
-using note_line_t = event_line_t<music_note_properties>;
-using notes_in = events_in_t<music_note_properties>;
-using notes_out = events_out_t<music_note_properties>;
+using note_signal_t = event_signal_t<daw::music_note_properties>;
+using note_line_t = event_line_t<daw::music_note_properties>;
+using notes_in = events_in_t<daw::music_note_properties>;
+using notes_out = events_out_t<daw::music_note_properties>;
 
 }
 
 #endif // NOTES_H
+
