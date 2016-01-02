@@ -18,6 +18,7 @@
 /*************************************************************************/
 
 #include "debug.h"
+/*#include "jack_player.h"*/
 #include "project.h"
 #include "bars.h"
 //#include "lfo.h"

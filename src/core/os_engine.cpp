@@ -29,7 +29,6 @@ bool os_engine_t::process(sample_no_t samples)
 {
 	engine_t::proceed(samples);
 
-#if 0
 	if(! player.sink() )
 	 throw "no sink allocated?";
 	m_reader_t& reader = player.sink()->get();
@@ -42,7 +41,6 @@ bool os_engine_t::process(sample_no_t samples)
 	auto rs = reader.read_max(samples);
 	if(rs.size() < (std::size_t)samples) // TODO: remove casts soon?
 	 throw "not enough space in rs";
-#endif
 
 /*	for(int side = 0; side < 2; ++side)
 	{
