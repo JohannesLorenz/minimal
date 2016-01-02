@@ -47,7 +47,8 @@ HEADERS += src/include/plugin.h \
 	src/include/mports.h \
 	src/include/audio_sink.h \
 	src/include/scales.h \
-	src/include/node.h
+	src/include/node.h \
+	src/core/os_engine.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
@@ -73,7 +74,8 @@ SOURCES += src/core/main.cpp \
 	src/songs/debug_proj.cpp \
 	src/core/player.cpp \
 	src/include/sample.cpp \
-	src/include/node.cpp
+	src/include/node.cpp \
+	src/core/os_engine.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \
