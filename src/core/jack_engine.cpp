@@ -65,8 +65,12 @@ int jack_engine_t::process(jack::frames_t samples)
 			// std::copy does not work because we have
 			// ringbuffer<Stereo<float>>, and must output
 			// buffer<float>
+			float avg = 0.0f;
 			for(std::size_t i = 0; i < rs.size(); ++i)
-			 buffer[i] = rs[i][side];
+			{
+				avg += buffer[i] = rs[i][side];
+			}
+			std::cerr << "average: " << (avg/=rs.size()) << std::endl;
 		}
 		else
 		 throw "could not get buffer";

@@ -20,6 +20,8 @@
 #ifndef BARS_H
 #define BARS_H
 
+#include <limits>
+
 #include "fraction.h"
 #include "sample.h"
 
@@ -51,6 +53,18 @@ inline sample_no_t as_samples_floor(const bars_t& b, const sample_no_t& samples_
 {
 	return (samples_per_bar * b).floor();
 }
+
+template<class >
+struct numeric_limits
+{
+};
+
+template<>
+struct numeric_limits<bars_t>
+{
+	constexpr static bars_t _max = bars_t(std::numeric_limits<sample_no_t>::max(), 1);
+	static const bars_t& max() { return _max; }
+};
 
 }
 

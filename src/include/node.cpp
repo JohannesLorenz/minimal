@@ -32,6 +32,9 @@ nnode::nnode(const char *ext, nnode *parent) :
 	 parent->register_as_child(this);
 }
 
+nnode::nnode(const char *ext, nnode *parent, std::size_t idx) :
+	nnode((ext + std::to_string(idx)).c_str(), parent) {}
+
 void nnode::print_parent_chain() const {
 	no_rt::mlog << name() << " -> " << std::endl;
 	if(parent)

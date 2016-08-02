@@ -24,3 +24,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/version.h"
 
 #cp_script(test.sh)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/env.in
+		${CMAKE_CURRENT_BINARY_DIR}/env @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/env"
+		DESTINATION "${INSTALL_LIB_DIR}/pkgconfig")

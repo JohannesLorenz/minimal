@@ -48,6 +48,7 @@ HEADERS += src/include/plugin.h \
 	src/include/audio_sink.h \
 	src/include/scales.h \
 	src/include/node.h \
+	src/include/protocol.h \
 	src/core/os_engine.h
 
 SOURCES += src/core/main.cpp \
@@ -75,6 +76,7 @@ SOURCES += src/core/main.cpp \
 	src/core/player.cpp \
 	src/include/sample.cpp \
 	src/include/node.cpp \
+	src/include/protocol.cpp \
 	src/core/os_engine.cpp
 
 OTHER_FILES += INSTALL.md \

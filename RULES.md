@@ -33,6 +33,7 @@ set it for other components, e.g. to run ldd.
 All components need the PKG_CONFIG_PATH - either for compiling (song, plugin),
 or for getting the LD_LIBRARY_PATH before running (minimal-core).
 
+```
 song: PKG_CONFIG_PATH: libminimal, plugin (both for building)
   => LD_LIBRARY_PATH: like PKG
 plugin: PKG_CONFIG_PATH: minimal (for building)
@@ -40,6 +41,7 @@ plugin: PKG_CONFIG_PATH: minimal (for building)
 minimal-core: PKG_CONFIG_PATH: libminimal (LD before running),
   => LD_LIBRARY_PATH: like PKG
 libminimal: no paths at all
+```
 
 If a component needs to know the LD library path, you need to specify it once
 in CMAKE. Then, it will be known.
@@ -47,4 +49,28 @@ in CMAKE. Then, it will be known.
 The paths that you specify, are, of course, the ones of installed libraries.
 It is currently not possible to have different LD paths for builds and
 installations.
+
+## Summary
+
+Compiling and running works like this:
+
+1. Compile and install minimal (without any paths):
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=`readlink -e ./install` ..
+make install
+```
+2. Compile and install all plugins (give them the mininmal path):
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=`readlink -e ./install` -DMinimalPath=<path/to/minimal/install> ..
+make install
+# optional
+. src/env
+ldd install/lib64/minimal-plugins/*.so
+```
+
+3. Compile a song/project:
+. ...minimal.../src/env
+. ...plugin.../srv/env
+make
+
 

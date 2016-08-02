@@ -56,6 +56,7 @@ public:
 	};
 
 	nnode(const char* ext, nnode* parent);
+	nnode(const char* ext, nnode* parent, std::size_t idx);
 
 	void print_parent_chain() const;
 	void print_tree(unsigned initial_depth = 0) const;
