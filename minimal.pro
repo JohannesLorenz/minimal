@@ -77,7 +77,8 @@ SOURCES += src/core/main.cpp \
 	src/include/sample.cpp \
 	src/include/node.cpp \
 	src/include/protocol.cpp \
-	src/core/os_engine.cpp
+	src/core/os_engine.cpp \
+	src/include/bars.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \

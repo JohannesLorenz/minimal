@@ -59,27 +59,29 @@ void project_t::finalize()
 		effect_t* cur_effect = ready_fx.top();
 		ready_fx.pop();
 
-		if(cur_effect->id() != has_id::no_id())
-		 throw "Id given twice";
-
-		cur_effect->set_id(next_id++);
-
-		//no_rt::mlog << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
-
-		const auto cb = [&](const std::vector<effect_t*>& next_vector)
+		if(cur_effect->id() == has_id::no_id())
 		{
-			for(effect_t* next: next_vector)
-			{
-				bool parents_done = true;
-				for(const effect_t* par: next->writers)
-				 parents_done = parents_done && (par->id() != has_id::no_id());
-				if(parents_done)
-				 ready_fx.push(next);
-			}
-		};
 
-		cb(cur_effect->readers);
-		cb(cur_effect->deps);
+
+			cur_effect->set_id(next_id++);
+
+			//no_rt::mlog << "set id: " << next_id - 1 << " for " << cur_effect << std::endl;
+
+			const auto cb = [&](const std::vector<effect_t*>& next_vector)
+			{
+				for(effect_t* next: next_vector)
+				{
+					bool parents_done = true;
+					for(const effect_t* par: next->writers)
+					 parents_done = parents_done && (par->id() != has_id::no_id());
+					if(parents_done)
+					 ready_fx.push(next);
+				}
+			};
+
+			cb(cur_effect->readers);
+			cb(cur_effect->deps);
+		}
 
 	} while(ready_fx.size());
 	finalized = true;

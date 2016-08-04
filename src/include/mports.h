@@ -41,6 +41,10 @@ void add_in_port(effect_t& e, in_port_base* opb);
 
 class port_base : public is_variable
 {
+	port_base(const port_base& ) = delete;
+public:
+	port_base() = default;
+	port_base(port_base&& ) noexcept = default;
 };
 
 class out_port_base : public port_base
@@ -132,7 +136,7 @@ protected:
 
 	//bool unread_changes = false; initally send values ... is this good? 
 protected:
-	const out_port_base* source = nullptr;
+	out_port_base* source = nullptr;
 
 /*
 	friends
@@ -184,6 +188,8 @@ public:
 	virtual void on_read(sample_no_t time) = 0;
 
 	virtual const void* get_value() const = 0;
+
+	out_port_base* get_source() { return source; };
 
 	virtual ~in_port_base() {}
 };
@@ -426,6 +432,13 @@ template<class T>
 struct events_in_t : in_port_templ<const event_signal_t<T>*>
 {
 	using in_port_templ<const event_signal_t<T>*>::in_port_templ;
+};
+
+//! specialize this
+template<class T>
+struct input_type_t
+{
+	using type = T;
 };
 
 }

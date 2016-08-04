@@ -20,6 +20,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <iosfwd>
 #include <array>
 #include <jack/types.h>
 #include <ringbuffer/ringbuffer.h>
@@ -104,6 +105,8 @@ struct audio_out : out_port_templ<m_ringbuffer_t>
 class m_reader_t : public ringbuffer_reader_t<Stereo<float>> {
 public:
 	m_reader_t() : ringbuffer_reader_t(rb_size) {}
+	friend std::ostream& operator<< (std::ostream& stream,
+		class m_reader_t& r);
 };
 
 //! redefinition for the port, since there is nothing to assign
@@ -130,6 +133,13 @@ struct audio_in : public in_port_templ<m_reader_t, true /*TODO?*/>
 	void on_read(sample_no_t ) {} // TODO??
 	audio_in(effect_t& e) : in_port_templ(e) {}
 	//using base::in_port_templ;
+};
+
+
+template<>
+struct input_type_t<m_ringbuffer_t*>
+{
+	using type = m_reader_t;
 };
 
 }
