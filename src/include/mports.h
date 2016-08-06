@@ -65,6 +65,7 @@ public:
 	const effect_t* effect() const { return e; }
 
 	virtual const void* get_value() const = 0; // void* is not good...
+	virtual void* get_value_mod() = 0; // void* is not good...
 //	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
 
 	//virtual void connect(const in_port_base& ) ;
@@ -115,6 +116,7 @@ public:
 	}
 
 	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
+	void* get_value_mod() { return reinterpret_cast<void*>(&data); }
 
 	template<class T1, class T2, bool IsDep>
 	friend void internal_connect(in_port_templ<T1, IsDep>& ipt, out_port_templ<T2>& opt);
@@ -177,6 +179,7 @@ public:
 		return source->next_time;
 	}*/
 
+	//! the function to fetch data from an outport
 	virtual bool update() = 0;
 
 	bool is_trigger() const { return _is_trigger; }
@@ -188,6 +191,8 @@ public:
 	virtual void on_read(sample_no_t time) = 0;
 
 	virtual const void* get_value() const = 0;
+
+	virtual void instantiate() = 0;
 
 	out_port_base* get_source() { return source; };
 
@@ -244,7 +249,11 @@ protected:
 	}
 
 public:
-	bool update() {
+	void instantiate() override {
+		templ_base::data = (static_cast<T>(templ_base::source->get_value_mod()));
+	}
+
+	bool update() override {
 		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
 		return (out_port_changed) && set();
 	}
@@ -268,9 +277,13 @@ protected:
 		templ_base::data = new_value;
 		return true;
 	}
-public:
 
-	bool update() {
+public:
+	void instantiate() override {
+		templ_base::data = *(static_cast<const T*>(templ_base::source->get_value()));
+	}
+
+	bool update() override {
 		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
 	//	io::mlog << "OUT PORT CHANGED? " << out_port_changed << io::endl;
 		return (out_port_changed) && set(*(static_cast<const T*>(templ_base::source->get_value())));
@@ -281,8 +294,9 @@ public:
 template<class T, bool IsDep>
 struct in_port_templ<T*, IsDep> : public in_port_templ_noassign<T*, IsDep>
 {
+	using templ_base = in_port_templ_noassign<T*, IsDep>;
 public:
-	using in_port_templ_noassign<T*, IsDep>::in_port_templ_noassign;
+	using templ_base::templ_base;
 };
 
 /*class m_reader_t;

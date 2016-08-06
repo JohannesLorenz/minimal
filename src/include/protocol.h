@@ -34,7 +34,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ<T*>
 
 	struct log_port_t : public in_port_templ<reader_type> {
 		using in_port_templ<reader_type>::in_port_templ;
-		void on_read(sample_no_t ) {}
+		void on_read(sample_no_t ) override {}
 	};
 
 	log_port_t log_port;

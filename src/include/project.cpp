@@ -40,6 +40,9 @@ void project_t::finalize()
 
 	for(effect_t* e : effects()) // TODO: -> initializer list
 	{
+		for(in_port_base* ip : e->get_in_ports())
+		 ip->instantiate();
+
 		e->instantiate();
 		if(e->writers.empty())
 		{
