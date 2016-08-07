@@ -119,7 +119,7 @@ public:
 
 	sample_no_t _proceed(sample_no_t amnt)
 	{
-		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::data;
+		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::value();
 		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
 
 		// itr points to note_events

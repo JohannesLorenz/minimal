@@ -27,29 +27,37 @@ public:
 };
 
 template<class T>
-class protocol_tbase_t : public protocol_base_t, public out_port_templ<T*>
+class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 {
 	using input_type = T*;//typename input_type_t<T>::type*;
 	using reader_type = typename input_type_t<T*>::type;
 
-	struct log_port_t : public in_port_templ<reader_type> {
-		using in_port_templ<reader_type>::in_port_templ;
+	class log_port_t : public in_port_templ<reader_type, T> {
+		using base = in_port_templ<reader_type, T>;
+	public:
+		using base::base;
 		void on_read(sample_no_t ) override {}
+		// WARNING: this will not work if base::data is a pointer!
+		void instantiate() override { base::data = base::source->value(); }
 	};
 
 	log_port_t log_port;
 
 	void instantiate() {
 		// assign pointers for redirection
-		out_port_templ<T*>::data = input.data;
-		log_port << static_cast<out_port_templ<T>&>(*input.get_source());
+		out_port_templ_ref<T>::value() = input.data;
+		log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
 	}
 public:
 
-	struct m_proto_in : public in_port_templ<input_type>
+	class m_proto_in : public in_port_templ<input_type, T, true>
 	{
-		using in_port_templ<input_type>::in_port_templ;
-		void on_read(sample_no_t ) {} // TODO??
+		using base = in_port_templ<input_type, T, true>;
+	public:
+		using in_port_templ<input_type, T, true>::in_port_templ;
+		void on_read(sample_no_t ) override {} // TODO??
+		// TODO: add dummy to mports.h?
+		void instantiate() override { base::data = &base::source->value(); }
 		//m_proto_in(effect_t& e) : in_port_templ<T*>(e) {}
 	};
 
@@ -72,7 +80,7 @@ public:
 	protocol_tbase_t(bool on_change = true, bars_t each_seconds
 		= numeric_limits<bars_t>::max()) :
 		protocol_base_t(on_change, each_seconds),
-		out_port_templ<T*>((effect_t&)*this),
+		out_port_templ_ref<T>((effect_t&)*this),
 		log_port(*this),
 		input(*this)
 		{

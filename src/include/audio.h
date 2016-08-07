@@ -107,28 +107,32 @@ public:
 	m_reader_t() : ringbuffer_reader_t(rb_size) {}
 	friend std::ostream& operator<< (std::ostream& stream,
 		class m_reader_t& r);
+	void operator=(m_ringbuffer_t& rb) { connect(rb); }
 };
 
 //! redefinition for the port, since there is nothing to assign
 // TODO: general version for multiplex<T>
 template<bool IsDep>
-struct in_port_templ<m_reader_t, IsDep> : public in_port_templ_noassign<m_reader_t, IsDep>
+struct in_port_templ<m_reader_t, m_ringbuffer_t, IsDep> :
+	public in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>
 {
 public:
-	using in_port_templ_noassign<m_reader_t, IsDep>::in_port_templ_noassign;
+	using in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>::in_port_templ_noassign;
 	// TODO: noassign is incorrect, use foreach...
 };
 
+#if 0 // deprecated
 //! redefinition of connection
 template<bool IsDep>
-void operator<<(in_port_templ<m_reader_t, IsDep>& ipt,
+void operator<<(in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>& ipt,
 	out_port_templ<m_ringbuffer_t>& opt)
 {
 	internal_connect(ipt, opt);
 	ipt.data.connect(opt.data);
 }
+#endif
 
-struct audio_in : public in_port_templ<m_reader_t, true /*TODO?*/>
+struct audio_in : public in_port_templ<m_reader_t, m_ringbuffer_t, true /*TODO?*/>
 {
 	void on_read(sample_no_t ) {} // TODO??
 	audio_in(effect_t& e) : in_port_templ(e) {}

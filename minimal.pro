@@ -49,6 +49,7 @@ HEADERS += src/include/plugin.h \
 	src/include/scales.h \
 	src/include/node.h \
 	src/include/protocol.h \
+	src/include/notes.h \
 	src/core/os_engine.h
 
 SOURCES += src/core/main.cpp \
