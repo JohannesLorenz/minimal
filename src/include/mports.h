@@ -201,6 +201,9 @@ public:
 	virtual const T& value() const { return *data; }
 	virtual T& value() { return *data; }
 
+	const T*& ref() const { return data; }
+	T*& ref() { return data; }
+
 	/*void notify_set(sample_no_t now)
 	{
 		change_stamp = now;
@@ -378,9 +381,9 @@ public:
 };
 
 template<class T, class SourceT, bool IsDep>
-struct in_port_templ<T*, SourceT, IsDep> : public in_port_templ_noassign<T*, T, IsDep>
+struct in_port_templ<T*, SourceT, IsDep> : public in_port_templ_noassign<T*, SourceT, IsDep>
 {
-	using templ_base = in_port_templ_noassign<T*, T, IsDep>;
+	using templ_base = in_port_templ_noassign<T*, SourceT, IsDep>;
 public:
 	void instantiate() override { // TODO: private virtual funcs
 		templ_base::data = &templ_base::source->value();

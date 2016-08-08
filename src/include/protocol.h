@@ -45,7 +45,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 
 	void instantiate() {
 		// assign pointers for redirection
-		out_port_templ_ref<T>::value() = input.data;
+		out_port_templ_ref<T>::ref() = input.data;
 		log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
 	}
 public:
