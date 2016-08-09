@@ -40,10 +40,6 @@ void project_t::finalize()
 
 	for(effect_t* e : effects()) // TODO: -> initializer list
 	{
-		for(in_port_base* ip : e->get_in_ports())
-		 ip->instantiate();
-
-		e->instantiate();
 		if(e->writers.empty())
 		{
 			_effect_root.readers.push_back(e);
@@ -84,6 +80,13 @@ void project_t::finalize()
 
 			cb(cur_effect->readers);
 			cb(cur_effect->deps);
+
+			for(in_port_base* ip : cur_effect->get_in_ports())
+			{
+				std::cerr << "for: " << cur_effect->name() << ": instantiate..." << std::endl;
+				ip->instantiate_port();
+			}
+			cur_effect->instantiate();
 		}
 
 	} while(ready_fx.size());

@@ -70,7 +70,7 @@ int jack_engine_t::process(jack::frames_t samples)
 			{
 				avg += buffer[i] = rs[i][side];
 			}
-			std::cerr << "average: " << (avg/=rs.size()) << std::endl;
+			//std::cerr << "average: " << (avg/=rs.size()) << std::endl;
 		}
 		else
 		 throw "could not get buffer";

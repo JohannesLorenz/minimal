@@ -19,7 +19,7 @@
 
 #ifndef AUDIO_SINK_H
 #define AUDIO_SINK_H
-
+#include <iostream> // TODO
 #include "effect.h"
 #include "audio.h"
 
@@ -27,7 +27,9 @@ namespace mini {
 
 class audio_sink_t : public effect_t, public audio_in
 {
-	void instantiate() {}
+	void instantiate() {
+		std::cerr << "instantiate audio_sink" << std::endl;
+	}
 	void clean_up() {}
 
 	bool _proceed() {

@@ -38,7 +38,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 		using base::base;
 		void on_read(sample_no_t ) override {}
 		// WARNING: this will not work if base::data is a pointer!
-		void instantiate() override {
+		void instantiate_port() override {
 			base::data = base::source->value(); }
 	};
 
@@ -49,6 +49,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 	void instantiate() {
 		// assign pointers for redirection
 		out_port_templ_ref<T>::ref() = input.data;
+		std::cerr << "redirect: " << out_port_templ_ref<T>::ref();
 
 		reader = input.value();
 		//log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
@@ -62,7 +63,7 @@ public:
 		using in_port_templ<input_type, T, true>::in_port_templ;
 		void on_read(sample_no_t ) override {} // TODO??
 		// TODO: add dummy to mports.h?
-		void instantiate() override { base::data = &base::source->value(); }
+		void instantiate_port() override { base::data = &base::source->value(); }
 		//m_proto_in(effect_t& e) : in_port_templ<T*>(e) {}
 	};
 
@@ -78,6 +79,7 @@ public:
 		}
 		return true;*/
 		std::clog << /*log_port.data*/ reader << std::endl;
+		std::clog << time() << " <-> " << interval << std::endl;
 		set_next_time(time() + interval);
 		return true;
 	}

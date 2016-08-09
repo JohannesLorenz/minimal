@@ -22,6 +22,7 @@
 
 #include <array>
 #include <limits>
+#include <iostream> // TODO
 
 #include "sample.h"
 #include "types.h"
@@ -287,7 +288,7 @@ public:
 
 	virtual const void* get_value() const = 0;
 
-	virtual void instantiate() = 0;
+	virtual void instantiate_port() = 0;
 	
 	virtual ~in_port_base() {}
 };
@@ -335,6 +336,18 @@ protected:
 
 };
 
+template<class T1, class T2>
+void m_assign(T1*& ptr, T2& ref)
+{
+	ptr = &ref;
+}
+
+template<class T1, class T2>
+void m_assign(T1& ref1, T2& ref2)
+{
+	ref1 = ref2;
+}
+
 template<class T, class SourceT, bool IsDep>
 class in_port_templ_noassign : public in_port_templ_base<T, SourceT, IsDep>
 {
@@ -352,6 +365,11 @@ protected:
 	}
 
 public:
+	void instantiate_port() override { // TODO: private virtual funcs
+		std::cerr << "ipt-noassign: " << &templ_base::source->value() << std::endl;
+		m_assign(templ_base::data, templ_base::source->value());
+	}
+
 	bool update() override {
 		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
 		return (out_port_changed) && set();
@@ -378,7 +396,8 @@ protected:
 	}
 
 public:
-	void instantiate() override {
+	void instantiate_port() override {
+		std::cerr << "ipt: " << &templ_base::source->value() << std::endl;
 		templ_base::data = templ_base::source->value();
 	}
 
@@ -395,10 +414,6 @@ struct in_port_templ<T*, SourceT, IsDep> : public in_port_templ_noassign<T*, Sou
 {
 	using templ_base = in_port_templ_noassign<T*, SourceT, IsDep>;
 public:
-	void instantiate() override { // TODO: private virtual funcs
-		templ_base::data = &templ_base::source->value();
-	}
-
 	using templ_base::templ_base;
 };
 
