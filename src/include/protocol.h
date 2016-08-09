@@ -32,21 +32,26 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 	using input_type = T*;//typename input_type_t<T>::type*;
 	using reader_type = typename input_type_t<T*>::type;
 
-	class log_port_t : public in_port_templ<reader_type, T> {
+/*	class log_port_t : public in_port_templ<reader_type, T> {
 		using base = in_port_templ<reader_type, T>;
 	public:
 		using base::base;
 		void on_read(sample_no_t ) override {}
 		// WARNING: this will not work if base::data is a pointer!
-		void instantiate() override { base::data = base::source->value(); }
+		void instantiate() override {
+			base::data = base::source->value(); }
 	};
 
-	log_port_t log_port;
+	log_port_t log_port; */
+
+	reader_type reader;
 
 	void instantiate() {
 		// assign pointers for redirection
 		out_port_templ_ref<T>::ref() = input.data;
-		log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
+
+		reader = input.value();
+		//log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
 	}
 public:
 
@@ -72,7 +77,7 @@ public:
 			std::clog << log_port.data << std::endl;
 		}
 		return true;*/
-		std::clog << log_port.data << std::endl;
+		std::clog << /*log_port.data*/ reader << std::endl;
 		set_next_time(time() + interval);
 		return true;
 	}
@@ -81,7 +86,7 @@ public:
 		= numeric_limits<bars_t>::max()) :
 		protocol_base_t(on_change, each_seconds),
 		out_port_templ_ref<T>((effect_t&)*this),
-		log_port(*this),
+		//log_port(*this),
 		input(*this)
 		{
 	}

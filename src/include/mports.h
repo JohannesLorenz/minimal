@@ -22,7 +22,6 @@
 
 #include <array>
 #include <limits>
-#include <type_traits>
 
 #include "sample.h"
 #include "types.h"
@@ -93,6 +92,14 @@ class in_port_templ;
 
 
 namespace detail {
+	template<class T>
+	struct remove_pointer {
+		using type = T;
+	};
+	template<class T>
+	struct remove_pointer<T*> {
+		using type = T;
+	};
 	template<class T>
 	T& deref_if_ptr(T* x) {
 		return *x;
@@ -281,7 +288,7 @@ public:
 	virtual const void* get_value() const = 0;
 
 	virtual void instantiate() = 0;
-
+	
 	virtual ~in_port_base() {}
 };
 
@@ -289,7 +296,7 @@ template<class T, class SourceT, bool IsDep = true>
 class in_port_templ_base : public in_port_base
 {
 protected:
-	out_port_templ_base<SourceT>* source;
+	out_port_templ_base<SourceT>* source = nullptr;
 
 public: // TODO! (protected)
 
@@ -313,6 +320,9 @@ public: // TODO! (protected)
 	const T& get() const { return data; }
 	T& get() { return data; } // TODO? needed currently for ringbuffer_reader_t
 
+	typename detail::remove_pointer<T>::type& value() { return detail::deref_if_ptr(data); }
+	const typename detail::remove_pointer<T>::type& value() const { return detail::deref_if_ptr(data); }
+	
 	using type = T;
 protected:
 	void update_stamp() {
