@@ -580,7 +580,30 @@ struct event_signal_t
 	event_signal_t() {
 		recently_changed[0].first = -1;
 	}
+
+	template<class T>
+	friend std::ostream& operator<<(std::ostream& os,
+		const event_signal_t<T>& es);
 };
+
+// TODO: -> cpp file?
+template<class T>
+std::ostream& operator<<(std::ostream& os,
+		const event_signal_t<T>& es)
+{
+	return os << "recently changed: " << es.recently_changed.size() << std::endl;
+	
+	for(const std::pair<int, int>& rch : es.recently_changed)
+	if(rch.first < 0)
+	 break;
+	else
+	{
+		std::pair<int, T> p2 = es.lines[rch.first][rch.second];
+
+		os << ((p2.first < 0) ? '-' : '+')
+			<< rch.first << '(' << p2.second << ')' << std::endl;
+	}
+}
 
 template<class T>
 struct events_out_t : out_port_templ<event_signal_t<T>>

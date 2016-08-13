@@ -1,6 +1,7 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
+#include <sstream>
 #include <iostream>
 #include <limits>
 #include "effect.h"
@@ -51,7 +52,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 		out_port_templ_ref<T>::ref() = input.data;
 		std::cerr << "redirect: " << out_port_templ_ref<T>::ref();
 
-		reader = input.value();
+		m_assign(reader, input.value());
 		//log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
 	}
 public:
@@ -68,7 +69,7 @@ public:
 	};
 
 	m_proto_in input;
-
+	std::string last_value;
 	bool _proceed()
 	{
 	/*	std::clog << time() << " <-> " << last_call << ", " << interval << std::endl;
@@ -78,8 +79,15 @@ public:
 			std::clog << log_port.data << std::endl;
 		}
 		return true;*/
-		std::clog << /*log_port.data*/ reader << std::endl;
-		std::clog << time() << " <-> " << interval << std::endl;
+//		std::clog << /*log_port.data*/ reader << std::endl;
+//		std::clog << time() << " <-> " << interval << std::endl;
+		std::stringstream ss;
+		ss << reader;
+		if(ss.str() != last_value)
+		{
+			std::clog << time() << ": " << detail::deref_if_ptr(reader) << std::endl;
+			last_value = ss.str();
+		}
 		set_next_time(time() + interval);
 		return true;
 	}
@@ -96,7 +104,7 @@ public:
 };
 
 template<class T>
-class protocol_t : protocol_tbase_t<T> {
+class protocol_t : public protocol_tbase_t<T> {
 	using protocol_tbase_t<T>::protocol_tbase_t;
 };
 
