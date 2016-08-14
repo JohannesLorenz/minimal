@@ -70,6 +70,8 @@ namespace daw
 		note_geom_t operator-(const note_geom_t& rhs) const {
 			return note_geom_t(start - rhs.start, offs - rhs.offs);
 		}
+
+		friend std::ostream& operator<<(std::ostream& os, const note_geom_t& n);
 	};
 
 	template<class Geom, class ...Children>
@@ -121,7 +123,39 @@ namespace daw
 			m.emplace(geom, new T(t)); // TODO: push back pointer, id, ... ?
 			_repeat_end = _end = std::max(_end, geom.start + t.length());
 		}
+
+
+		template<class Geom2, class ...Children2>
+		friend std::ostream& operator<<(std::ostream& os, const seg_base<Geom2, Children2...>& sb);
 	};
+
+
+	namespace detail
+	{
+		struct print_all
+		{
+			std::ostream* os;
+			template<class T>
+			void operator()(const T& map)
+			{
+				for(const auto& pr : map)
+				{
+					*os << pr.first << ": " << *pr.second << std::endl;
+				}
+			}
+		};
+	}
+
+	template<class Geom, class ...Children>
+	std::ostream& operator<<(std::ostream& os, const seg_base<Geom, Children...>& sb)
+	{
+		// TODO: foreach
+		detail::print_all printer { &os };
+		tuple_helpers::for_each(sb._children, printer);
+		return os;
+	}
+
+
 
 #if 0
 	struct note_event_t {
@@ -159,14 +193,18 @@ namespace daw
 		}
 	};*/
 
+	//! allows inserting notes *one after another*
+	//! also recalls the current insertion position
 	template<class T>
 	class insert_seq
 	{
-		T cur_e;
+		T* cur_e;
 		bars_t cur_pos = bars_t(0, 1);
 	public:
+		insert_seq(T& e) : cur_e(&e) {}
+
 		insert_seq& operator<<(const T& new_e) {
-			cur_e.add_notes(new_e, note_geom_t(cur_pos, 0));
+			cur_e->add_notes(new_e, note_geom_t(cur_pos, 0));
 			cur_pos += new_e.repeat_end();
 			return *this;
 		}
@@ -179,15 +217,19 @@ namespace daw
 	{
 		using mevents_t = events_t<NoteProperties>;
 		using mevent_t = event_t<NoteProperties>;
+	public:
 		using base = seg_base<note_geom_t, events_t<NoteProperties>,
 			event_t<NoteProperties>>;
+	private:
 		using geom_t = typename base::geom_t;
 		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
 	public:
+
 		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
 			for(const auto pr : notes.template get<mevent_t>())
 			{
+				std::cerr << "add_note: " << +other_geom.offs << " + " << +base::geom.offs << std::endl;
 				add_note(*pr.second, other_geom - base::geom + pr.first);
 			}
 		}
@@ -218,14 +260,31 @@ namespace daw
 //		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
 		insert_seq<mevents_t> operator<<(const mevents_t& n) { // TODO: std::forward?
-			return insert_seq<mevents_t>() << *this << n;
+
+			return insert_seq<mevents_t>(*this) << n;
 #if 0		
 			add_notes(std::move(n), geom_t(bars_t(0, 1), 0));
 			// TODO: recall last position
 			return *this;
 #endif
 		}
+
+		std::ostream& dump(std::ostream& os = std::cerr) const
+		{
+			//return os << "events +" << base::geom << ":" << std::endl;
+			return os << *this;
+		}
+
+	//	friend std::ostream& operator<<(std::ostream& os, const events_t<NoteProperties>& e);
 	};
+
+	template<class N>
+	std::ostream& operator<<(std::ostream& os, const events_t<N>& e)
+	{
+		os << "events +" << e.geom << ":" << std::endl;
+		os << (const typename events_t<N>::base&)e;
+		return os;
+	}
 	
 	// TODO: move?
 	template<class T>

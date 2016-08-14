@@ -99,6 +99,7 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 			const daw::event_t<NoteProperties>& cur_note = *n2.second;
 			const m_geom_t next_offs = cur_offs + n2.first;
 			std::cerr << "emplacing: " << next_visit_id << std::endl;
+			std::cerr << "next_offs: " << +next_offs.offs << std::endl;
 			// TODO: this does not work for all note properties
 			note_events.emplace(next_offs,
 				m_note_event(true, next_visit_id, cur_note.value())); // TODO: 1
@@ -117,10 +118,14 @@ public:
 			m_note_event(true, std::numeric_limits<int>::max(), 0));
 
 		itr = note_events.begin();
+
+		//std::cerr << *this << std::endl;
 	}
 
 	sample_no_t _proceed(sample_no_t amnt)
 	{
+		std::cerr << "note line..." << std::endl;
+
 		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::value();
 		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
 
@@ -171,7 +176,16 @@ public:
 		last_time = amnt;
 		return as_samples_floor(itr->first.start, info.samples_per_bar);
 	}
+
+	template<class N>
+	friend std::ostream& operator<<(std::ostream& os, line_impl<N> e);
 };
+
+template<class N>
+std::ostream& operator<<(std::ostream& os, line_impl<N> e) {
+	(void)os;
+	(void)e;
+}
 
 template<class T>
 class event_line_t : public effect_t, public events_out_t<T>, has_impl_t<line_impl<T>, event_line_t<T>> // TODO: which header?
@@ -183,8 +197,9 @@ class event_line_t : public effect_t, public events_out_t<T>, has_impl_t<line_im
 	daw::events_t<T> notes;
 
 public:
-	event_line_t() :
+	event_line_t(const char* name) :
 //		port_chain<events_out_t>((effect_t&)*this),
+		effect_t(name),
 		events_out_t<T>((effect_t&)*this),
 		impl_t(this)
 	{
@@ -211,7 +226,30 @@ public:
 		set_next_time(impl_t::impl->_proceed(time()));
 		return true;
 	}
+
+	std::ostream& dump(std::ostream& os = std::cerr) const
+	{
+		os << "event line: " << std::endl;
+		return notes.dump(os);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const event_line_t<T>& e);
 };
+
+template<class T>
+inline std::ostream& operator<<(std::ostream& os, const event_line_t<T>& e)
+{
+	return os << "event line: " << std::endl
+		<< e.notes;
+	//	<< *e.impl;
+//	return os << e.id() << std::endl;
+}
+
+template<class T>
+void nlf(std::ostream& os, const T& x)
+{
+	os << x << std::endl;
+}
 
 }
 

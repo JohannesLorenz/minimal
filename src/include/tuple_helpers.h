@@ -21,13 +21,28 @@
 #define TUPLE_HELPERS_H
 
 #include <tuple>
+#include <utility>
 
-// adapted from [1]
+// adapted from [1] and [2]
 
 // TODO: check what is unused
 
 namespace tuple_helpers
 {
+
+
+template<std::size_t I = 0, typename FuncT, typename... Tp>
+inline typename std::enable_if<I == sizeof...(Tp), void>::type
+for_each(const std::tuple<Tp...> &, FuncT)
+{ }
+
+template<std::size_t I = 0, typename FuncT, typename... Tp>
+inline typename std::enable_if<I < sizeof...(Tp), void>::type
+for_each(const std::tuple<Tp...>& t, FuncT f)
+{
+	f(std::get<I>(t));
+	for_each<I + 1, FuncT, Tp...>(t, f);
+}
 
 // matches for recursion
 template<int Index, class Search, class First = void, class... Types>
@@ -94,5 +109,6 @@ static_assert(get_internal<0,int,char,bool>::type::index == 2, "...");
 // sources:
 // [1] http://stackoverflow.com/questions/16594002/
 //   for-stdtuple-how-to-get-data-by-type-and-how-to-get-type-by-index
+// [2] http://stackoverflow.com/questions/1198260/iterate-over-tuple
 
 #endif // TUPLE_HELPERS_H

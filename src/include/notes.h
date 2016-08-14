@@ -34,6 +34,7 @@ class music_note_properties : public value_t<char, 64>
 {
 public:
 	using value_t<char, 64>::value_t;
+	// TODO: operator<<, print char with '+'
 };
 
 class note_t : public event_t<music_note_properties>

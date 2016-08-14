@@ -20,6 +20,7 @@
 #ifndef SIMPLE_H
 #define SIMPLE_H
 
+#include <iostream> // TODO: ugly!
 #include <string>
 
 namespace mini
@@ -46,7 +47,16 @@ public:
 	// TODO: std::forward
 	value_t(const T& t) : t(t) {}
 	value_t() = default;
+
+	template<class T2, T2 default_value2>
+	friend std::ostream& operator<<(std::ostream& os, const value_t<T2, default_value2>& val);
 };
+
+template<class T, T default_value>
+std::ostream& operator<<(std::ostream& os, const value_t<T, default_value>& val)
+{
+	return os << val.value();
+}
 
 }
 

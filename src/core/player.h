@@ -77,6 +77,8 @@ class _player_t : public work_queue_t // TODO: own header
 
 		void proceed()
 		{
+			io::mlog << "next effect: " << effect->name() << " (id: " << effect->id() << ')'
+				<< io::endl;
 			if(effect->proceed() && true)
 			{
 				update_next_time(effect->get_next_time());
