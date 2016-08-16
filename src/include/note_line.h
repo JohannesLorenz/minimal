@@ -183,8 +183,8 @@ public:
 
 template<class N>
 std::ostream& operator<<(std::ostream& os, line_impl<N> e) {
-	(void)os;
 	(void)e;
+	return os;
 }
 
 template<class T>
@@ -233,7 +233,8 @@ public:
 		return notes.dump(os);
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const event_line_t<T>& e);
+	template<class T2>
+	friend std::ostream& operator<<(std::ostream& os, const event_line_t<T2>& e);
 };
 
 template<class T>

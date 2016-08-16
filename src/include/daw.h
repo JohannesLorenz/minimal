@@ -64,6 +64,12 @@ namespace daw
 			offs += n.value();
 			return *this;
 		}
+		note_geom_t operator+=(const note_geom_t& rhs) const {
+			start += rhs.start; offs += rhs.offs;
+		}
+		note_geom_t operator-=(const note_geom_t& rhs) const {
+			start -= rhs.start; offs -= rhs.offs;
+		}
 		note_geom_t operator+(const note_geom_t& rhs) const {
 			return note_geom_t(start + rhs.start, offs + rhs.offs);
 		}
@@ -93,12 +99,12 @@ namespace daw
 	template<bool>
 	struct add_geom_of {
 		template<class T, class G>
-		static void exec(T& first, const G& add) { first.geom += add; }
+		static void exec(G& value, const T& segment) { value += segment.geom; }
 	};
 	template<>
 	struct add_geom_of<false> {
 		template<class T, class G>
-		static void exec(T& , const G& ) {}
+		static void exec(G& , const T&) {}
 	};
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
@@ -149,9 +155,9 @@ namespace daw
 		template<class T, class StoreT = T>
 		void add(const T& t, const geom_t& geom) {
 			map_t<StoreT>& m = get<StoreT>();
-			auto new_geom = geom;
-			add_geom_of<has_geom<T>::value>(t, new_geom);
-			m.emplace(t.geom + geom, new T(t)); // TODO: push back pointer, id, ... ?
+			auto new_geom = geom; // TODO: no temporary variable required?
+			add_geom_of<has_geom<T>::value>::exec(new_geom, t);
+			m.emplace(new_geom, new T(t)); // TODO: push back pointer, id, ... ?
 			_repeat_end = _end = std::max(_end, geom.start + t.length());
 		}
 
