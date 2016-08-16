@@ -74,6 +74,32 @@ namespace daw
 		friend std::ostream& operator<<(std::ostream& os, const note_geom_t& n);
 	};
 
+	// http://stackoverflow.com/questions/1005476/
+	// how-to-detect-whether-there-is-a-specific-member-variable-in-class
+	template<typename T>
+	struct has_geom
+	{
+		struct fallback { int geom; }; // introduce member name "x"
+		struct derived : T, fallback { };
+
+		template<typename C, C> struct ch_t;
+
+		template<typename C> static char (&f(ch_t<int fallback::*, &C::geom>*))[1];
+		template<typename C> static char (&f(...))[2];
+
+		static bool const value = sizeof(f<derived>(0)) == 2;
+	};
+
+	template<bool>
+	struct add_geom_of {
+		template<class T, class G>
+		static void exec(T& first, const G& add) { first.geom += add; }
+	};
+	template<>
+	struct add_geom_of<false> {
+		template<class T, class G>
+		static void exec(T& , const G& ) {}
+	};
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
 	{
@@ -117,10 +143,15 @@ namespace daw
 				std::forward_as_tuple(T),
 				std::forward_as_tuple(Args...)).second;
 		}*/
+
+
+
 		template<class T, class StoreT = T>
 		void add(const T& t, const geom_t& geom) {
 			map_t<StoreT>& m = get<StoreT>();
-			m.emplace(geom, new T(t)); // TODO: push back pointer, id, ... ?
+			auto new_geom = geom;
+			add_geom_of<has_geom<T>::value>(t, new_geom);
+			m.emplace(t.geom + geom, new T(t)); // TODO: push back pointer, id, ... ?
 			_repeat_end = _end = std::max(_end, geom.start + t.length());
 		}
 
@@ -135,15 +166,22 @@ namespace daw
 		struct print_all
 		{
 			std::ostream* os;
+			static std::size_t depth;
 			template<class T>
 			void operator()(const T& map)
 			{
+				++depth;
 				for(const auto& pr : map)
 				{
+					for(std::size_t d2 = depth; d2; --d2)
+					 *os << "  ";
 					*os << pr.first << ": " << *pr.second << std::endl;
 				}
+				--depth;
 			}
 		};
+
+		std::size_t print_all::depth = 0;
 	}
 
 	template<class Geom, class ...Children>
@@ -225,13 +263,16 @@ namespace daw
 		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
 	public:
 
+		bars_t length() const { return bars_t(1, 1); } // TODO
+
 		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
-			for(const auto pr : notes.template get<mevent_t>())
+			base::template add<mevents_t>(notes, other_geom);
+/*			for(const auto pr : notes.template get<mevent_t>())
 			{
 				std::cerr << "add_note: " << +other_geom.offs << " + " << +base::geom.offs << std::endl;
 				add_note(*pr.second, other_geom - base::geom + pr.first);
-			}
+			}*/
 		}
 
 		void add_note(const mevent_t& n, geom_t geom = geom_t::zero()) { base::template add<mevent_t>(n, geom); }
