@@ -260,7 +260,7 @@ void REALTIME _player_t::process(sample_no_t work)
 			for(const out_port_base* op  : this_ef->get_out_ports())
 			{
 			// TODO! only dependencys...
-			if(op->change_stamp <= pos)
+			if(op->change_stamp >= pos)
 			{
 				for(in_port_base* target_ip : op->readers())
 				{

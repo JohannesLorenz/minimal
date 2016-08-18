@@ -107,6 +107,10 @@ public:
 		return (*this = *this + rhs);
 	}
 
+	fraction_t& operator-=(const fraction_t& rhs) {
+		return (*this = *this - rhs);
+	}
+
 	constexpr bool operator==(const fraction_t& other) const {
 		return other.n == n && other.d == d;
 	}

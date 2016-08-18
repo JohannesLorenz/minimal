@@ -84,12 +84,20 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 
 	int next_visit_id = 0;
 
+	std::size_t visit_depth = 0;
+
 	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset)
 	{
+		++visit_depth;
 		m_geom_t cur_offs = offset + n.geom;
 		for(const std::pair<const daw::note_geom_t,
 			const daw::events_t<NoteProperties>*>& n2 :
 			n.template get<daw::events_t<NoteProperties>>()) {
+
+			for(std::size_t x = visit_depth; x; --x)
+			 std::cerr << "  ";
+			std::cerr << "recursing: " << cur_offs + n2.first << std::endl;
+
 			visit(*n2.second, cur_offs + n2.first);
 		}
 		for(const std::pair<const m_geom_t,
@@ -98,7 +106,11 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 		{
 			const daw::event_t<NoteProperties>& cur_note = *n2.second;
 			const m_geom_t next_offs = cur_offs + n2.first;
+			for(std::size_t x = visit_depth; x; --x)
+			 std::cerr << "  ";
 			std::cerr << "emplacing: " << next_visit_id << std::endl;
+			for(std::size_t x = visit_depth; x; --x)
+			 std::cerr << "  ";
 			std::cerr << "next_offs: " << +next_offs.offs << std::endl;
 			// TODO: this does not work for all note properties
 			note_events.emplace(next_offs,
@@ -106,6 +118,7 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 			note_events.emplace(next_offs + m_geom_t(cur_note.length(), 0),
 				m_note_event(false, next_visit_id++, cur_note.value()));
 		}
+		--visit_depth;
 	}
 
 public:

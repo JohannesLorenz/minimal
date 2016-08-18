@@ -64,11 +64,13 @@ namespace daw
 			offs += n.value();
 			return *this;
 		}
-		note_geom_t operator+=(const note_geom_t& rhs) const {
+		note_geom_t& operator+=(const note_geom_t& rhs) {
 			start += rhs.start; offs += rhs.offs;
+			return *this;
 		}
-		note_geom_t operator-=(const note_geom_t& rhs) const {
+		note_geom_t& operator-=(const note_geom_t& rhs) {
 			start -= rhs.start; offs -= rhs.offs;
+			return *this;
 		}
 		note_geom_t operator+(const note_geom_t& rhs) const {
 			return note_geom_t(start + rhs.start, offs + rhs.offs);
@@ -156,7 +158,7 @@ namespace daw
 		void add(const T& t, const geom_t& geom) {
 			map_t<StoreT>& m = get<StoreT>();
 			auto new_geom = geom; // TODO: no temporary variable required?
-			add_geom_of<has_geom<T>::value>::exec(new_geom, t);
+		//	add_geom_of<has_geom<T>::value>::exec(new_geom, t);
 			m.emplace(new_geom, new T(t)); // TODO: push back pointer, id, ... ?
 			_repeat_end = _end = std::max(_end, geom.start + t.length());
 		}
@@ -193,7 +195,6 @@ namespace daw
 	template<class Geom, class ...Children>
 	std::ostream& operator<<(std::ostream& os, const seg_base<Geom, Children...>& sb)
 	{
-		// TODO: foreach
 		detail::print_all printer { &os };
 		tuple_helpers::for_each(sb._children, printer);
 		return os;
@@ -273,6 +274,7 @@ namespace daw
 
 		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
+			std::cerr << "add_notes: " << notes.geom << ", " << other_geom << std::endl;
 			base::template add<mevents_t>(notes, other_geom);
 /*			for(const auto pr : notes.template get<mevent_t>())
 			{
