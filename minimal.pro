@@ -65,6 +65,7 @@ SOURCES += src/core/main.cpp \
 	src/include/soundfile.cpp \
 	src/include/jack.cpp \
 	src/include/audio_instrument.cpp \
+        src/include/audio.cpp \
 	src/include/io.cpp \
 	src/include/effect.cpp \
 	src/include/jack_player.cpp \
@@ -79,7 +80,8 @@ SOURCES += src/core/main.cpp \
 	src/include/node.cpp \
 	src/include/protocol.cpp \
 	src/core/os_engine.cpp \
-	src/include/bars.cpp
+        src/include/bars.cpp \
+        src/include/ports.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \

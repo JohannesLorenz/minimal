@@ -105,6 +105,10 @@ void jack_engine_t::vrun(bars_t _limit)
 	connect(out[1].name(), outPorts[1]);
 
 	io::mlog << "jack samplerate: " << sample_rate() << io::endl;
+
+	// update info class now (TODO: return the info class and let main() set it)
+	info.global_samplerate = sample_rate();
+	info.recompute();
 }
 
 }

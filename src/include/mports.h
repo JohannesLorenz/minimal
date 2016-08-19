@@ -591,7 +591,7 @@ template<class T>
 std::ostream& operator<<(std::ostream& os,
 		const event_signal_t<T>& es)
 {
-	return os << "recently changed: " << es.recently_changed.size() << std::endl;
+	os << "changed notes: ";
 	
 	for(const std::pair<int, int>& rch : es.recently_changed)
 	if(rch.first < 0)
@@ -601,8 +601,10 @@ std::ostream& operator<<(std::ostream& os,
 		std::pair<int, T> p2 = es.lines[rch.first][rch.second];
 
 		os << ((p2.first < 0) ? '-' : '+')
-			<< rch.first << '(' << p2.second << ')' << std::endl;
+			<< rch.first << '(' << p2.second << ')' << ' ';
 	}
+
+	return os << std::endl;
 }
 
 template<class T>

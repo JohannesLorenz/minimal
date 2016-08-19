@@ -82,13 +82,18 @@ public:
 //		std::clog << /*log_port.data*/ reader << std::endl;
 //		std::clog << time() << " <-> " << interval << std::endl;
 		std::stringstream ss;
-		ss << reader;
-		if(ss.str() != last_value)
+
+//		ss << reader;
+
+		ss << detail::deref_if_ptr(reader);
+
+		//if(ss.str() != last_value)
 		{
-			std::clog << time() << ": " << detail::deref_if_ptr(reader) << std::endl;
 			last_value = ss.str();
+			std::cout << time() << ": " << last_value << std::endl;
 		}
 		set_next_time(time() + interval);
+		out_port_templ_ref<T>::notify_set(time());
 		return true;
 	}
 
