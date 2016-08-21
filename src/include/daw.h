@@ -1,4 +1,4 @@
-/*************************************************************************/
+﻿/*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
@@ -20,6 +20,7 @@
 #ifndef DAW_H
 #define DAW_H
 
+#include <iosfwd>
 #include <tuple>
 #include <map>
 #include "utils.h"
@@ -81,7 +82,7 @@ namespace daw
 
 		friend std::ostream& operator<<(std::ostream& os, const note_geom_t& n);
 	};
-
+#if 0
 	// http://stackoverflow.com/questions/1005476/
 	// how-to-detect-whether-there-is-a-specific-member-variable-in-class
 	template<typename T>
@@ -108,31 +109,41 @@ namespace daw
 		template<class T, class G>
 		static void exec(G& , const T&) {}
 	};
+#endif
+
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
 	{
 		using counted = util::counted_t<Geom, Children...>;
 	public:
-		// TODO: private and protected accessors?
 		using geom_t = Geom;
-		geom_t geom = geom_t::zero();
-
-		seg_base(geom_t geom = geom_t::zero()) : geom(geom) {}
-
 	protected:
+		geom_t _geom = geom_t::zero();
+	public:
+		const geom_t& geom() const { return _geom; }
+
+		seg_base(geom_t geom = geom_t::zero()) :
+			_geom(geom) {}
+	protected:
+		// we use pointers here to share children between segments
 		template<class ChildType>
 		using map_t = std::multimap<geom_t, const ChildType*>;
-		// TODO: can the * be omitted?
 	public:
 		template<class ChildType>
 		using pair_t = typename map_t<ChildType>::value_type;
-
-		std::tuple<map_t<Children>...> _children;
 	private:
-		bars_t _end = bars_t(0, 1), _repeat_end = bars_t(0, 1);
+		std::tuple<map_t<Children>...> _children;
+
+		bars_t /*_end = bars_t(0, 1),*/ _repeat_end = bars_t(0, 1);
 	public:
-		bars_t end() const { return _end; }
+//		bars_t end() const { return _end; }
 		bars_t repeat_end() const { return _repeat_end; }
+
+		// this is mostly needed if the user glues notes together
+		// with operator<<
+		// once the real end should be needed, we should use
+		// length() and repeat_length()
+		bars_t length() const { return _repeat_end; }
 
 		template<class T>
 		map_t<T>& get() {
@@ -143,6 +154,10 @@ namespace daw
 		const map_t<T>& get() const {
 			return tuple_helpers::get<map_t<T>>(_children);
 		}
+
+		using self_t = seg_base<Geom, Children...>;
+		self_t operator+=(scales::note n) { _geom += n; return *this; }
+
 	protected:
 	/*	template<class T, class ...Args>
 		T& make(Args ...args) {
@@ -155,12 +170,14 @@ namespace daw
 
 
 		template<class T, class StoreT = T>
-		void add(const T& t, const geom_t& geom) {
+		void add(const T& t, const geom_t& geom)
+		{
 			map_t<StoreT>& m = get<StoreT>();
-			auto new_geom = geom; // TODO: no temporary variable required?
-		//	add_geom_of<has_geom<T>::value>::exec(new_geom, t);
-			m.emplace(new_geom, new T(t)); // TODO: push back pointer, id, ... ?
-			_repeat_end = _end = std::max(_end, geom.start + t.length());
+#if 0
+			add_geom_of<has_geom<T>::value>::exec(geom, t);
+#endif
+			m.emplace(geom, new T(t)); // TODO: do not make a copy
+			_repeat_end = std::max(_repeat_end, geom.start + t.length());
 		}
 
 
@@ -188,8 +205,6 @@ namespace daw
 				--depth;
 			}
 		};
-
-		std::size_t print_all::depth = 0;
 	}
 
 	template<class Geom, class ...Children>
@@ -199,7 +214,6 @@ namespace daw
 		tuple_helpers::for_each(sb._children, printer);
 		return os;
 	}
-
 
 
 #if 0
@@ -213,7 +227,7 @@ namespace daw
 	template<class NoteProperties>
 	class event_t : public NoteProperties
 	{
-		bars_t _length = bars_t(1, 1); // TODO: //(1 bars::_1);
+		bars_t _length = bars_t(1, 1); // FEATURE: //(1 bars::_1);
 	public:
 		bars_t length() const { return _length; }
 		event_t& operator*=(const bars_t& b) { _length *= b; return *this; }
@@ -221,7 +235,7 @@ namespace daw
 	};
 
 	/*class event_t : public seg_base<note_geom_t> {
-		sample_no_t propagate() const { return geom.start; } // TODO: also propagate end?
+		sample_no_t propagate() const { return geom.start; } ... also propagate end?
 	public:
 		note_data_t n;
 		using seg_base::seg_base;
@@ -267,20 +281,12 @@ namespace daw
 			event_t<NoteProperties>>;
 	private:
 		using geom_t = typename base::geom_t;
-		bars_t propagate(bars_t /*note*/) const { return base::geom.start; /*TODO: note*/ }
+//		bars_t propagate(bars_t /*note*/) const { return base::geom.start; ... or note ? }
 	public:
-
-		bars_t length() const { return bars_t(1, 1); } // TODO
-
 		void add_notes(const mevents_t& notes, geom_t other_geom)
 		{
-			std::cerr << "add_notes: " << notes.geom << ", " << other_geom << std::endl;
+			//io::mlog << "add_notes: " << notes.geom() << ", " << other_geom << io::endl;
 			base::template add<mevents_t>(notes, other_geom);
-/*			for(const auto pr : notes.template get<mevent_t>())
-			{
-				std::cerr << "add_note: " << +other_geom.offs << " + " << +base::geom.offs << std::endl;
-				add_note(*pr.second, other_geom - base::geom + pr.first);
-			}*/
 		}
 
 		void add_note(const mevent_t& n, geom_t geom = geom_t::zero()) { base::template add<mevent_t>(n, geom); }
@@ -309,13 +315,7 @@ namespace daw
 //		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
 		insert_seq<mevents_t> operator<<(const mevents_t& n) { // TODO: std::forward?
-
 			return insert_seq<mevents_t>(*this) << n;
-#if 0		
-			add_notes(std::move(n), geom_t(bars_t(0, 1), 0));
-			// TODO: recall last position
-			return *this;
-#endif
 		}
 
 		std::ostream& dump(std::ostream& os = std::cerr) const
@@ -330,7 +330,7 @@ namespace daw
 	template<class N>
 	std::ostream& operator<<(std::ostream& os, const events_t<N>& e)
 	{
-		os << "events +" << e.geom << ":" << std::endl;
+		os << "events +" << e.geom() << ":" << std::endl;
 		os << (const typename events_t<N>::base&)e;
 		return os;
 	}

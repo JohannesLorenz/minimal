@@ -38,7 +38,7 @@ namespace mini
 	void shutdown();
 };*/
 
-class recorder_t : public effect_t, public audio_in
+class recorder_t : public effect_t, public audio_in<true>
 {
 	SndfileHandle fp;
 	m_ringbuffer_t rb;

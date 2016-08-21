@@ -17,27 +17,16 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream>
-#include "daw.h"
+#include "io.h"
+#include "note_line.h"
 
 namespace mini
 {
 
-namespace daw
-{
-
-namespace detail
-{
-	std::size_t print_all::depth = 0;
-}
-
-std::ostream& operator<<(std::ostream& os,
-	const note_geom_t& n)
-{
-	return os << n.start << ": " << +n.offs;
+void log_note_event(bool on, const bars_t& start, int event_id) {
+	io::mlog << "note_line: played note " <<
+	 (on ? "on" : "off")
+	<< " (start: " << start << ", event id: " << event_id << ")" << io::endl;
 }
 
 }
-
-}
-

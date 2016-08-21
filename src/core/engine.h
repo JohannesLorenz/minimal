@@ -21,9 +21,8 @@
 #define ENGINE_H
 
 #include "atomic.h"
-#include <threadpool/src/include/threadpool.h>
-#include <threadpool/src/include/thread.h>
-// ^ TODO: get rid of this? use new instead of vector?
+//#include <threadpool/src/include/threadpool.h>
+//#include <threadpool/src/include/thread.h>
 
 #include "player.h"
 #include "io.h"
@@ -88,6 +87,12 @@ public:
 		} else {
 			_is_running.store(true);
 			vrun(limit);
+
+			// update info class now
+			// FEATURE: return sample rate?
+			info.global_samplerate = get_sample_rate();
+			info.recompute();
+
 			//_is_running.store(false);
 			//io::mlog << "Engine finished..." << io::endl;
 		}

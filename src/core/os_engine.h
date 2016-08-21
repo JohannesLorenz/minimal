@@ -45,7 +45,7 @@ class os_engine_t : public engine_t
 	//! permanent function for @a run_thread
 	void run_loop();
 	
-	// TODO: can this be avoided with C++11 threads?
+	// FEATURE: can the need of static functions be avoided with C++11 threads?
 	static void run_loop_static(os_engine_t* obj) { obj->run_loop(); }
 public:
 	const char* type_hint() { return "none"; }

@@ -1,4 +1,4 @@
-/*************************************************************************/
+﻿/*************************************************************************/
 /* minimal - a minimal osc sequencer                                     */
 /* Copyright (C) 2014-2015                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
@@ -20,11 +20,8 @@
 #ifndef LFO_H
 #define LFO_H
 
-#include <cmath>
-#include <limits>
 #include "effect.h"
 #include "mports.h"
-#include "io.h"
 #include "bars.h"
 
 namespace mini
@@ -38,7 +35,7 @@ struct lfo_con : ef_con_t<lfo_t<OutType>>, public port_chain<freq_lfo_out<OutTyp
 {
 };*/
 
-constexpr sample_no_t default_lfo_step = 441;
+constexpr sample_no_t default_lfo_step = 441; // 441 ?
 
 enum class lfo_type
 {
@@ -46,8 +43,13 @@ enum class lfo_type
 	constant
 };
 
-template<class OutType, lfo_type Lfo = lfo_type::cos>
-struct lfo_t : effect_t, freq_lfo_out<OutType>
+struct lfo_base
+{
+	static sample_no_t never();
+	static void lfo_proceed_message();
+};
+
+struct sine_base : lfo_base
 {
 	//using base = port_chain<lfo_out<OutType>>;
 	const float min, max, mm2 /* max + min / 2*/, middle;
@@ -61,60 +63,58 @@ struct lfo_t : effect_t, freq_lfo_out<OutType>
 	const float premult;
 	//float time =
 
-	//using lfo_out = lfo_out<OutType>;
+	float calc(float time) const;
 
-	void instantiate() {}
-	void clean_up() {}
+	static void print_value(float val);
+
+	sine_base(float min, float max, bars_t _start, bars_t _end, float times = 1.0f, float outside = 0.0f, sample_no_t step = default_lfo_step);
+};
+
+template<class OutType, lfo_type Lfo = lfo_type::cos>
+struct lfo_t : sine_base, effect_t, freq_lfo_out<OutType>
+{
+	//using lfo_out = lfo_out<OutType>;
 
 	bool _proceed()
 	{
-		io::mlog << "proceeding with lfo... " << io::endl;
+		lfo_proceed_message();
+
 		if(time() < start) {
 			freq_lfo_out<OutType>::set(outside, time());
 			set_next_time(start);
 		}
 		else if(time() < end)
 		{
-			float new_value = middle +
-				sinf((time()-start) * premult) * mm2;
-
+			float new_value = calc(time());
+			print_value(new_value);
 
 			freq_lfo_out<OutType>::set(new_value, time());
 			// TODO: repeat etc.
-			io::mlog << "lfo value: " << new_value << io::endl;
 
 			set_next_time(time() + step);
 		}
 		else
 		{
 			freq_lfo_out<OutType>::set(outside, time());
-			set_next_time(std::numeric_limits<sample_no_t>::max());
+			set_next_time(never());
 		}
 		return true; // LFO is always single threaded
 	//	return 0.0f; // TODO
 	}
 
+	void instantiate() {}
+	void clean_up() {}
+
 	lfo_t(float min, float max, bars_t _start, bars_t _end, float times = 1.0f, float outside = 0.0f, sample_no_t step = default_lfo_step) :
+		sine_base(min, max, _start, _end, times, outside, step),
 		effect_t(std::tuple<freq_lfo_out<OutType>&>{*this}),
-		freq_lfo_out<OutType>((effect_t&)*this),
-		min(min),
-		max(max),
-		mm2((max - min)/2.0f),
-		middle(min + mm2),
-		start(as_samples_floor(_start, info.samples_per_bar)),
-		end(as_samples_floor(_end, info.samples_per_bar)),
-		times(times),
-		outside(outside),
-		step(step),
-		repeat((end - start)/times),
-		premult(times * M_PI/(end - start))
-	{
+		freq_lfo_out<OutType>((effect_t&)*this) {
 		init_next_time(0); // must be set initially, even if 0.0f < start
 	}
 };
 
 template<class OutType, OutType Value>
-struct constant : effect_t, freq_lfo_out<OutType>
+struct constant : lfo_base, effect_t, freq_lfo_out<OutType>
 {
 	constant() : // TODO: lfo base class?
 		freq_lfo_out<OutType>((effect_t&)*this)
@@ -129,7 +129,7 @@ struct constant : effect_t, freq_lfo_out<OutType>
 	// this will be only called on startup
 	bool _proceed(sample_no_t ) {
 		//freq_lfo_out<OutType>::set(Value, time);
-		set_next_time(std::numeric_limits<sample_no_t>::max());
+		set_next_time(never());
 		return true;
 	}
 };

@@ -127,18 +127,18 @@ public:
 	num_t floor() const { return n/d; }
 	//! returns the rest of dividing n/d
 	fraction_t rest() const { return fraction_t(n%d, d); }
-	//sample_no_t ceil() const { r } TODO: this is not just n/d + 1
+	//sample_no_t ceil() const { r } ... !this is not just n/d + 1!
 
 	num_t numerator() const { return n; }
 	denom_t denominator() const { return d; }
 
 	bool operator<(const fraction_t& other) const {
 		denom_t l = lcm(d, other.d);
-		// TODO: shortening for if d>o.d && n<o.n and the opposite?
+		// FEATURE: shortening for if d>o.d && n<o.n and the opposite?
 		return n * (l/d) < other.n * (l/other.d);
 	}
 
-	// TODO: code duplication, see above
+	// FEATURE: code duplication, see above
 	bool operator>(const fraction_t& other) const {
 		num_t l = lcm(d, other.d);
 		return n * (l/d) > other.n * (l/other.d);

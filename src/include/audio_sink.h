@@ -25,7 +25,8 @@
 
 namespace mini {
 
-class audio_sink_t : public effect_t, public audio_in
+// FEATURE: can this be moved to the core?
+class audio_sink_t : public effect_t, public audio_in<true>
 {
 	void instantiate() {
 		std::cerr << "instantiate audio_sink" << std::endl;

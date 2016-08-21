@@ -17,27 +17,31 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#include <iostream>
-#include "daw.h"
+#include "io.h"
+#include "instrument.h"
+#include "command_tools.h"
 
 namespace mini
 {
 
-namespace daw
+void prioritized_command_cmd::proceed()
 {
+	proceed_base();
 
-namespace detail
-{
-	std::size_t print_all::depth = 0;
+	io::mlog << "osc msg to: " << plugin->name() << ": " << io::endl
+		 << "osc: " << cmd->complete_buffer() << io::endl;
+
+	//no_rt::mlog << "osc msg to: " << plugin->name() << ": " << std::endl
+	//	<< "osc: " << cmd->complete_buffer() << std::endl;
+
+	if(!plugin) throw "plugin";
+	if(!cmd) throw "not cmd";
+	plugin->send_osc_cmd(cmd->complete_buffer().raw());
+
+	// TODO: not sure, but max sounds correct:
+	update_next_time(std::numeric_limits<sample_no_t>::max());
+	w->update(get_handle());
 }
 
-std::ostream& operator<<(std::ostream& os,
-	const note_geom_t& n)
-{
-	return os << n.start << ": " << +n.offs;
-}
 
 }
-
-}
-

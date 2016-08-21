@@ -18,7 +18,7 @@
 /*************************************************************************/
 
 #include <algorithm>
-//#include <jack/jack.h>
+#include <jack/jack.h>
 
 #include <stdlib.h>
 #include <string.h>

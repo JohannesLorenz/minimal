@@ -19,13 +19,10 @@
 
 #include <stack>
 #include "project.h"
+#include "mports.h"
 #include "audio_sink.h"
 
 namespace mini {
-
-project_t::project_t()
-{
-}
 
 project_t::~project_t()
 {
@@ -38,7 +35,7 @@ void project_t::finalize()
 	if(!sink)
 	 throw "Project misses a sink";
 
-	for(effect_t* e : effects()) // TODO: -> initializer list
+	for(effect_t* e : effects()) // FEATURE: -> initializer list -> ?
 	{
 		if(e->writers.empty())
 		{

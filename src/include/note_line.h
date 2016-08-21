@@ -20,16 +20,17 @@
 #ifndef NOTE_LINE_H
 #define NOTE_LINE_H
 
-#include <iostream>
+#include <iosfwd>
 
 #include "effect.h"
 #include "daw.h"
 #include "mports.h"
 #include "impl.h"
 #include "simple.h"
-//#include "io.h"
 
 namespace mini {
+
+void log_note_event(bool on, const bars_t& start, int event_id);
 
 //constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
@@ -89,15 +90,15 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset)
 	{
 		++visit_depth;
-		m_geom_t cur_offs = offset + n.geom;
+		m_geom_t cur_offs = offset + n.geom();
 		for(const std::pair<const daw::note_geom_t,
 			const daw::events_t<NoteProperties>*>& n2 :
 			n.template get<daw::events_t<NoteProperties>>()) {
-
+#ifdef DEBUG_NOTE_LINE
 			for(std::size_t x = visit_depth; x; --x)
-			 std::cerr << "  ";
-			std::cerr << "recursing: " << cur_offs + n2.first << std::endl;
-
+			 io::mlog << "  ";
+			io::mlog << "recursing: " << cur_offs + n2.first << io::endl;
+#endif
 			visit(*n2.second, cur_offs + n2.first);
 		}
 		for(const std::pair<const m_geom_t,
@@ -106,13 +107,15 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 		{
 			const daw::event_t<NoteProperties>& cur_note = *n2.second;
 			const m_geom_t next_offs = cur_offs + n2.first;
+#ifdef DEBUG_NOTE_LINE
 			for(std::size_t x = visit_depth; x; --x)
-			 std::cerr << "  ";
-			std::cerr << "emplacing: " << next_visit_id << std::endl;
+			 io::mlog << "  ";
+			io::mlog << "emplacing: " << next_visit_id << std::endl;
 			for(std::size_t x = visit_depth; x; --x)
-			 std::cerr << "  ";
-			std::cerr << "next_offs: " << +next_offs.offs << std::endl;
+			 io::mlog << "  ";
+			io::mlog << "next_offs: " << +next_offs.offs << std::endl;
 			// TODO: this does not work for all note properties
+#endif
 			note_events.emplace(next_offs,
 				m_note_event(true, next_visit_id, cur_note.value())); // TODO: 1
 			note_events.emplace(next_offs + m_geom_t(cur_note.length(), 0),
@@ -137,8 +140,6 @@ public:
 
 	sample_no_t _proceed(sample_no_t amnt)
 	{
-		std::cerr << "note line..." << std::endl;
-
 		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::value();
 		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
 
@@ -160,7 +161,6 @@ public:
 
 				events_at->first = event.id;
 				events_at->second = event;
-				io::mlog << "note on: " << event.id << io::endl;
 			}
 			else
 			{
@@ -170,14 +170,12 @@ public:
 				 throw "end of polyphony reached!";
 
 				events_at->first = -1;
-
-				io::mlog << "note off: " << event.id << io::endl;
 			}
-
 			recently_changed_ptr->first = geom.offs;
 			(recently_changed_ptr++)->second = id;
 
-			io::mlog << "played one note: " << itr->first.start << io::endl;
+			// io logging
+			log_note_event(event.on, itr->first.start, event.id);
 	
 			++itr;
 		}

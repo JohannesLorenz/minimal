@@ -44,12 +44,18 @@ constexpr std::size_t rb_size = buffer_size * sample_size;
 template<class T, std::size_t Channels = 2>
 struct Stereo {
 	T ch[Channels];
+
+	// Master.h suggests operator[], so we provide it...
 	T& operator[](std::size_t idx) { return ch[idx]; }
 	const T& operator[](std::size_t idx) const { return ch[idx]; }
+
+	template<std::size_t I> const T& at() const { return ch[I]; }
+	template<std::size_t I> T& at() { return ch[I]; }
 };
 
+#if 0 // Unused, Stereo is being used instead
 template<class T, std::size_t N = 2>
-struct multiplex
+class multiplex
 {
 	/*struct test {
 		test(test&& ) = default;
@@ -59,7 +65,7 @@ struct multiplex
 	using T = test;
 */
 	T data[N];
-
+public:
 	template<class ...Args>
 	multiplex(Args&&... args) : data{std::forward<Args>(args)...} {}
 
@@ -87,10 +93,12 @@ public:
 		data = other.data;
 	}
 	
-	// TODO: should be like std::get<I> ?
-	const T& operator[](std::size_t i) const { return data[i]; }
-	T& operator[](std::size_t i) { return data[i]; }
+	// don't use this, implement std::get<I> instead
+//	const T& operator[](std::size_t i) const { return data[i]; }
+//	T& operator[](std::size_t i) { return data[i]; }
 };
+
+#endif
 
 class m_ringbuffer_t : public ringbuffer_t<Stereo<float>>, util::non_movable_t
 {
@@ -111,34 +119,21 @@ public:
 };
 
 //! redefinition for the port, since there is nothing to assign
-// TODO: general version for multiplex<T>
 template<bool IsDep>
 struct in_port_templ<m_reader_t, m_ringbuffer_t, IsDep> :
 	public in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>
 {
 public:
 	using in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>::in_port_templ_noassign;
-	// TODO: noassign is incorrect, use foreach...
 };
 
-#if 0 // deprecated
-//! redefinition of connection
-template<bool IsDep>
-void operator<<(in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>& ipt,
-	out_port_templ<m_ringbuffer_t>& opt)
+template<bool IsDep = true>
+struct audio_in : public in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>
 {
-	internal_connect(ipt, opt);
-	ipt.data.connect(opt.data);
-}
-#endif
-
-struct audio_in : public in_port_templ<m_reader_t, m_ringbuffer_t, true /*TODO?*/>
-{
-	void on_read(sample_no_t ) {} // TODO??
-	audio_in(effect_t& e) : in_port_templ(e) {}
-	//using base::in_port_templ;
+	void on_read(sample_no_t ) {} // default behaviour
+	using base = in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>;
+	using base::in_port_templ;
 };
-
 
 template<>
 struct input_type_t<m_ringbuffer_t*>

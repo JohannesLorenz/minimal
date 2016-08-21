@@ -56,7 +56,8 @@ SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
 	src/include/project.cpp \
 	src/include/instrument.cpp \
-	src/core/lfo.cpp \
+        src/include/daw.cpp \
+        src/include/lfo.cpp \
 	src/test/test_str.cpp \
 	src/include/osc_string.cpp \
 	src/include/note_line.cpp \
@@ -75,6 +76,7 @@ SOURCES += src/core/main.cpp \
 	src/core/jack_engine.cpp \
 	src/include/fraction.cpp \
 	src/songs/debug_proj.cpp \
+        src/include/command_tools.cpp \
 	src/core/player.cpp \
 	src/include/sample.cpp \
 	src/include/node.cpp \

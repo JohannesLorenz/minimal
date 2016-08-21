@@ -49,12 +49,15 @@ public:
 
 using loaded_project_t = project_t;
 
-class _player_t : public work_queue_t // TODO: own header
+class _player_t : public work_queue_t
 {
 	//array_stack<effect_t*> ready_fx;
 
 	sample_no_t pos = 0; //!< number of samples played until now
-	loaded_project_t* project; // TODO! must be const
+
+	// note: this can not be const: the effects are modified
+	// when they are being played
+	loaded_project_t* project;
 
 	spinlock_t work_queue_lock;
 

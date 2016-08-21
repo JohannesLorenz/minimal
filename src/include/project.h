@@ -141,7 +141,7 @@ class project_t : public util::non_copyable_t
 public:
 	effect_root_t& effect_root() { return _effect_root; }
 
-	project_t();
+	project_t() = default;
 	~project_t();
 
 	project_t(project_t&& ) = default;
@@ -205,9 +205,12 @@ public:
 
 	void invalidate() { valid = false; }
 
-	audio_sink_t* sink;
+	class audio_sink_t* sink;
 
-	audio_sink_t& add_sink();
+
+
+
+	class audio_sink_t& add_sink();
 };
 
 }

@@ -18,6 +18,8 @@
 /*************************************************************************/
 
 #include <algorithm>
+#include <jack/jack.h>
+
 #include "jack_engine.h"
 #include "audio.h"
 #include "io.h"
@@ -65,17 +67,18 @@ int jack_engine_t::process(jack::frames_t samples)
 			// std::copy does not work because we have
 			// ringbuffer<Stereo<float>>, and must output
 			// buffer<float>
-			float avg = 0.0f;
+/*			float avg = 0.0f;
 			for(std::size_t i = 0; i < rs.size(); ++i)
 			{
 				avg += buffer[i] = rs[i][side];
 			}
-			//std::cerr << "average: " << (avg/=rs.size()) << std::endl;
+			std::cerr << "average: " << (avg/=rs.size()) << std::endl;
+*/
 		}
 		else
 		 throw "could not get buffer";
 
-	} // TODO: avoid throw here?
+	} // TODO: avoid throw here? what do the jack docs say?
 
 	if((samples_until_now += samples) > limit)
 	 stop();
@@ -105,10 +108,6 @@ void jack_engine_t::vrun(bars_t _limit)
 	connect(out[1].name(), outPorts[1]);
 
 	io::mlog << "jack samplerate: " << sample_rate() << io::endl;
-
-	// update info class now (TODO: return the info class and let main() set it)
-	info.global_samplerate = sample_rate();
-	info.recompute();
 }
 
 }

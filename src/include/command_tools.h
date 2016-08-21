@@ -26,31 +26,16 @@
 // welcome to teplate-hell...
 // ^ teplate -> already the first strange word
 
-#include "io.h" // TODO
+#include "work_queue.h"
 #include "command.h"
 #include "node.h"
-#include "instrument.h" // TODO: -> cpp, including proceed() below?
 
 namespace mini {
 
-//! task + priority
-// TODO: -> work_queue
-struct prioritized_task : public work_queue_t::task_base_with_handle
-{
-	std::size_t priority;
-	prioritized_task(std::size_t priority) :
-		task_base_with_handle(std::numeric_limits<sample_no_t>::max()),
-		priority(priority)
-	{
-
-	}
-	bool cmp(const task_base& rhs) const {
-		return priority < dynamic_cast<const prioritized_task&>(rhs).priority;
-	}
-};
+class instrument_t;
 
 //! ~ task + priority + instrument
-class prioritized_command : public prioritized_task
+class prioritized_command : public work_queue_t::prioritized_task
 {
 	bool changed = false;
 protected:
@@ -91,24 +76,7 @@ public:
 		cmd(cmd)
 		{}
 
-	void proceed()
-	{
-		proceed_base();
-
-		io::mlog << "osc msg to: " << plugin->name() << ": " << io::endl
-			<< "osc: " << cmd->complete_buffer() << io::endl;
-
-		//no_rt::mlog << "osc msg to: " << plugin->name() << ": " << std::endl
-		//	<< "osc: " << cmd->complete_buffer() << std::endl;
-
-		if(!plugin) throw "plugin";
-		if(!cmd) throw "not cmd";
-		plugin->send_osc_cmd(cmd->complete_buffer().raw());
-
-		// TODO: not sure, but max sounds correct:
-		update_next_time(std::numeric_limits<sample_no_t>::max());
-		w->update(get_handle());
-	}
+	void proceed();
 };
 
 //! this extends a port (e.g. an in port) by cmd and ins pointers

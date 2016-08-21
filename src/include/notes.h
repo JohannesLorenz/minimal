@@ -60,7 +60,7 @@ notes_t operator+(const notes_t& no, const scales::note& n) {
 	notes_t copy = no;
 	/*for(auto& pr : get<note_t>())
 	 pr.first += n;*/
-	copy.geom += n;
+	copy += n;
 	return copy;
 }
 

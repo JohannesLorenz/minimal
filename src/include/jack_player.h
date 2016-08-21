@@ -26,7 +26,7 @@
 namespace mini
 {
 
-class jack_player_t : public effect_t, public audio_in
+class jack_player_t : public effect_t, public audio_in<true>
 {
 public:
 	jack_player_t();

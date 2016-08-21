@@ -113,11 +113,11 @@ public:
 	virtual ~instrument_t();
 
 	void pass_changed_ports(const std::vector<bool>& _cp)
-	{ // TODO: no vector bool -> stack of ints
+	{ // FEATURE: no vector bool -> stack of ints
 		cp = &_cp;
 	}
 
-//	virtual instrument_t* clone() const = 0; // TODO: generic clone class?
+//	virtual instrument_t* clone() const = 0; // ... generic clone class?
 	//! should create OSC commands which cause the plugin to clean up as
 	//! much as it requires
 	virtual command_base *make_close_command() const = 0;

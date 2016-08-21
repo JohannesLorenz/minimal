@@ -23,9 +23,7 @@
 #include <atomic>
 #include <cstddef>
 
-//#include <sys/types.h> // for size_t
-
-#include <jack/jack.h> // TODO: types.h?
+#include <jack/types.h>
 
 namespace mini {
 

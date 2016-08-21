@@ -62,7 +62,7 @@ class effect_t : util::non_copyable_t, public has_id, public named_t //: public 
 protected:
 	//sample_no_t pos = 0; //!< number of samples processed yet
 	std::vector<in_port_base*> in_ports;
-	std::vector<out_port_base*> out_ports; // TODO: not public
+	std::vector<out_port_base*> out_ports;
 private:
 	sample_no_t next_time;
 	template<class T, class Tpl, int ...Is>
@@ -75,11 +75,12 @@ private:
 	static std::vector<T> make_vector(const std::tuple<Args...>& tpl) {
 		return make_vector<T>(tpl, util::gen_seq<sizeof...(Args)>());
 	}
-protected:
+public:
 	//! should advance the effect s.t. at least @a samples samples
 	//! are computed in all out ports
-	virtual bool _proceed() = 0; // TODO: private?
-	// TODO: deprecated?
+	virtual bool _proceed() = 0;
+protected:
+	// TODO: deprecated? the whole set_next_time concept..
 	void set_next_time(sample_no_t next);
 	//! time while @a _proceed is being called
 	sample_no_t time() { return get_next_time(); }

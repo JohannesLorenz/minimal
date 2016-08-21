@@ -55,7 +55,6 @@ public:
 	{
 		handle_type handle;
 	public:
-		//using task_base::task_base;
 		task_base_with_handle(sample_no_t next_time,
 			handle_type handle = handle_type()) :
 			task_base(next_time),
@@ -63,6 +62,23 @@ public:
 			{}
 		handle_type& get_handle() final { return handle; }
 		void set_handle(handle_type h) { handle = h; }
+	};
+
+	class prioritized_task : public task_base_with_handle
+	{
+		std::size_t _priority;
+	public:
+		std::size_t priority() const { return _priority; }
+
+		prioritized_task(std::size_t priority) :
+			task_base_with_handle(std::numeric_limits<sample_no_t>::max()),
+			_priority(priority)
+		{
+		}
+
+		bool cmp(const task_base& rhs) const {
+			return _priority < dynamic_cast<const prioritized_task&>(rhs)._priority;
+		}
 	};
 
 private:
