@@ -37,13 +37,23 @@ void log_note_event(bool on, const bars_t& start, int event_id);
 template<class T>
 class event_line_t;
 
+class line_impl_base
+{
+protected:
+	using m_geom_t = daw::note_geom_t;
+
+	std::size_t visit_depth = 0;
+
+	void log_visit_events(m_geom_t cur_offset, m_geom_t next_offset) const;
+	void log_visit_event(m_geom_t next_offset, int next_visit_id) const;
+};
+
 template<class NoteProperties>
-class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
+class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NoteProperties>>
 {
 	friend class event_line_t<NoteProperties>;
 	using m_event_line_t = event_line_t<NoteProperties>;
 	using impl_t = is_impl_of_t<m_event_line_t>;
-	using m_geom_t = daw::note_geom_t;
 
 	sample_no_t last_time = -1.0f;
 	//std::map<int, std::map<sample_no_t, event_t>> note_lines;
@@ -85,8 +95,6 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 
 	int next_visit_id = 0;
 
-	std::size_t visit_depth = 0;
-
 	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset)
 	{
 		++visit_depth;
@@ -99,6 +107,8 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 			 io::mlog << "  ";
 			io::mlog << "recursing: " << cur_offs + n2.first << io::endl;
 #endif
+			log_visit_events(cur_offs, n2.first);
+
 			visit(*n2.second, cur_offs + n2.first);
 		}
 		for(const std::pair<const m_geom_t,
@@ -107,15 +117,9 @@ class line_impl : public is_impl_of_t<event_line_t<NoteProperties>>
 		{
 			const daw::event_t<NoteProperties>& cur_note = *n2.second;
 			const m_geom_t next_offs = cur_offs + n2.first;
-#ifdef DEBUG_NOTE_LINE
-			for(std::size_t x = visit_depth; x; --x)
-			 io::mlog << "  ";
-			io::mlog << "emplacing: " << next_visit_id << std::endl;
-			for(std::size_t x = visit_depth; x; --x)
-			 io::mlog << "  ";
-			io::mlog << "next_offs: " << +next_offs.offs << std::endl;
-			// TODO: this does not work for all note properties
-#endif
+
+			log_visit_event(next_offs, next_visit_id);
+
 			note_events.emplace(next_offs,
 				m_note_event(true, next_visit_id, cur_note.value())); // TODO: 1
 			note_events.emplace(next_offs + m_geom_t(cur_note.length(), 0),
@@ -144,6 +148,7 @@ public:
 		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
 
 		// itr points to note_events
+		// => check all not yet played notes at/before the current position
 		while(
 			as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt)
 		{
@@ -157,19 +162,21 @@ public:
 				for(; id < POLY_MAX && events_at->first > 0; ++events_at, ++id) ;
 
 				if(id >= POLY_MAX)
-				 throw "end of polyphony reached!";
+				 throw "note on, but end of polyphony reached!";
 
 				events_at->first = event.id;
 				events_at->second = event;
+				std::cerr << "xx: note on" << std::endl;
 			}
 			else
 			{
 				for(; id < POLY_MAX && events_at->first != event.id; ++events_at, ++id) ;
 
 				if(id >= POLY_MAX)
-				 throw "end of polyphony reached!";
+				 throw "note off for a note that is already off";
 
 				events_at->first = -1;
+				std::cerr << "xx: note off" << std::endl;
 			}
 			recently_changed_ptr->first = geom.offs;
 			(recently_changed_ptr++)->second = id;
@@ -185,6 +192,7 @@ public:
 		impl_t::ref->events_out_t<NoteProperties>::change_stamp = amnt;
 
 		last_time = amnt;
+		std::cerr << "start: " << itr->first.start << std::endl;
 		return as_samples_floor(itr->first.start, info.samples_per_bar);
 	}
 

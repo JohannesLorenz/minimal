@@ -50,7 +50,8 @@ HEADERS += src/include/plugin.h \
 	src/include/node.h \
 	src/include/protocol.h \
 	src/include/notes.h \
-	src/core/os_engine.h
+        src/core/os_engine.h \
+        src/include/simple.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \

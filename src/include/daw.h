@@ -23,6 +23,12 @@
 #include <iosfwd>
 #include <tuple>
 #include <map>
+
+
+
+#include "io.h" // TODO !!!
+
+
 #include "utils.h"
 #include "tuple_helpers.h"
 #include "bars.h"
@@ -111,6 +117,28 @@ namespace daw
 	};
 #endif
 
+/*	namespace detail
+	{
+		struct multiplier_t
+		{
+			bars_t repeat_end = bars_t(0, 1);
+			bars_t value;
+
+			template<class T>
+			void operator()(T& child)
+			{
+				for(typename T::value_type& pr : child)
+				 *pr.second *= value;
+
+				repeat_end = std::max(repeat_end, child.rend()->second->length());
+				// new_e.emplace(pr.first, new mevent_t((*pr.second) * b));
+			}
+
+			multiplier_t(const bars_t& value) : value(value) {}
+		};
+	}*/
+
+
 	template<class Geom, class ...Children>
 	class seg_base : public util::counted_t<Geom, Children...> // : non_copyable_t
 	{
@@ -125,6 +153,9 @@ namespace daw
 		seg_base(geom_t geom = geom_t::zero()) :
 			_geom(geom) {}
 	protected:
+
+
+
 		// we use pointers here to share children between segments
 		template<class ChildType>
 		using map_t = std::multimap<geom_t, const ChildType*>;
@@ -135,6 +166,8 @@ namespace daw
 		std::tuple<map_t<Children>...> _children;
 
 		bars_t /*_end = bars_t(0, 1),*/ _repeat_end = bars_t(0, 1);
+
+		bars_t factor = bars_t(1, 0);
 	public:
 //		bars_t end() const { return _end; }
 		bars_t repeat_end() const { return _repeat_end; }
@@ -178,9 +211,39 @@ namespace daw
 #endif
 			m.emplace(geom, new T(t)); // TODO: do not make a copy
 			_repeat_end = std::max(_repeat_end, geom.start + t.length());
+
+			io::mlog << "repeatend: " << _repeat_end << io::endl;
 		}
 
+#if 0
+		self_t& operator*=(const bars_t& b)
+		{
+			detail::multiplier_t multiplier(b);
 
+			tuple_helpers::for_each(_children, multiplier);
+			_repeat_end = multiplier.repeat_end;
+
+#if 0
+			typename base::template map_t<mevent_t> new_e;
+			for(auto pr : copy.template get<mevent_t>())
+			 new_e.emplace(pr.first, new mevent_t((*pr.second) * b));
+			get<mevent_t>() = new_e;
+
+			typename base::template map_t<mevents_t> new_es;
+			for(auto pr : copy.template get<mevents_t>())
+			 new_es.emplace(pr.first, new mevents_t((*pr.second) * b));
+			get<mevents_t>() = new_es;
+
+			const std::pair<const note_geom_t, const mevent_t*>& last_event = *copy.template get<mevent_t>().rend();
+			const std::pair<const note_geom_t, const mevents_t*>& last_events = *copy.template get<mevents_t>().rend();
+
+			copy._repeat_end = std::max(last_event.first.start + last_event.second->length(),
+						last_events.first.start + last_events.second->length());
+
+			return copy;
+#endif
+		}
+#endif
 		template<class Geom2, class ...Children2>
 		friend std::ostream& operator<<(std::ostream& os, const seg_base<Geom2, Children2...>& sb);
 	};
@@ -252,6 +315,14 @@ namespace daw
 		}
 	};*/
 
+	struct scale
+	{
+		bars_t _factor;
+	public:
+		scale(const bars_t& factor) : _factor(factor) {}
+		const bars_t& factor() { return _factor; }
+	};
+
 	//! allows inserting notes *one after another*
 	//! also recalls the current insertion position
 	template<class T>
@@ -259,6 +330,7 @@ namespace daw
 	{
 		T* cur_e;
 		bars_t cur_pos = bars_t(0, 1);
+		bars_t factor = bars_t(1, 0);
 	public:
 		insert_seq(T& e) : cur_e(&e) {}
 
@@ -267,6 +339,8 @@ namespace daw
 			cur_pos += new_e.repeat_end();
 			return *this;
 		}
+
+		insert_seq& operator<<(const scale& sc) { factor = sc.factor(); }
 	};
 
 	//! just notes, not corresponding to any instrument
@@ -295,10 +369,12 @@ namespace daw
 		}*/
 		using seg_base<note_geom_t, events_t<NoteProperties>,
 			event_t<NoteProperties>>::seg_base;
+#if 0
 		events_t operator*(const bars_t& b) const
 		{
-			events_t copy = *this;
-			
+			mevents_t copy = *this;
+			copy *= b;
+#if 0
 			typename base::template map_t<mevent_t> new_e;
 			for(auto pr : copy.template get<mevent_t>())
 			 new_e.emplace(pr.first, new mevent_t((*pr.second) * b));
@@ -309,9 +385,16 @@ namespace daw
 			 new_es.emplace(pr.first, new mevents_t((*pr.second) * b));
 			copy.template get<mevents_t>() = new_es;
 
+/*			const std::pair<const note_geom_t, const mevent_t*>& last_event = *copy.template get<mevent_t>().rend();
+			const std::pair<const note_geom_t, const mevents_t*>& last_events = *copy.template get<mevents_t>().rend();
+
+			copy._repeat_end = std::max(last_event.first.start + last_event.second->length(),
+						last_events.first.start + last_events.second->length());
+*/
+#endif
 			return copy;
 		}
-
+#endif
 //		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
 		insert_seq<mevents_t> operator<<(const mevents_t& n) { // TODO: std::forward?
