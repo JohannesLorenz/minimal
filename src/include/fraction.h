@@ -94,6 +94,12 @@ public:
 		//n(_n/gcd(_d,_n)), d(_d*n/_n)
 		fraction_t(1, _d, _n)
 	{
+
+	}
+
+	constexpr fraction_t(num_t _n) :
+		n(_n), d(1)
+	{
 	}
 
 	fraction_t(const fraction_t& ) = default;

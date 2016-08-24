@@ -23,10 +23,7 @@
 #include "project.h"
 #include "work_queue.h"
 #include "sample.h"
-#include "bars.h"
 #include "spinlock.h"
-#include "audio.h"
-#include "io.h"
 
 namespace mini {
 
@@ -78,44 +75,9 @@ class _player_t : public work_queue_t
 		{
 		}
 
-		void proceed()
-		{
-			io::mlog << "next effect: " << effect->name() << " (id: " << effect->id() << ')'
-				<< io::endl;
-			if(effect->proceed() && true)
-			{
-				update_next_time(effect->get_next_time());
-			}
-			//else
-			
-			// the effect might have been finished or not
-			// depending on which thread exits
+		void proceed();
 
-			
-
-			//update_next_time(effect->proceed(amnt));
-		}
-
-		bool cmp(const task_base& other) const {
-			// ugly cast, but probably not avoidable?
-			//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
-			const effect_t* const o_effect = dynamic_cast<const task_effect&>(other).effect;
-
-			if(&other == this)
-			 io::mlog << "equal fx compared..." << io::endl;
-
-			bars_t b_self(effect->cur_threads, effect->max_threads),
-				b_other(o_effect->cur_threads, o_effect->max_threads);
-			
-			io::mlog << "bars: " << b_self << " vs " << b_other << ": " <<
-					(b_self == b_other) << ", " << (b_self > b_other) << io::endl;
-
-			// strict ordering is guaranteed (!)
-			return (b_self == b_other) // don't bother about b_other?
-				? effect->id() > o_effect->id() // take smaller id
-				: (b_self > b_other); // take smaller bar
-			
-		}
+		bool cmp(const task_base& other) const;
 
 /*		handle_type& get_handle() final {
 

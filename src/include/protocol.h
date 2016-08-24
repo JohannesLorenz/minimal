@@ -87,13 +87,23 @@ public:
 
 		ss << detail::deref_if_ptr(reader);
 
-		//if(ss.str() != last_value)
+		if(input.needs_update())
 		{
-			last_value = ss.str();
-			std::cout << time() << ": " << last_value << std::endl;
+			//if(ss.str() != last_value)
+			{
+				last_value = ss.str();
+				std::cout << as_bars(time(), info.samples_per_bar) << ": " << last_value << std::endl;
+			}
+
+			// these two *must* be ccalled, even if we don't read/write any data
+			input.update();
+			out_port_templ_ref<T>::notify_set(time());
 		}
+
+		std::cerr << "next_time: " << as_bars(time() + interval, info.samples_per_bar) << std::endl;
+
 		set_next_time(time() + interval);
-		out_port_templ_ref<T>::notify_set(time());
+
 		return true;
 	}
 

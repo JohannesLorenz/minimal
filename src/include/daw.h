@@ -154,11 +154,22 @@ namespace daw
 			_geom(geom) {}
 	protected:
 
-
+		template<class T>
+		struct child_with_meta
+		{
+			//bars_t end = 0;
+			bars_t factor;
+			const T* child;
+			child_with_meta(const T* child, const bars_t& factor = 1) :
+				factor(factor), child(child) {}
+			bars_t recalculate_end() const {
+				return /*end =*/ child->recalculate_end(factor);
+			}
+		};
 
 		// we use pointers here to share children between segments
 		template<class ChildType>
-		using map_t = std::multimap<geom_t, const ChildType*>;
+		using map_t = std::multimap<geom_t, child_with_meta<ChildType>>;
 	public:
 		template<class ChildType>
 		using pair_t = typename map_t<ChildType>::value_type;
@@ -167,10 +178,35 @@ namespace daw
 
 		bars_t /*_end = bars_t(0, 1),*/ _repeat_end = bars_t(0, 1);
 
-		bars_t factor = bars_t(1, 0);
+		bars_t factor = bars_t(1, 1);
+
+		struct end_recalculator_t
+		{
+			bars_t factor, end = 0;
+			end_recalculator_t(bars_t factor) : factor(factor) {}
+			template<class T>
+			void operator()(const T& child_map)
+			{
+				for(const auto& pr : child_map)
+				{
+					std::cerr << "end_recalc : " << end << ", " << pr.first.start + pr.second.recalculate_end()
+						<< std::endl;
+					end = std::max(end, pr.first.start + pr.second.recalculate_end());
+				}
+			}
+		};
+
 	public:
 //		bars_t end() const { return _end; }
 		bars_t repeat_end() const { return _repeat_end; }
+
+		bars_t recalculate_end(const bars_t& factor) const
+		{
+			end_recalculator_t end_recalculator(factor);
+			tuple_helpers::for_each(_children, end_recalculator);
+			std::cerr << "recalc_end: " << end_recalculator.end << ", " << geom().start << std::endl;
+			return end_recalculator.end + geom().start;
+		}
 
 		// this is mostly needed if the user glues notes together
 		// with operator<<
@@ -201,15 +237,17 @@ namespace daw
 		}*/
 
 
-
+	public:
 		template<class T, class StoreT = T>
-		void add(const T& t, const geom_t& geom)
+		void add(const T& t, const geom_t& geom, const bars_t& _factor = bars_t(1, 1))
 		{
 			map_t<StoreT>& m = get<StoreT>();
 #if 0
 			add_geom_of<has_geom<T>::value>::exec(geom, t);
 #endif
-			m.emplace(geom, new T(t)); // TODO: do not make a copy
+			m.emplace(geom, child_with_meta<T>(new T(t), _factor)); // TODO: do not make a copy
+			// TODO: set to NULL if this pointer may not be deleted anymore!
+
 			_repeat_end = std::max(_repeat_end, geom.start + t.length());
 
 			io::mlog << "repeatend: " << _repeat_end << io::endl;
@@ -263,7 +301,7 @@ namespace daw
 				{
 					for(std::size_t d2 = depth; d2; --d2)
 					 *os << "  ";
-					*os << pr.first << ": " << *pr.second << std::endl;
+					*os << pr.first << ": " << *pr.second.child << std::endl;
 				}
 				--depth;
 			}
@@ -293,6 +331,7 @@ namespace daw
 		bars_t _length = bars_t(1, 1); // FEATURE: //(1 bars::_1);
 	public:
 		bars_t length() const { return _length; }
+		bars_t recalculate_end(const bars_t& factor) const { return _length * factor; }
 		event_t& operator*=(const bars_t& b) { _length *= b; return *this; }
 		event_t operator*(const bars_t& b) const { event_t r = *this; return r*=b; }
 	};
@@ -320,27 +359,42 @@ namespace daw
 		bars_t _factor;
 	public:
 		scale(const bars_t& factor) : _factor(factor) {}
-		const bars_t& factor() { return _factor; }
+		const bars_t& factor() const { return _factor; }
 	};
 
 	//! allows inserting notes *one after another*
 	//! also recalls the current insertion position
-	template<class T>
+	template<class T, class T2>
 	class insert_seq
 	{
 		T* cur_e;
 		bars_t cur_pos = bars_t(0, 1);
-		bars_t factor = bars_t(1, 0);
+		bars_t factor = bars_t(1, 1);
+
+		template<class T3>
+		insert_seq& add_with_offset(const T3& new_e, note_offset_t no, bars_t length) {
+			cur_e->template add<T3>(new_e, note_geom_t(cur_pos, no), factor);
+			cur_pos += length;
+			return *this;
+		}
 	public:
 		insert_seq(T& e) : cur_e(&e) {}
 
-		insert_seq& operator<<(const T& new_e) {
-			cur_e->add_notes(new_e, note_geom_t(cur_pos, 0));
-			cur_pos += new_e.repeat_end();
+		template<class T3>
+		insert_seq& operator<<(const T3& new_e) {
+			return add_with_offset<T3>(new_e, 0, new_e.recalculate_end(factor));
+		}
+
+		insert_seq& operator<<(const scale& sc) { factor = sc.factor(); return *this; }
+
+		insert_seq& operator<<(const scales::note& n)
+		{
+			T2* ptr = new T2();
+			add_with_offset<T2>(*ptr, n.value(), factor);
+			if(ptr) delete ptr;
 			return *this;
 		}
 
-		insert_seq& operator<<(const scale& sc) { factor = sc.factor(); }
 	};
 
 	//! just notes, not corresponding to any instrument
@@ -397,8 +451,16 @@ namespace daw
 #endif
 //		event_t& note(note_geom_t geom) { return make<event_t>(geom); }
 //		events_t& notes(note_geom_t geom) { return make<events_t>(geom); }
-		insert_seq<mevents_t> operator<<(const mevents_t& n) { // TODO: std::forward?
-			return insert_seq<mevents_t>(*this) << n;
+
+		/*
+		TODO: instead, allow cast to insertion sequence?
+		*/
+		insert_seq<mevents_t, mevent_t> operator<<(const mevents_t& n) { // TODO: std::forward?
+			return insert_seq<mevents_t, mevent_t>(*this) << n;
+		}
+
+		insert_seq<mevents_t, mevent_t> operator<<(const scale& sc) { // TODO: std::forward?
+			return insert_seq<mevents_t, mevent_t>(*this) << sc;
 		}
 
 		std::ostream& dump(std::ostream& os = std::cerr) const

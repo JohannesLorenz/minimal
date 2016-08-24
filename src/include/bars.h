@@ -54,6 +54,11 @@ inline sample_no_t as_samples_floor(const bars_t& b, const sample_no_t& samples_
 	return (samples_per_bar * b).floor();
 }
 
+inline bars_t as_bars(const sample_no_t& s, const sample_no_t& samples_per_bar)
+{
+	return bars_t(s, samples_per_bar);
+}
+
 template<class >
 struct numeric_limits
 {

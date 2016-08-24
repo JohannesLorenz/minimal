@@ -49,7 +49,7 @@ public:
 };
 
 template<class T, class SourceT, bool IsDep>
-class in_port_templ;
+class in_port_templ_base;
 template<class T>
 class out_port_templ_base;
 
@@ -84,7 +84,7 @@ public:
 	//virtual void connect(const in_port_base& ) ;
 
 	template<class T1, class T2Source, class T2, bool IsDep>
-	friend void internal_connect(in_port_templ<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
+	friend void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
 
 };
 
@@ -240,10 +240,10 @@ protected:
 	friends
 */
 	template<class T1, class T2Source, class T2, bool IsDep>
-	friend void internal_connect(in_port_templ<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
+	friend void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
 
-	template<class T1, class T2, bool IsDep>
-	friend void operator<<(in_port_templ<const T1*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt);
+//	template<class T1, class T2, bool IsDep>
+//	friend void operator<<(in_port_templ<const T1*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt);
 public:
 
 
@@ -325,6 +325,10 @@ public: // TODO! (protected)
 	const typename detail::remove_pointer<T>::type& value() const { return detail::deref_if_ptr(data); }
 	
 	using type = T;
+
+	bool up_to_date() const { return source->change_stamp <= change_stamp; }
+	bool needs_update() const { return source->change_stamp > change_stamp; }
+
 protected:
 	void update_stamp() {
 		//if(unread_changes)
@@ -371,8 +375,9 @@ public:
 	}
 
 	bool update() override {
-		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
-		return (out_port_changed) && set();
+		bool outdated = templ_base::change_stamp < templ_base::source->change_stamp;
+//		if(outdated) std::cerr << templ_base::change_stamp << " yyy " <<  templ_base::source->change_stamp << std::endl;
+		return (outdated) && set();
 	}
 };
 
@@ -388,10 +393,10 @@ public:
 	using in_port_templ_base<T, SourceT, IsDep>::in_port_templ_base;
 
 protected:
-	bool set(const T& new_value)
+	bool set(const SourceT& new_value)
 	{
 		templ_base::update_stamp();
-		templ_base::data = new_value;
+		templ_base::data = new_value; // conversion from SourceT to T
 		return true;
 	}
 
@@ -402,9 +407,10 @@ public:
 	}
 
 	bool update() override {
-		bool out_port_changed = templ_base::change_stamp != templ_base::source->change_stamp;
-	//	io::mlog << "OUT PORT CHANGED? " << out_port_changed << io::endl;
-		return (out_port_changed) && set(templ_base::source->value());
+		bool outdated = templ_base::change_stamp < templ_base::source->change_stamp;
+	//	if(outdated) std::cerr << templ_base::change_stamp << " <--outdated-- "
+	//		<<  templ_base::source->change_stamp << std::endl;
+		return (outdated) && set(templ_base::source->value());
 	}
 
 };
@@ -428,7 +434,7 @@ public:
 
 
 template<class T1, class T2Source, class T2, bool IsDep>
-void internal_connect(in_port_templ<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt)
+void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	if(ipt.get_source() != nullptr)
 	 throw "double connect to in port";
@@ -586,6 +592,26 @@ struct event_signal_t
 		const event_signal_t<T>& es);
 };
 
+template<class NoteProperties>
+struct event_signal_receiver_t
+{
+	const event_signal_t<NoteProperties>* sender;
+	int read_stamp = 0;
+	bool up_to_date() const {
+		return read_stamp == sender->changed_stamp;
+	}
+/*	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
+	{
+		sender = &_sender;
+		return *this;
+	}*/
+	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
+	{
+		sender = &_sender;
+		return *this;
+	}
+};
+
 // TODO: -> cpp file?
 template<class T>
 std::ostream& operator<<(std::ostream& os,
@@ -614,9 +640,9 @@ struct events_out_t : out_port_templ<event_signal_t<T>>
 };
 
 template<class T>
-struct events_in_t : in_port_templ<const event_signal_t<T>*, event_signal_t<T>>
+struct events_in_t : in_port_templ_noassign<event_signal_receiver_t<T>, event_signal_t<T>, true>
 {
-	using in_port_templ<const event_signal_t<T>*, event_signal_t<T>>::in_port_templ;
+	using in_port_templ_noassign<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_templ_noassign;
 };
 
 //! specialize this

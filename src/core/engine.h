@@ -24,8 +24,9 @@
 //#include <threadpool/src/include/threadpool.h>
 //#include <threadpool/src/include/thread.h>
 
+#include "bars.h"
 #include "player.h"
-#include "io.h"
+//#include "io.h"
 
 namespace mini {
 

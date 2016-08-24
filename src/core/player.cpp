@@ -21,6 +21,7 @@
 #include <chrono>
 #include <map>
 
+#include "bars.h"
 #include "io.h"
 #include "player.h"
 #include "mports.h"
@@ -145,6 +146,8 @@ void _player_t::play_until(sample_no_t dest)
 #endif
 
 //! the "heart" of minimal
+//! @note the thread stuff here is all incomplete and buggy. just ignore it,
+//!   as minimal currently only runs single threaded...
 void REALTIME _player_t::process(sample_no_t work)
 {
 	if(work == 0) {
@@ -195,6 +198,8 @@ void REALTIME _player_t::process(sample_no_t work)
 		< dynamic_cast<task_effect*>(peek_next_task())->effect->max_threads )*/
 	while((task_e = try_get_task(pos + work)))
 	{
+		// TODO: is this correct? we start an effect *before* the limit is reached?
+
 		io::mlog << "pos, work: "
 			<< pos << ", " << work << io::endl;
 
@@ -296,6 +301,46 @@ void REALTIME _player_t::process(sample_no_t work)
 	} // while has active tasks at this time
 
 	io::mlog << "Nothing to do at " << pos << io::endl;
+}
+
+void _player_t::task_effect::proceed()
+{
+	io::mlog << as_bars(effect->get_next_time(), info.samples_per_bar)
+		<< ": next effect: " << effect->name() << " (id: " << effect->id() << ')'
+		<< io::endl;
+	if(effect->proceed() && true)
+	{
+		update_next_time(effect->get_next_time());
+	}
+	//else
+
+	// the effect might have been finished or not
+	// depending on which thread exits
+
+
+
+	//update_next_time(effect->proceed(amnt));
+}
+
+bool _player_t::task_effect::cmp(const work_queue_t::task_base& other) const {
+	// ugly cast, but probably not avoidable?
+	//return effect->id() < dynamic_cast<const task_effect&>(other).effect->id();
+	const effect_t* const o_effect = dynamic_cast<const task_effect&>(other).effect;
+
+	if(&other == this)
+		io::mlog << "equal fx compared..." << io::endl;
+
+	bars_t b_self(effect->cur_threads, effect->max_threads),
+			b_other(o_effect->cur_threads, o_effect->max_threads);
+
+	io::mlog << "bars: " << b_self << " vs " << b_other << ": " <<
+		    (b_self == b_other) << ", " << (b_self > b_other) << io::endl;
+
+	// strict ordering is guaranteed (!)
+	return (b_self == b_other) // don't bother about b_other?
+			? effect->id() > o_effect->id() // take smaller id
+			: (b_self > b_other); // take smaller bar
+
 }
 
 }

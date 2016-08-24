@@ -21,6 +21,7 @@
 #define NOTE_LINE_H
 
 #include <iosfwd>
+#include <map>
 
 #include "effect.h"
 #include "daw.h"
@@ -87,7 +88,7 @@ class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NotePropertie
 	};
 
 	//  TODO: rename m_note_event -> m_event, allow subclasses of it via NoteProperties?
-	using event_map_t = std::map<m_geom_t, m_note_event>;
+	using event_map_t = std::multimap<m_geom_t, m_note_event>;
 	event_map_t note_events;
 	typename event_map_t::const_iterator itr;
 
@@ -95,12 +96,12 @@ class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NotePropertie
 
 	int next_visit_id = 0;
 
-	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset)
+	void visit(const daw::events_t<NoteProperties>& n, const m_geom_t offset,
+		bars_t factor = bars_t(1, 1))
 	{
 		++visit_depth;
 		m_geom_t cur_offs = offset + n.geom();
-		for(const std::pair<const daw::note_geom_t,
-			const daw::events_t<NoteProperties>*>& n2 :
+		for(const auto& n2 :
 			n.template get<daw::events_t<NoteProperties>>()) {
 #ifdef DEBUG_NOTE_LINE
 			for(std::size_t x = visit_depth; x; --x)
@@ -109,20 +110,20 @@ class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NotePropertie
 #endif
 			log_visit_events(cur_offs, n2.first);
 
-			visit(*n2.second, cur_offs + n2.first);
+			visit(*n2.second.child, cur_offs + n2.first, factor * n2.second.factor);
 		}
-		for(const std::pair<const m_geom_t,
-			const daw::event_t<NoteProperties>*>& n2 :
+		for(const auto& n2 :
 			n.template get<daw::event_t<NoteProperties>>())
 		{
-			const daw::event_t<NoteProperties>& cur_note = *n2.second;
+			const daw::event_t<NoteProperties>& cur_note = *n2.second.child;
 			const m_geom_t next_offs = cur_offs + n2.first;
 
 			log_visit_event(next_offs, next_visit_id);
 
+			std::cerr << "factors: " << factor << ", " << n2.second.factor << std::endl;
 			note_events.emplace(next_offs,
-				m_note_event(true, next_visit_id, cur_note.value())); // TODO: 1
-			note_events.emplace(next_offs + m_geom_t(cur_note.length(), 0),
+				m_note_event(true, next_visit_id, cur_note.value()));
+			note_events.emplace(next_offs + m_geom_t(cur_note.length() * factor * n2.second.factor, 0),
 				m_note_event(false, next_visit_id++, cur_note.value()));
 		}
 		--visit_depth;
@@ -138,11 +139,11 @@ public:
 			m_note_event(true, std::numeric_limits<int>::max(), 0));
 
 		itr = note_events.begin();
-
-		//std::cerr << *this << std::endl;
+		std::cerr << "LINEIMPL" << std::endl;
+		std::cerr << *this << std::endl;
 	}
 
-	sample_no_t _proceed(sample_no_t amnt)
+	sample_no_t _proceed(sample_no_t pos)
 	{
 		event_signal_t<NoteProperties>& events_out = impl_t::ref->events_out_t<NoteProperties>::value();
 		std::pair<int, int>* recently_changed_ptr = events_out.recently_changed.data();
@@ -150,7 +151,7 @@ public:
 		// itr points to note_events
 		// => check all not yet played notes at/before the current position
 		while(
-			as_samples_floor(itr->first.start, info.samples_per_bar) <= amnt)
+			as_samples_floor(itr->first.start, info.samples_per_bar) <= pos)
 		{
 			const m_geom_t& geom = itr->first;
 			const m_note_event& event = itr->second;
@@ -166,17 +167,18 @@ public:
 
 				events_at->first = event.id;
 				events_at->second = event;
-				std::cerr << "xx: note on" << std::endl;
 			}
 			else
 			{
 				for(; id < POLY_MAX && events_at->first != event.id; ++events_at, ++id) ;
 
+				std::cerr << "note off: " << as_bars(pos, info.samples_per_bar) << ", "
+					  << itr->first << std::endl;
+
 				if(id >= POLY_MAX)
-				 throw "note off for a note that is already off";
+				 throw std::runtime_error("note off for a note that is already off");
 
 				events_at->first = -1;
-				std::cerr << "xx: note off" << std::endl;
 			}
 			recently_changed_ptr->first = geom.offs;
 			(recently_changed_ptr++)->second = id;
@@ -189,9 +191,9 @@ public:
 
 		recently_changed_ptr->first = -1;
 		++events_out.changed_stamp;
-		impl_t::ref->events_out_t<NoteProperties>::change_stamp = amnt;
+		impl_t::ref->events_out_t<NoteProperties>::change_stamp = pos;
 
-		last_time = amnt;
+		last_time = pos;
 		std::cerr << "start: " << itr->first.start << std::endl;
 		return as_samples_floor(itr->first.start, info.samples_per_bar);
 	}
@@ -202,7 +204,8 @@ public:
 
 template<class N>
 std::ostream& operator<<(std::ostream& os, line_impl<N> e) {
-	(void)e;
+//	for(const auto& pr : e.note_events) ;
+	(void) e;
 	return os;
 }
 
