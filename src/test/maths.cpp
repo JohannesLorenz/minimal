@@ -1,6 +1,6 @@
 /*************************************************************************/
 /* test files for minimal                                                */
-/* Copyright (C) 2014-2015                                               */
+/* Copyright (C) 2014-2016                                               */
 /* Johannes Lorenz (jlsf2013 @ sourceforge)                              */
 /*                                                                       */
 /* This program is free software; you can redistribute it and/or modify  */
