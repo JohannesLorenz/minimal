@@ -25,7 +25,7 @@ HEADERS += src/include/plugin.h \
 	src/include/command.h \
 	src/include/effect.h \
 	src/include/work_queue.h \
-	src/include/note_line.h \
+        src/include/event_roll.h \
 	src/include/recorder.h \
 	src/include/soundfile.h \
 	src/include/jack.h \
@@ -61,7 +61,7 @@ SOURCES += src/core/main.cpp \
         src/include/lfo.cpp \
 	src/test/test_str.cpp \
 	src/include/osc_string.cpp \
-	src/include/note_line.cpp \
+        src/include/event_roll.cpp \
 	src/include/command.cpp \
 	src/include/recorder.cpp \
 	src/include/soundfile.cpp \

@@ -18,7 +18,7 @@
 /*************************************************************************/
 
 #include "io.h"
-#include "note_line.h"
+#include "event_roll.h"
 
 #define DEBUG_NOTE_LINE
 
@@ -26,13 +26,13 @@ namespace mini
 {
 
 void log_note_event(bool on, const bars_t& start, int event_id) {
-	io::mlog << "note_line: played note " <<
+	io::mlog << "piano_roll: played note " <<
 	 (on ? "on" : "off")
 		 << " (start: " << start << ", event id: " << event_id << ")" << io::endl;
 }
 
-void line_impl_base::log_visit_events(line_impl_base::m_geom_t cur_offset,
-	line_impl_base::m_geom_t next_offset) const
+void roll_impl_base::log_visit_events(roll_impl_base::m_geom_t cur_offset,
+	roll_impl_base::m_geom_t next_offset) const
 {
 #ifdef DEBUG_NOTE_LINE
 	for(std::size_t x = visit_depth; x; --x)
@@ -44,7 +44,7 @@ void line_impl_base::log_visit_events(line_impl_base::m_geom_t cur_offset,
 #endif
 }
 
-void line_impl_base::log_visit_event(line_impl_base::m_geom_t next_offset,
+void roll_impl_base::log_visit_event(roll_impl_base::m_geom_t next_offset,
 	int next_visit_id) const
 {
 #ifdef DEBUG_NOTE_LINE

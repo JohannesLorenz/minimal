@@ -87,7 +87,7 @@ audio_instrument_t::audio_instrument_t(const char *name) :
 }
 
 template<class T>
-void test(out_port_templ<T>&) {}
+void test(out_port_t<T>&) {}
 
 void audio_instrument_t::init(/*jack_client_t &client*/)
 {

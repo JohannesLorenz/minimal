@@ -89,7 +89,7 @@ public:
 };
 
 template<class T, class SourceT, bool IsDep>
-class in_port_templ;
+class in_port_t;
 
 
 namespace detail {
@@ -116,7 +116,7 @@ class out_port_templ_base : public out_port_base
 {
 	//operator const T&() { return data; }
 public:
-	//void connect(const in_port_templ& ip) { target = &ip; }
+	//void connect(const in_port_t& ip) { target = &ip; }
 
 	using type = T;
 	using data_type = T;
@@ -153,20 +153,20 @@ public:
 	virtual T& value() = 0;
 
 //	friend
-//	void operator<<(in_port_templ<T>& ipt, const out_port_templ_base<T>& opt);
+//	void operator<<(in_port_t<T>& ipt, const out_port_templ_base<T>& opt);
 };
 
 template<class T>
-class out_port_templ : public out_port_templ_base<T>
+class out_port_t : public out_port_templ_base<T>
 {
 	T data;
 protected:
 	//! identifies us as a base for children
-	using base = out_port_templ<T>;
+	using base = out_port_t<T>;
 
 public:
 	template <class ...Args>
-	out_port_templ(effect_t& e, Args... args) : // TODO: forward?
+	out_port_t(effect_t& e, Args... args) : // TODO: forward?
 		out_port_templ_base<T>(e),
 		data(args...)
 	{
@@ -187,20 +187,20 @@ public:
 };
 
 template<class T>
-class out_port_templ_ref : public out_port_templ_base<T>
+class out_port_ref_t : public out_port_templ_base<T>
 {
 	T* data;
 protected:
 	//! identifies us as a base for children
-	using base = out_port_templ_ref<T>;
+	using base = out_port_ref_t<T>;
 public:
-	out_port_templ_ref(effect_t& e, T& ref) : // TODO: forward?
+	out_port_ref_t(effect_t& e, T& ref) : // TODO: forward?
 		out_port_templ_base<T>(e),
 		data(&ref)
 	{
 	}
 
-	out_port_templ_ref(effect_t& e) : // TODO: forward?
+	out_port_ref_t(effect_t& e) : // TODO: forward?
 		out_port_templ_base<T>(e),
 		data(nullptr)
 	{
@@ -243,7 +243,7 @@ protected:
 	friend void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
 
 //	template<class T1, class T2, bool IsDep>
-//	friend void operator<<(in_port_templ<const T1*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt);
+//	friend void operator<<(in_port_t<const T1*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt);
 public:
 
 
@@ -353,11 +353,11 @@ void m_assign(T1& ref1, T2& ref2)
 }
 
 template<class T, class SourceT, bool IsDep>
-class in_port_templ_noassign : public in_port_templ_base<T, SourceT, IsDep>
+class in_port_noassign_t : public in_port_templ_base<T, SourceT, IsDep>
 {
 protected:
 	//! identifies us as a base for children
-	using base = in_port_templ<T, SourceT, IsDep>;
+	using base = in_port_t<T, SourceT, IsDep>;
 	using templ_base = in_port_templ_base<T, SourceT, IsDep>;
 public:
 	using in_port_templ_base<T, SourceT, IsDep>::in_port_templ_base;
@@ -382,11 +382,11 @@ public:
 };
 
 template<class T, class SourceT = T, bool IsDep = true>
-class in_port_templ : public in_port_templ_base<T, SourceT, IsDep>
+class in_port_t : public in_port_templ_base<T, SourceT, IsDep>
 {
 protected:
 	//! identifies us as a base for children
-	using base = in_port_templ<T, SourceT, IsDep>;
+	using base = in_port_t<T, SourceT, IsDep>;
 	using templ_base = in_port_templ_base<T, SourceT, IsDep>;
 
 public:
@@ -416,9 +416,9 @@ public:
 };
 
 template<class T, class SourceT, bool IsDep>
-struct in_port_templ<T*, SourceT, IsDep> : public in_port_templ_noassign<T*, SourceT, IsDep>
+struct in_port_t<T*, SourceT, IsDep> : public in_port_noassign_t<T*, SourceT, IsDep>
 {
-	using templ_base = in_port_templ_noassign<T*, SourceT, IsDep>;
+	using templ_base = in_port_noassign_t<T*, SourceT, IsDep>;
 public:
 	using templ_base::templ_base;
 };
@@ -426,10 +426,10 @@ public:
 /*class m_reader_t;
 
 template<bool IsDep>
-struct in_port_templ<m_reader_t, IsDep> : public in_port_templ_noassign<m_reader_t, IsDep>
+struct in_port_t<m_reader_t, IsDep> : public in_port_noassign_t<m_reader_t, IsDep>
 {
 public:
-	using in_port_templ_noassign<m_reader_t, IsDep>::in_port_templ_noassign;
+	using in_port_noassign_t<m_reader_t, IsDep>::in_port_noassign_t;
 };*/
 
 
@@ -450,14 +450,14 @@ void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_tem
 
 //! copy-value based connection
 template<class T1, class T2, bool IsDep> // TODO: make traits such that T1 matches T2
-void operator<<(in_port_templ<T1, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
+void operator<<(in_port_t<T1, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
 }
 
 //! pointer based connection
 template<class T, class T2, bool IsDep>
-void operator<<(in_port_templ<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
+void operator<<(in_port_t<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
 	ipt.data = &opt.value();
@@ -466,7 +466,7 @@ void operator<<(in_port_templ<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>
 #if 0
 //! pointer based connection
 template<class T, class T2, bool IsDep>
-void operator<<(in_port_templ<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
+void operator<<(in_port_t<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
 	ipt.data = &opt.data;
@@ -474,7 +474,7 @@ void operator<<(in_port_templ<const T*, T2, IsDep>& ipt, out_port_templ_base<T2>
 
 //! pointer based connection
 template<class T, class T2, bool IsDep>
-void operator<<(in_port_templ<T, T2, IsDep>& ipt, out_port_templ_base<T2*>& opt)
+void operator<<(in_port_t<T, T2, IsDep>& ipt, out_port_templ_base<T2*>& opt)
 {
 	internal_connect(ipt, opt);
 	ipt.data = *opt.data;
@@ -484,7 +484,7 @@ void operator<<(in_port_templ<T, T2, IsDep>& ipt, out_port_templ_base<T2*>& opt)
 
 //! connection that does no assignments once running
 template<class T, class T2, bool IsDep>
-void operator<<(in_port_templ_noassign<T, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
+void operator<<(in_port_noassign_t<T, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
 	ipt.data = opt.value();
@@ -499,7 +499,7 @@ struct _constant
 
 //! constant value connection // TODO: also for pointer?
 template<class T, T V, bool IsDep>
-void operator<<(in_port_templ<T, T, IsDep>& ipt, const _constant<T, V>&) // TODO: forward
+void operator<<(in_port_t<T, T, IsDep>& ipt, const _constant<T, V>&) // TODO: forward
 {
 	ipt.data = V;
 }
@@ -554,10 +554,10 @@ public:
 	using type = T;
 };
 
-template<class T>
-struct freq_lfo_out : out_port_templ<T>
+template<class T> // TODO: useless class?
+struct freq_lfo_out : out_port_t<T>
 {
-	using out_port_templ<T>::out_port_templ;
+	using out_port_t<T>::out_port_t;
 };
 
 constexpr std::size_t NOTES_MAX = 12 * 10;
@@ -634,15 +634,15 @@ std::ostream& operator<<(std::ostream& os,
 }
 
 template<class T>
-struct events_out_t : out_port_templ<event_signal_t<T>>
+struct events_out_t : out_port_t<event_signal_t<T>>
 {
-	using out_port_templ<event_signal_t<T>>::out_port_templ;
+	using out_port_t<event_signal_t<T>>::out_port_t;
 };
 
 template<class T>
-struct events_in_t : in_port_templ_noassign<event_signal_receiver_t<T>, event_signal_t<T>, true>
+struct events_in_t : in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>
 {
-	using in_port_templ_noassign<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_templ_noassign;
+	using in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_noassign_t;
 };
 
 //! specialize this

@@ -22,7 +22,7 @@
 
 // TODO: forw decl?
 #include "mports.h"
-#include "note_line.h"
+#include "event_roll.h"
 #include "daw.h"
 
 namespace mini {
@@ -72,7 +72,7 @@ T operator*(const T& other, const note_t& n) {
 
 }
 using note_signal_t = event_signal_t<daw::music_note_properties>;
-using note_line_t = event_line_t<daw::music_note_properties>;
+using piano_roll_t = event_roll_t<daw::music_note_properties>;
 using notes_in = events_in_t<daw::music_note_properties>;
 using notes_out = events_out_t<daw::music_note_properties>;
 

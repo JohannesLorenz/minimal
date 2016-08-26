@@ -17,8 +17,10 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef NOTE_LINE_H
-#define NOTE_LINE_H
+#ifndef EVENT_ROLL_H
+#define EVENT_ROLL_H
+
+//! @file event_roll.h abstraction of a piano roll
 
 #include <iosfwd>
 #include <map>
@@ -36,9 +38,9 @@ void log_note_event(bool on, const bars_t& start, int event_id);
 //constexpr unsigned char MAX_NOTES_PRESSED = 32;
 
 template<class T>
-class event_line_t;
+class event_roll_t;
 
-class line_impl_base
+class roll_impl_base
 {
 protected:
 	using m_geom_t = daw::note_geom_t;
@@ -50,14 +52,14 @@ protected:
 };
 
 template<class NoteProperties>
-class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NoteProperties>>
+class roll_impl : roll_impl_base, public is_impl_of_t<event_roll_t<NoteProperties>>
 {
-	friend class event_line_t<NoteProperties>;
-	using m_event_line_t = event_line_t<NoteProperties>;
-	using impl_t = is_impl_of_t<m_event_line_t>;
+	friend class event_roll_t<NoteProperties>;
+	using m_event_roll_t = event_roll_t<NoteProperties>;
+	using impl_t = is_impl_of_t<m_event_roll_t>;
 
 	sample_no_t last_time = -1.0f;
-	//std::map<int, std::map<sample_no_t, event_t>> note_lines;
+	//std::map<int, std::map<sample_no_t, event_t>> piano_rolls;
 	/*sample_no_t last_time = -1.0f;
 	struct notes_impl_t
 	{
@@ -130,7 +132,7 @@ class line_impl : line_impl_base, public is_impl_of_t<event_line_t<NotePropertie
 	}
 
 public:
-	line_impl(m_event_line_t *nl) : is_impl_of_t<m_event_line_t>(nl)
+	roll_impl(m_event_roll_t *nl) : is_impl_of_t<m_event_roll_t>(nl)
 	{
 		// insert notes
 		visit(impl_t::ref->notes, m_geom_t(bars_t(0, 1), 0));
@@ -199,27 +201,28 @@ public:
 	}
 
 	template<class N>
-	friend std::ostream& operator<<(std::ostream& os, line_impl<N> e);
+	friend std::ostream& operator<<(std::ostream& os, roll_impl<N> e);
 };
 
 template<class N>
-std::ostream& operator<<(std::ostream& os, line_impl<N> e) {
+std::ostream& operator<<(std::ostream& os, roll_impl<N> e) {
 //	for(const auto& pr : e.note_events) ;
 	(void) e;
 	return os;
 }
 
+//! abstraction of a piano roll for events of type T
 template<class T>
-class event_line_t : public effect_t, public events_out_t<T>, has_impl_t<line_impl<T>, event_line_t<T>> // TODO: which header?
+class event_roll_t : public effect_t, public events_out_t<T>, has_impl_t<roll_impl<T>, event_roll_t<T>> // TODO: which header?
 {
-	friend class line_impl<T>;
-	using impl_t = has_impl_t<line_impl<T>, event_line_t<T>>;
+	friend class roll_impl<T>;
+	using impl_t = has_impl_t<roll_impl<T>, event_roll_t<T>>;
 
 	//! @note: one might need to store the events_t blocks seperated for muting etc
 	daw::events_t<T> notes;
 
 public:
-	event_line_t(const char* name) :
+	event_roll_t(const char* name) :
 //		port_chain<events_out_t>((effect_t&)*this),
 		effect_t(name),
 		events_out_t<T>((effect_t&)*this),
@@ -256,11 +259,11 @@ public:
 	}
 
 	template<class T2>
-	friend std::ostream& operator<<(std::ostream& os, const event_line_t<T2>& e);
+	friend std::ostream& operator<<(std::ostream& os, const event_roll_t<T2>& e);
 };
 
 template<class T>
-inline std::ostream& operator<<(std::ostream& os, const event_line_t<T>& e)
+inline std::ostream& operator<<(std::ostream& os, const event_roll_t<T>& e)
 {
 	return os << "event line: " << std::endl
 		<< e.notes;
@@ -276,5 +279,5 @@ void nlf(std::ostream& os, const T& x)
 
 }
 
-#endif // NOTE_LINE_H
+#endif // EVENT_ROLL_H
 

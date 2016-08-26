@@ -28,13 +28,13 @@ public:
 };
 
 template<class T>
-class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
+class protocol_tbase_t : public protocol_base_t, public out_port_ref_t<T>
 {
 	using input_type = T*;//typename input_type_t<T>::type*;
 	using reader_type = typename input_type_t<T*>::type;
 
-/*	class log_port_t : public in_port_templ<reader_type, T> {
-		using base = in_port_templ<reader_type, T>;
+/*	class log_port_t : public in_port_t<reader_type, T> {
+		using base = in_port_t<reader_type, T>;
 	public:
 		using base::base;
 		void on_read(sample_no_t ) override {}
@@ -49,23 +49,23 @@ class protocol_tbase_t : public protocol_base_t, public out_port_templ_ref<T>
 
 	void instantiate() {
 		// assign pointers for redirection
-		out_port_templ_ref<T>::ref() = input.data;
-		std::cerr << "redirect: " << out_port_templ_ref<T>::ref();
+		out_port_ref_t<T>::ref() = input.data;
+		std::cerr << "redirect: " << out_port_ref_t<T>::ref();
 
 		m_assign(reader, input.value());
-		//log_port << static_cast<out_port_templ_ref<T>&>(*input.get_source());
+		//log_port << static_cast<out_port_ref_t<T>&>(*input.get_source());
 	}
 public:
 
-	class m_proto_in : public in_port_templ<input_type, T, true>
+	class m_proto_in : public in_port_t<input_type, T, true>
 	{
-		using base = in_port_templ<input_type, T, true>;
+		using base = in_port_t<input_type, T, true>;
 	public:
-		using in_port_templ<input_type, T, true>::in_port_templ;
+		using in_port_t<input_type, T, true>::in_port_t;
 		void on_read(sample_no_t ) override {} // TODO??
 		// TODO: add dummy to mports.h?
 		void instantiate_port() override { base::data = &base::source->value(); }
-		//m_proto_in(effect_t& e) : in_port_templ<T*>(e) {}
+		//m_proto_in(effect_t& e) : in_port_t<T*>(e) {}
 	};
 
 	m_proto_in input;
@@ -97,7 +97,7 @@ public:
 
 			// these two *must* be ccalled, even if we don't read/write any data
 			input.update();
-			out_port_templ_ref<T>::notify_set(time());
+			out_port_ref_t<T>::notify_set(time());
 		}
 
 		std::cerr << "next_time: " << as_bars(time() + interval, info.samples_per_bar) << std::endl;
@@ -110,7 +110,7 @@ public:
 	protocol_tbase_t(bool on_change = true, bars_t each_seconds
 		= numeric_limits<bars_t>::max()) :
 		protocol_base_t(on_change, each_seconds),
-		out_port_templ_ref<T>((effect_t&)*this),
+		out_port_ref_t<T>((effect_t&)*this),
 		//log_port(*this),
 		input(*this)
 		{

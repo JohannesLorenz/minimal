@@ -105,9 +105,9 @@ class m_ringbuffer_t : public ringbuffer_t<Stereo<float>>, util::non_movable_t
 	using ringbuffer_t<Stereo<float>>::ringbuffer_t;
 };
 
-struct audio_out : out_port_templ<m_ringbuffer_t>
+struct audio_out : out_port_t<m_ringbuffer_t>
 {
-	using base::out_port_templ;
+	using base::out_port_t;
 };
 
 class m_reader_t : public ringbuffer_reader_t<Stereo<float>> {
@@ -120,19 +120,19 @@ public:
 
 //! redefinition for the port, since there is nothing to assign
 template<bool IsDep>
-struct in_port_templ<m_reader_t, m_ringbuffer_t, IsDep> :
-	public in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>
+struct in_port_t<m_reader_t, m_ringbuffer_t, IsDep> :
+	public in_port_noassign_t<m_reader_t, m_ringbuffer_t, IsDep>
 {
 public:
-	using in_port_templ_noassign<m_reader_t, m_ringbuffer_t, IsDep>::in_port_templ_noassign;
+	using in_port_noassign_t<m_reader_t, m_ringbuffer_t, IsDep>::in_port_noassign_t;
 };
 
 template<bool IsDep = true>
-struct audio_in : public in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>
+struct audio_in : public in_port_t<m_reader_t, m_ringbuffer_t, IsDep>
 {
 	void on_read(sample_no_t ) {} // default behaviour
-	using base = in_port_templ<m_reader_t, m_ringbuffer_t, IsDep>;
-	using base::in_port_templ;
+	using base = in_port_t<m_reader_t, m_ringbuffer_t, IsDep>;
+	using base::in_port_t;
 };
 
 template<>

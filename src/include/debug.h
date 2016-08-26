@@ -31,21 +31,21 @@
 namespace mini
 {
 
-struct int_out : out_port_templ<int>
+struct int_out : out_port_t<int>
 {
-	using base::out_port_templ;
+	using base::out_port_t;
 };
 
-struct int_in_1 : in_port_templ<int>
+struct int_in_1 : in_port_t<int>
 {
 	void on_read(sample_no_t ) {}
-	using base::in_port_templ;
+	using base::in_port_t;
 };
 
-struct int_in_2 : in_port_templ<int>
+struct int_in_2 : in_port_t<int>
 {
 	void on_read(sample_no_t ) {}
-	using base::in_port_templ;
+	using base::in_port_t;
 };
 
 struct debug_effect_base : public effect_t
