@@ -51,7 +51,8 @@ HEADERS += src/include/plugin.h \
 	src/include/protocol.h \
 	src/include/notes.h \
         src/core/os_engine.h \
-        src/include/simple.h
+        src/include/simple.h \
+        src/include/ladspa_plugin.h
 
 SOURCES += src/core/main.cpp \
 	src/include/plugin.cpp \
@@ -84,7 +85,8 @@ SOURCES += src/core/main.cpp \
 	src/include/protocol.cpp \
 	src/core/os_engine.cpp \
         src/include/bars.cpp \
-        src/include/ports.cpp
+        src/include/ports.cpp \
+        src/include/ladspa_plugin.cpp
 
 OTHER_FILES += INSTALL.md \
 	CMakeLists.txt \

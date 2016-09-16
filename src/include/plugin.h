@@ -35,6 +35,11 @@ class project_t;
 class plugin_t
 {
 	void* handle = nullptr;
+
+	//! returns the function pointer of the function @a funcname
+	//! @param funcname the functions name, without any arguments etc
+	//! @return the function pointer. always valid if no throw
+	void* get_funcptr(const char* funcname);
 public:
 	/**
 	 * @brief plugin_t
@@ -43,7 +48,39 @@ public:
 	plugin_t(const char* path);
 	~plugin_t();
 
-	bool load_project(project_t& pro);
+	template<class Ret, class ...Args>
+	Ret call(const char* function, Args&&... args)
+	{
+		Ret (*funcptr)(Args...);
+		*(void**) (&funcptr) = get_funcptr(function);
+		return funcptr(args...);
+	}
+
+	//! use this function if the function to be called returns void*,
+	//! and you wish to cast it to @a Ret
+	template<class Ret, class ...Args>
+	Ret call_voidptr(const char* function, Args&&... args)
+	{ // TODO: std::forward of args?
+		return static_cast<Ret>(
+			call<void*, Args...>(function, args...));
+	}
+
+	//! use this function if the function to be called
+	//! returns no value (void)
+	template<class ...Args>
+	void call_noreturn(const char* function, Args&&... args)
+	{ // TODO: std::forward of args?
+		void (*funcptr)(Args...);
+		*(void**) (&funcptr) = get_funcptr(function);
+		funcptr(args...);
+	}
+};
+
+class minimal_plugin_t : plugin_t
+{
+public:
+	using plugin_t::plugin_t;
+	void load_project(class project_t& pro);
 };
 
 /**

@@ -49,7 +49,7 @@ class protocol_tbase_t : public protocol_base_t, public out_port_ref_t<T>
 
 	void instantiate() {
 		// assign pointers for redirection
-		out_port_ref_t<T>::ref() = input.data;
+		out_port_ref_t<T>::ref() = input.get();
 		std::cerr << "redirect: " << out_port_ref_t<T>::ref();
 
 		m_assign(reader, input.value());
@@ -64,7 +64,7 @@ public:
 		using in_port_t<input_type, T, true>::in_port_t;
 		void on_read(sample_no_t ) override {} // TODO??
 		// TODO: add dummy to mports.h?
-		void instantiate_port() override { base::data = &base::source->value(); }
+		void instantiate_port() override { base::get() = &base::source->value(); }
 		//m_proto_in(effect_t& e) : in_port_t<T*>(e) {}
 	};
 

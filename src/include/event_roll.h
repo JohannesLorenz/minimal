@@ -23,6 +23,7 @@
 //! @file event_roll.h abstraction of a piano roll
 
 #include <iosfwd>
+#include <iostream>
 #include <map>
 
 #include "effect.h"
@@ -32,6 +33,87 @@
 #include "simple.h"
 
 namespace mini {
+
+constexpr std::size_t NOTES_MAX = 12 * 10;
+constexpr std::size_t POLY_MAX = 16;
+
+template<class NoteProperties>
+struct event_signal_t
+{
+	//! whether a note at height <int> is on or off
+	//! lines[x][y] : pair at height x, polymorphy y
+	//! first: a unique id for this note, or -1 for note off
+	//! second: volume
+	std::pair<int, NoteProperties> lines[NOTES_MAX][POLY_MAX];
+
+	int changed_stamp = 0;
+
+	//! the recently switched lines
+	//! pairs geometry <-> polymorphy id
+	//! if the pair is <x,y>, it marks lines[x][y]
+	std::array<std::pair<int, int>, POLY_MAX> recently_changed;
+
+	event_signal_t() {
+		recently_changed[0].first = -1;
+	}
+
+	template<class T>
+	friend std::ostream& operator<<(std::ostream& os,
+		const event_signal_t<T>& es);
+};
+
+template<class NoteProperties>
+struct event_signal_receiver_t
+{
+	const event_signal_t<NoteProperties>* sender;
+	int read_stamp = 0;
+	bool up_to_date() const {
+		return read_stamp == sender->changed_stamp;
+	}
+/*	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
+	{
+		sender = &_sender;
+		return *this;
+	}*/
+	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
+	{
+		sender = &_sender;
+		return *this;
+	}
+};
+
+// FEATURE: separate header event_roll_print.h ? => remove iostream include
+template<class T>
+std::ostream& operator<<(std::ostream& os,
+		const event_signal_t<T>& es)
+{
+	os << "changed notes: ";
+
+	for(const std::pair<int, int>& rch : es.recently_changed)
+	if(rch.first < 0)
+	 break;
+	else
+	{
+		std::pair<int, T> p2 = es.lines[rch.first][rch.second];
+
+		os << ((p2.first < 0) ? '-' : '+')
+			<< rch.first << '(' << p2.second << ')' << ' ';
+	}
+
+	return os << std::endl;
+}
+
+template<class T>
+struct events_out_t : out_port_t<event_signal_t<T>>
+{
+	using out_port_t<event_signal_t<T>>::out_port_t;
+};
+
+template<class T>
+struct events_in_t : in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>
+{
+	using in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_noassign_t;
+};
 
 void log_note_event(bool on, const bars_t& start, int event_id);
 

@@ -43,12 +43,33 @@ enum class lfo_type
 	constant
 };
 
+//! generic, non-template base for all lfos
 struct lfo_base
 {
 	static sample_no_t never();
 	static void lfo_proceed_message();
 };
 
+
+template<class T> // TODO: useless class?
+struct freq_lfo_out : out_port_t<T>
+{
+	using out_port_t<T>::out_port_t;
+};
+
+//! template base for all lfos
+template<class OutType>
+struct lfo_templ_base : effect_t, freq_lfo_out<OutType>
+{
+	lfo_templ_base() :
+		effect_t(std::tuple<freq_lfo_out<OutType>&>{*this}),
+		freq_lfo_out<OutType>((effect_t&)*this)
+	{
+		init_next_time(0); // must be set initially, even if 0.0f < start
+	}
+};
+
+//! non-template-base for sine
 struct sine_base : lfo_base
 {
 	//using base = port_chain<lfo_out<OutType>>;
@@ -71,32 +92,34 @@ struct sine_base : lfo_base
 };
 
 template<class OutType, lfo_type Lfo = lfo_type::cos>
-struct lfo_t : sine_base, effect_t, freq_lfo_out<OutType>
+struct lfo_t : sine_base, lfo_templ_base<OutType>
 {
 	//using lfo_out = lfo_out<OutType>;
+	using effect = lfo_templ_base<OutType>;
+	sample_no_t time = effect::time();
 
 	bool _proceed()
 	{
 		lfo_proceed_message();
 
-		if(time() < start) {
-			freq_lfo_out<OutType>::set(outside, time());
-			set_next_time(start);
+		if(time < start) {
+			effect::set(outside, time);
+			effect::set_next_time(start);
 		}
-		else if(time() < end)
+		else if(time < end)
 		{
-			float new_value = calc(time());
+			float new_value = calc(time);
 			print_value(new_value);
 
-			freq_lfo_out<OutType>::set(new_value, time());
+			effect::set(new_value, time);
 			// TODO: repeat etc.
 
-			set_next_time(time() + step);
+			effect::set_next_time(time + step);
 		}
 		else
 		{
-			freq_lfo_out<OutType>::set(outside, time());
-			set_next_time(never());
+			effect::set(outside, time);
+			effect::set_next_time(never());
 		}
 		return true; // LFO is always single threaded
 	//	return 0.0f; // TODO
@@ -106,21 +129,16 @@ struct lfo_t : sine_base, effect_t, freq_lfo_out<OutType>
 	void clean_up() {}
 
 	lfo_t(float min, float max, bars_t _start, bars_t _end, float times = 1.0f, float outside = 0.0f, sample_no_t step = default_lfo_step) :
-		sine_base(min, max, _start, _end, times, outside, step),
-		effect_t(std::tuple<freq_lfo_out<OutType>&>{*this}),
-		freq_lfo_out<OutType>((effect_t&)*this) {
-		init_next_time(0); // must be set initially, even if 0.0f < start
+		sine_base(min, max, _start, _end, times, outside, step) {
 	}
 };
 
 template<class OutType, OutType Value>
-struct constant : lfo_base, effect_t, freq_lfo_out<OutType>
+struct constant : lfo_base, lfo_templ_base<OutType>
 {
-	constant() : // TODO: lfo base class?
-		freq_lfo_out<OutType>((effect_t&)*this)
+	constant()
 	{
 		freq_lfo_out<OutType>::set(Value, 0.0f);
-		set_next_time(0);
 	}
 
 	void instantiate() {}
@@ -128,8 +146,7 @@ struct constant : lfo_base, effect_t, freq_lfo_out<OutType>
 
 	// this will be only called on startup
 	bool _proceed(sample_no_t ) {
-		//freq_lfo_out<OutType>::set(Value, time);
-		set_next_time(never());
+		lfo_templ_base<OutType>::set_next_time(never());
 		return true;
 	}
 };

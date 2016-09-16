@@ -20,21 +20,19 @@
 #ifndef NOTES_H
 #define NOTES_H
 
-// TODO: forw decl?
-#include "mports.h"
+// FEATURE: forw decl of daw stuff?
 #include "event_roll.h"
 #include "daw.h"
 
 namespace mini {
 
-namespace daw { // TODO: namespace daw correct here?
+namespace daw { // FEATURE: namespace daw correct here?
 
 //! value() = velocity
 class music_note_properties : public value_t<char, 64>
 {
 public:
 	using value_t<char, 64>::value_t;
-	// TODO: operator<<, print char with '+'
 };
 
 class note_t : public event_t<music_note_properties>
@@ -65,7 +63,7 @@ notes_t operator+(const notes_t& no, const scales::note& n) {
 }
 
 // swap multiplicands
-template<class T> // TODO: std::forward?
+template<class T> // FEATURE: std::forward?
 T operator*(const T& other, const note_t& n) {
 	return n * other;
 }

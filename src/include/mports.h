@@ -21,8 +21,6 @@
 #define IO_PORTS_H
 
 #include <array>
-#include <limits>
-#include <iostream> // TODO
 
 #include "sample.h"
 #include "types.h"
@@ -42,6 +40,8 @@ void add_in_port(effect_t& e, in_port_base* opb);
 
 class port_base : public is_variable
 {
+
+
 	port_base(const port_base& ) = delete;
 public:
 	port_base() = default;
@@ -55,9 +55,9 @@ class out_port_templ_base;
 
 class out_port_base : public port_base
 {
+	effect_t* e;
 protected:
 	bool start = true;
-	effect_t* e;
 	std::vector<in_port_base*> _readers;
 
 	void _notify_set(sample_no_t now)
@@ -74,18 +74,13 @@ public:
 
 	const std::vector<in_port_base*>& readers() const { return _readers; }
 	std::vector<in_port_base*>& readers() { return _readers; }
-	// TODO: std::forward
+	// FEATURE: std::forward
 	const effect_t* effect() const { return e; }
 
-//	virtual const void* get_value() const = 0; // void* is not good...
-//	virtual void* get_value_mod() = 0; // void* is not good...
 //	sample_no_t next_time = std::numeric_limits<sample_no_t>::max();
-
-	//virtual void connect(const in_port_base& ) ;
 
 	template<class T1, class T2Source, class T2, bool IsDep>
 	friend void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_templ_base<T2>& opt);
-
 };
 
 template<class T, class SourceT, bool IsDep>
@@ -121,7 +116,7 @@ public:
 	using type = T;
 	using data_type = T;
 
-	out_port_templ_base(effect_t& e) : // TODO: forward?
+	out_port_templ_base(effect_t& e) : // FEATURE : forward?
 		out_port_base(e)
 	{
 		add_out_port(e, this);
@@ -141,19 +136,8 @@ public:
 	//	changed = true;
 	}
 #endif
-
-//	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
-//	void* get_value_mod() { return reinterpret_cast<void*>(&data); }
-
-	// TODO: don't include header, use own func?
-//	const typename std::remove_pointer<T>::type& value_nocast() const { return detail::deref_if_ptr(data); }
-//	typename std::remove_pointer<T>::type& value_nocast() { return detail::deref_if_ptr(data); }
-
 	virtual const T& value() const = 0;
 	virtual T& value() = 0;
-
-//	friend
-//	void operator<<(in_port_t<T>& ipt, const out_port_templ_base<T>& opt);
 };
 
 template<class T>
@@ -166,7 +150,7 @@ protected:
 
 public:
 	template <class ...Args>
-	out_port_t(effect_t& e, Args... args) : // TODO: forward?
+	out_port_t(effect_t& e, Args... args) : // FEATURE : forward?
 		out_port_templ_base<T>(e),
 		data(args...)
 	{
@@ -194,13 +178,13 @@ protected:
 	//! identifies us as a base for children
 	using base = out_port_ref_t<T>;
 public:
-	out_port_ref_t(effect_t& e, T& ref) : // TODO: forward?
+	out_port_ref_t(effect_t& e, T& ref) : // FEATURE : forward?
 		out_port_templ_base<T>(e),
 		data(&ref)
 	{
 	}
 
-	out_port_ref_t(effect_t& e) : // TODO: forward?
+	out_port_ref_t(effect_t& e) : // FEATURE: forward?
 		out_port_templ_base<T>(e),
 		data(nullptr)
 	{
@@ -222,6 +206,17 @@ public:
 	}
 };
 
+template<class TIn, class TOut>
+class connection_base
+{
+	TIn& in_port;
+	TOut& out_port;
+
+	connection_base(TIn& in_port, TOut& out_port) :
+		in_port(in_port),
+		out_port(out_port)
+	{}
+};
 
 
 // TODO: abstract port base
@@ -286,8 +281,6 @@ public:
 */
 	virtual void on_read(sample_no_t time) = 0;
 
-	virtual const void* get_value() const = 0;
-
 	virtual void instantiate_port() = 0;
 	
 	virtual ~in_port_base() {}
@@ -299,18 +292,12 @@ class in_port_templ_base : public in_port_base
 protected:
 	out_port_templ_base<SourceT>* source = nullptr;
 
-public: // TODO! (protected)
-
-	out_port_templ_base<SourceT>*& get_source() { return source; }
-	const out_port_templ_base<SourceT>*& get_source() const { return source; }
-
 	T data;
 	using data_type = T;
-	const void* get_value() const { return reinterpret_cast<const void*>(&data); }
-
+public:
 	using in_port_base::in_port_base;
 	template <class ...Args>
-	in_port_templ_base(effect_t& e, Args... args) : // TODO: forward?
+	in_port_templ_base(effect_t& e, Args... args) : // FEATURE: forward?
 		in_port_base(e),
 		data(args...)
 	{
@@ -318,8 +305,11 @@ public: // TODO! (protected)
 
 	bool is_dependency() const { return IsDep; }
 
+	out_port_templ_base<SourceT>*& get_source() { return source; }
+	const out_port_templ_base<SourceT>*& get_source() const { return source; }
+
 	const T& get() const { return data; }
-	T& get() { return data; } // TODO? needed currently for ringbuffer_reader_t
+	T& get() { return data; }
 
 	typename detail::remove_pointer<T>::type& value() { return detail::deref_if_ptr(data); }
 	const typename detail::remove_pointer<T>::type& value() const { return detail::deref_if_ptr(data); }
@@ -335,6 +325,7 @@ protected:
 		// throw "omitting a value now!";
 		//unread_changes = true;
 		// TODO: check for unread changes via stamp?
+		//       e.g. by storing the two last stamps...
 		change_stamp = source->change_stamp;
 	}
 
@@ -370,7 +361,6 @@ protected:
 
 public:
 	void instantiate_port() override { // TODO: private virtual funcs
-		std::cerr << "ipt-noassign: " << &templ_base::source->value() << std::endl;
 		m_assign(templ_base::data, templ_base::source->value());
 	}
 
@@ -402,7 +392,6 @@ protected:
 
 public:
 	void instantiate_port() override {
-		std::cerr << "ipt: " << &templ_base::source->value() << std::endl;
 		templ_base::data = templ_base::source->value();
 	}
 
@@ -449,7 +438,7 @@ void internal_connect(in_port_templ_base<T1, T2Source, IsDep>& ipt, out_port_tem
 
 
 //! copy-value based connection
-template<class T1, class T2, bool IsDep> // TODO: make traits such that T1 matches T2
+template<class T1, class T2, bool IsDep>
 void operator<<(in_port_t<T1, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
@@ -487,7 +476,7 @@ template<class T, class T2, bool IsDep>
 void operator<<(in_port_noassign_t<T, T2, IsDep>& ipt, out_port_templ_base<T2>& opt)
 {
 	internal_connect(ipt, opt);
-	ipt.data = opt.value();
+	ipt.get() = opt.value();
 }
 
 
@@ -499,7 +488,7 @@ struct _constant
 
 //! constant value connection // TODO: also for pointer?
 template<class T, T V, bool IsDep>
-void operator<<(in_port_t<T, T, IsDep>& ipt, const _constant<T, V>&) // TODO: forward
+void operator<<(in_port_t<T, T, IsDep>& ipt, const _constant<T, V>&) // FEATURE: forward
 {
 	ipt.data = V;
 }
@@ -512,7 +501,6 @@ public:
 		// who knows :-)) (bad validation of protocol...)
 		return std::numeric_limits<sample_no_t>::max();
 	}*/
-	virtual const void* get_value() const = 0;
 };
 
 template<class T, bool = false>
@@ -544,105 +532,10 @@ public:
 	//! this is actually an invalidation of the protocol...
 	constexpr bool update() const { return true; }
 
-	const void* get_value() const {
-	//	io::mlog << "GET: " << *reinterpret_cast<const T*>(&data) << io::endl;
-		return reinterpret_cast<const void*>(&data); }
-
 	//! this has no effect
 	void set_trigger(bool = true) const { }
 
 	using type = T;
-};
-
-template<class T> // TODO: useless class?
-struct freq_lfo_out : out_port_t<T>
-{
-	using out_port_t<T>::out_port_t;
-};
-
-constexpr std::size_t NOTES_MAX = 12 * 10;
-constexpr std::size_t POLY_MAX = 16;
-
-//
-// a few example ports
-//
-
-template<class NoteProperties>
-struct event_signal_t
-{
-	//! whether a note at height <int> is on or off
-	//! lines[x][y] : pair at height x, polymorphy y
-	//! first: a unique id for this note, or -1 for note off
-	//! second: volume
-	std::pair<int, NoteProperties> lines[NOTES_MAX][POLY_MAX];
-
-	int changed_stamp = 0;
-
-	//! the recently switched lines
-	//! pairs geometry <-> polymorphy id
-	//! if the pair is <x,y>, it marks lines[x][y]
-	std::array<std::pair<int, int>, POLY_MAX> recently_changed;
-
-	event_signal_t() {
-		recently_changed[0].first = -1;
-	}
-
-	template<class T>
-	friend std::ostream& operator<<(std::ostream& os,
-		const event_signal_t<T>& es);
-};
-
-template<class NoteProperties>
-struct event_signal_receiver_t
-{
-	const event_signal_t<NoteProperties>* sender;
-	int read_stamp = 0;
-	bool up_to_date() const {
-		return read_stamp == sender->changed_stamp;
-	}
-/*	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
-	{
-		sender = &_sender;
-		return *this;
-	}*/
-	event_signal_receiver_t& operator=(const event_signal_t<NoteProperties>& _sender)
-	{
-		sender = &_sender;
-		return *this;
-	}
-};
-
-// TODO: -> cpp file?
-template<class T>
-std::ostream& operator<<(std::ostream& os,
-		const event_signal_t<T>& es)
-{
-	os << "changed notes: ";
-	
-	for(const std::pair<int, int>& rch : es.recently_changed)
-	if(rch.first < 0)
-	 break;
-	else
-	{
-		std::pair<int, T> p2 = es.lines[rch.first][rch.second];
-
-		os << ((p2.first < 0) ? '-' : '+')
-			<< rch.first << '(' << p2.second << ')' << ' ';
-	}
-
-	return os << std::endl;
-}
-
-template<class T>
-struct events_out_t : out_port_t<event_signal_t<T>>
-{
-	using out_port_t<event_signal_t<T>>::out_port_t;
-};
-
-template<class T>
-struct events_in_t : in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>
-{
-	using in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_noassign_t;
 };
 
 //! specialize this

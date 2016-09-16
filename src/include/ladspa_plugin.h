@@ -17,53 +17,47 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef SIMPLE_H
-#define SIMPLE_H
+#ifndef LADSPA_PLUGIN_H
+#define LADSPA_PLUGIN_H
 
-#include <iostream> // TODO: ugly!
-#include <string>
+#include "plugin.h"
 
-namespace mini
+#include "effect.h"
+#include "mports.h"
+#include "audio_instrument.h"
+
+namespace mini {
+
+class ladspa_plugin : public audio_instrument_t, plugin_t
 {
+	//! the descriptor: an instance returning all info,
+	//! also returning the handle which has the implementation
+	const struct LADSPA_Descriptor* descr;
 
-class named_t
-{
-	const std::string _name;
+	//! the implementation of the plugin
+	struct LADSPA_Handle handle;
+
+	bool _proceed();
+protected:
+	using id_t = unsigned long;
+	using in_port_data = audio;
+	using in_port_control = in_port_t<float>;
 public:
-	const std::string& name() const { return _name; }
-	named_t(const char* _name) : _name(_name) {}
-	named_t(const std::string& _name) : _name(_name) {}
+	ladspa_plugin(const char* libraryname, unsigned long index);
+	bool loading_was_successfull() const { return descr; }
+
+	virtual void instantiate() = 0;
+	virtual void clean_up() = 0;
+	virtual void pass_changed_ports(const std::vector<bool>& ) {}
+
 };
 
-template<class T, T default_value>
-class value_t
+class ladspa_glame_lp2
 {
-	T t = default_value;
-public:
-	const T& value() const { return t; }
-	T& value() { return t; }
-	// TODO: std::forward
-	void set(const T& new_value) { t = new_value; }
-	// TODO: std::forward
-	value_t(const T& t) : t(t) {}
-	value_t() = default;
-
-	template<class T2, T2 default_value2>
-	friend std::ostream& operator<<(std::ostream& os, const value_t<T2, default_value2>& val);
+	id_t id() const { return 1903; }
+	in_port_t<float> cutoff_frequency;
 };
 
-template<class T, T default_value>
-std::ostream& operator<<(std::ostream& os, const value_t<T, default_value>& val)
-{
-	return os << val.value();
 }
 
-template<char default_value>
-std::ostream& operator<< (std::ostream& os, const value_t<char, default_value>& val)
-{
-	return os << +val.value();
-}
-
-}
-
-#endif // SIMPLE_H
+#endif // LADSPA_PLUGIN_H

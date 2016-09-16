@@ -17,53 +17,31 @@
 /* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA  */
 /*************************************************************************/
 
-#ifndef SIMPLE_H
-#define SIMPLE_H
+#include <ladspa.h>
 
-#include <iostream> // TODO: ugly!
-#include <string>
+#include "ladspa_plugin.h"
 
-namespace mini
+namespace mini {
+
+ladspa_plugin::ladspa_plugin(const char* libraryname, unsigned long index)
+	: plugin_t(libraryname)
 {
+	descr = plugin_t::call<const LADSPA_Descriptor*>(
+		"ladspa_descriptor", index);
+	if(!descr)
+	 break;
 
-class named_t
-{
-	const std::string _name;
-public:
-	const std::string& name() const { return _name; }
-	named_t(const char* _name) : _name(_name) {}
-	named_t(const std::string& _name) : _name(_name) {}
-};
+	if(id() != descr->UniqueID)
+	 throw "logical error: minimal and ladspa descriptors differ";
 
-template<class T, T default_value>
-class value_t
-{
-	T t = default_value;
-public:
-	const T& value() const { return t; }
-	T& value() { return t; }
-	// TODO: std::forward
-	void set(const T& new_value) { t = new_value; }
-	// TODO: std::forward
-	value_t(const T& t) : t(t) {}
-	value_t() = default;
+	for(unsigned long port_no = 0; port_no < descr->PortCount; ++port_no)
+	{
+		LADSPA_PortDescriptor& port_descr =
+			descr->PortDescriptors[port_no];
 
-	template<class T2, T2 default_value2>
-	friend std::ostream& operator<<(std::ostream& os, const value_t<T2, default_value2>& val);
-};
+	}
 
-template<class T, T default_value>
-std::ostream& operator<<(std::ostream& os, const value_t<T, default_value>& val)
-{
-	return os << val.value();
-}
 
-template<char default_value>
-std::ostream& operator<< (std::ostream& os, const value_t<char, default_value>& val)
-{
-	return os << +val.value();
 }
 
 }
-
-#endif // SIMPLE_H

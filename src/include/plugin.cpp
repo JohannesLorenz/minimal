@@ -43,23 +43,20 @@ plugin_t::plugin_t(const char *path)
 
 plugin_t::~plugin_t() { if(handle) dlclose(handle); }
 
-bool plugin_t::load_project(project_t &pro)
+void* plugin_t::get_funcptr(const char* funcname)
 {
-	void (*init_project)(project_t&);
-	const char *error;
+	// retrieve function pointer as void*
+	void* fptr = dlsym(handle, funcname);
 
-	// for the cast syntax, consult man dlopen (3)
-	*(void**) (&init_project) = dlsym(handle, "init");
-
+	const char* error;
 	if ((error = dlerror()))  {
-		no_rt::mlog << "Error calling init() from plugin: "
+		no_rt::mlog << "error calling function from plugin: "
 			  << error << std::endl;
-		pro.invalidate();
-		return false; // TODO: throw?
+		return nullptr; // TODO: throw?
+	} else if (!fptr) {
+		throw "function not found in dynamic library";
 	}
-
-	init_project(pro);
-	return true;
+	else return fptr;
 }
 
 void cp_file(const char* dst_name, const char* src_name)
@@ -118,6 +115,15 @@ void* multi_plugin_t::get_funcptr(const char* funcname)
 multi_plugin_t::multi_plugin_t(const char *path)
 	: path(path)
 {
+}
+
+void minimal_plugin_t::load_project(project_t& pro)
+{
+	try { call_noreturn<project_t&>("init", pro); }
+	catch (const char* msg) {
+		pro.invalidate();
+		throw msg;
+	}
 }
 
 }

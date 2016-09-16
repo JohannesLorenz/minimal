@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 		if(action != action_t::exit)
 		{
 
-			plugin_t plugin(argv[1]);
+			minimal_plugin_t plugin(argv[1]);
 			project_t pro;
 
 			plugin.load_project(pro);
