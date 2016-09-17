@@ -110,9 +110,9 @@ struct events_out_t : out_port_t<event_signal_t<T>>
 };
 
 template<class T>
-struct events_in_t : in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>
+struct events_in_t : in_port_noassign_t<event_signal_receiver_t<T>, true>
 {
-	using in_port_noassign_t<event_signal_receiver_t<T>, event_signal_t<T>, true>::in_port_noassign_t;
+	using in_port_noassign_t<event_signal_receiver_t<T>, true>::in_port_noassign_t;
 };
 
 void log_note_event(bool on, const bars_t& start, int event_id);

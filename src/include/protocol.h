@@ -57,14 +57,14 @@ class protocol_tbase_t : public protocol_base_t, public out_port_ref_t<T>
 	}
 public:
 
-	class m_proto_in : public in_port_t<input_type, T, true>
+	class m_proto_in : public in_port_t<input_type, true> // was: input_type, T, true
 	{
-		using base = in_port_t<input_type, T, true>;
+		using base = in_port_t<input_type, true>;
 	public:
-		using in_port_t<input_type, T, true>::in_port_t;
+		using in_port_t<input_type, true>::in_port_t;
 		void on_read(sample_no_t ) override {} // TODO??
 		// TODO: add dummy to mports.h?
-		void instantiate_port() override { base::get() = &base::source->value(); }
+		void instantiate_port() { base::get() = &base::source->value(); }
 		//m_proto_in(effect_t& e) : in_port_t<T*>(e) {}
 	};
 

@@ -120,18 +120,18 @@ public:
 
 //! redefinition for the port, since there is nothing to assign
 template<bool IsDep>
-struct in_port_t<m_reader_t, m_ringbuffer_t, IsDep> :
-	public in_port_noassign_t<m_reader_t, m_ringbuffer_t, IsDep>
+struct in_port_t<m_reader_t, IsDep> :
+	public in_port_noassign_t<m_reader_t, IsDep>
 {
 public:
-	using in_port_noassign_t<m_reader_t, m_ringbuffer_t, IsDep>::in_port_noassign_t;
+	using in_port_noassign_t<m_reader_t, IsDep>::in_port_noassign_t;
 };
 
 template<bool IsDep = true>
-struct audio_in : public in_port_t<m_reader_t, m_ringbuffer_t, IsDep>
+struct audio_in : public in_port_t<m_reader_t, IsDep>
 {
 	void on_read(sample_no_t ) {} // default behaviour
-	using base = in_port_t<m_reader_t, m_ringbuffer_t, IsDep>;
+	using base = in_port_t<m_reader_t, IsDep>;
 	using base::in_port_t;
 };
 
