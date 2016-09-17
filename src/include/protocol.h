@@ -95,7 +95,7 @@ public:
 				std::cout << as_bars(time(), info.samples_per_bar) << ": " << last_value << std::endl;
 			}
 
-			// these two *must* be ccalled, even if we don't read/write any data
+			// these two *must* be called, even if we don't read/write any data
 			input.update();
 			out_port_ref_t<T>::notify_set(time());
 		}

@@ -96,10 +96,11 @@ struct lfo_t : sine_base, lfo_templ_base<OutType>
 {
 	//using lfo_out = lfo_out<OutType>;
 	using effect = lfo_templ_base<OutType>;
-	sample_no_t time = effect::time();
 
 	bool _proceed()
 	{
+		sample_no_t time = effect::time();
+
 		lfo_proceed_message();
 
 		if(time < start) {

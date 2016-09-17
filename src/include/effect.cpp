@@ -25,6 +25,9 @@ namespace mini {
 
 void effect_t::set_next_time(sample_no_t next)
 {
+	if(next && next <= time())
+	 throw "set_next_time() to a value not in the future";
+
 	io::mlog << "effect " << name() << " (id " << id()
 		<< "): set_next_time(" << next << ")" << io::endl;
 	if(finished_threads >= max_threads - 1) { // TODO: check atomacity...

@@ -42,7 +42,8 @@ constexpr std::size_t rb_size = buffer_size * sample_size;
 
 //! not my favorite solution, but new fails for float[2]
 template<class T, std::size_t Channels = 2>
-struct Stereo {
+struct Stereo
+{
 	T ch[Channels];
 
 	// Master.h suggests operator[], so we provide it...

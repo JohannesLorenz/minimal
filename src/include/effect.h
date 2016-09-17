@@ -64,7 +64,7 @@ protected:
 	std::vector<in_port_base*> in_ports;
 	std::vector<out_port_base*> out_ports;
 private:
-	sample_no_t next_time;
+	sample_no_t next_time = -1;
 	template<class T, class Tpl, int ...Is>
 	//! helper
 	static std::vector<T> make_vector(const Tpl& tpl, util::seq<Is...> ) {

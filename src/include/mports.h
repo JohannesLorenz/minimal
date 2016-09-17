@@ -171,6 +171,10 @@ public:
 		}
 	//	changed = true;
 	}
+
+	void notify_set(sample_no_t now) {
+		out_port_templ_base<T>::_notify_set(now);
+	}
 };
 
 template<class T>
