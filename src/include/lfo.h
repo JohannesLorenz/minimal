@@ -50,11 +50,107 @@ struct lfo_base
 	static void lfo_proceed_message();
 };
 
+enum class scale_type
+{
+	linear,
+	logarithmic
+};
 
-template<class T> // TODO: useless class?
-struct freq_lfo_out : out_port_t<T>
+template<class T>
+struct freq_lfo_params
+{
+	const T min, max;
+	const T range; //!< = max - min
+	const scale_type scale;
+	freq_lfo_params(T min, T max, scale_type scale) :
+		min(min), max(max), range(max - min),
+		scale(scale)
+		{}
+};
+
+template<class T>
+struct freq_lfo_out : public freq_lfo_params<T>, out_port_t<T>
 {
 	using out_port_t<T>::out_port_t;
+	template <class ...Args>
+	freq_lfo_out(T min, T max, scale_type scale, effect_t& e, Args... args) : // FEATURE : forward?
+		freq_lfo_params<T>(min, max, scale),
+		out_port_t(e, args...)
+	{
+	}
+};
+
+template<class T>
+struct freq_lfo_in : public freq_lfo_params<T>, in_port_t<T>
+{
+	using in_port_t<T>::in_port_t;
+	template <class ...Args>
+	freq_lfo_in(T min, T max, scale_type scale, effect_t& e, Args... args) : // FEATURE: forward?
+		freq_lfo_params<T>(min, max, scale),
+		in_port_t(e, args...)
+	{
+	}
+};
+
+template<class T1, class T2>
+struct more_precise_type
+{
+	using type = typename more_precise_type<T2, T1>::type;
+};
+
+template<>
+struct more_precise_type<int, float> { using type = float; };
+
+template<>
+struct more_precise_type<int, bool> { using type = int; };
+
+template<class TIn, class TOut>
+class connection<freq_lfo_in<TIn>, freq_lfo_out<TOut>> : public connection<TIn, TOut>
+{
+	using base = connection<TIn, TOut>;
+	void vinstantiate() { vtransmit(); }
+	void vtransmit() {
+		const freq_lfo_in<TIn>& in = base::in_port;
+		const freq_lfo_out<TOut>& out = base::out_port;
+		if(in.scale == out.scale)
+		{
+			typename more_precise_type<TIn, TOut>::type val = out.value();
+			in.data = ((val - out.min) / out.range) * in.range + in.min;
+		}
+		// the input interprets the (from the port coming) data logarithmically
+		// i.e. we have to calculate the exp function
+		else if(in.scale == scale_type::logarithmic)
+		{
+			// since expf and logf work with float, there is no reason
+			// to not use floats
+
+			// in.min/max have the values the user sees, i.e. non-exponential
+			float limi = logf(in.min), lima = logf(in.max);
+			// TODO: precompute all this!
+
+			float val = out.value();
+
+			float scaled_0_1 = ((val - out.min) / out.range);
+
+			in.data = expf(scaled_0_1 * (lima - limi) + limi);
+
+
+		}
+		else if(out.scale == scale_type::logarithmic)
+		{
+			// this needs to calculate exactly the reverse from the
+			// recent if-block
+
+			float val = out.value();
+
+			float scaled_0_1 = logf( val / out.min ) / logf( ((float)out.max) / out.min );
+
+			in.data = scaled_0_1 * in.range + in.min;
+		}
+	}
+
+public:
+	using base::base;
 };
 
 //! template base for all lfos

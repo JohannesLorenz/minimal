@@ -461,7 +461,7 @@ class connection : public connection_templ_base<TIn, TOut>
 	void vinstantiate() {
 		base::in_port.data = base::out_port.value();
 	}
-	void vtransmit() {}
+	void vtransmit() { base::in_port.data = base::out_port.value(); }
 public:
 	using base::base;
 };

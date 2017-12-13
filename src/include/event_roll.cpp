@@ -50,10 +50,10 @@ void roll_impl_base::log_visit_event(roll_impl_base::m_geom_t next_offset,
 #ifdef DEBUG_NOTE_LINE
 	for(std::size_t x = visit_depth; x; --x)
 	 io::mlog << "  ";
-	io::mlog << "emplacing: " << next_visit_id << std::endl;
+	io::mlog << "emplacing: " << next_visit_id << io::endl;
 	for(std::size_t x = visit_depth; x; --x)
 	 io::mlog << "  ";
-	io::mlog << "next_offs: " << next_offset << std::endl;
+	io::mlog << "next_offs: " << next_offset << io::endl;
 	// TODO: this does not work for all note properties
 #else
 	(void)next_offset;
